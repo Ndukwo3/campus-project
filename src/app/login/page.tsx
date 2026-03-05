@@ -21,7 +21,8 @@ export default function LoginPage() {
       </div>
 
       <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
-        <h1 className="text-3xl font-semibold text-center mb-10 tracking-tight">Login</h1>
+        <h1 className="text-4xl font-bold text-center mb-2 tracking-tight">Login</h1>
+        <p className="text-zinc-500 text-center mb-10 font-medium">Welcome back to <span className="text-zinc-900 font-bold italic underline decoration-[#E5FF66] decoration-4 underline-offset-4">Uni-verse</span></p>
 
         {/* Form Group - Email */}
         <div className="mb-6">
@@ -30,7 +31,7 @@ export default function LoginPage() {
             <input
               type="email"
               placeholder="email@gmail.com"
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
             />
           </div>
         </div>
@@ -42,7 +43,7 @@ export default function LoginPage() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="password@@1"
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
             />
             <button
               type="button"
@@ -104,7 +105,7 @@ export default function LoginPage() {
         <div className="mt-auto flex flex-col items-center gap-8">
           {/* Signup switch */}
           <p className="text-[13px] text-zinc-500">
-            Don't have an account? <Link href="/signup" className="font-semibold text-zinc-800 hover:text-black transition-colors">Sign up</Link>
+            Don't have an account? <Link href="/signup" className="font-bold text-zinc-900 hover:underline decoration-[#E5FF66] decoration-2 underline-offset-4 transition-colors">Sign up</Link>
           </p>
         </div>
       </div>

@@ -24,12 +24,13 @@ export default function SignupPage() {
       </div>
 
       <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
-        <h1 className="text-3xl font-semibold text-center mb-8 tracking-tight">Create Your Account</h1>
+        <h1 className="text-3xl font-bold text-center mb-2 tracking-tight">Create Account</h1>
+        <p className="text-zinc-500 text-center mb-8 font-medium">Join the <span className="text-zinc-900 font-bold italic underline decoration-[#E5FF66] decoration-4 underline-offset-4">Uni-verse</span></p>
 
         {/* Toggle Pill */}
         <div className="flex p-1 bg-zinc-100 rounded-full mb-8 relative">
           <div
-            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[#E2FF3D] rounded-full transition-transform duration-300 ease-in-out ${authMethod === "email" ? "translate-x-0" : "translate-x-full"
+            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[#E5FF66] rounded-full transition-transform duration-300 ease-in-out ${authMethod === "email" ? "translate-x-0" : "translate-x-full"
               }`}
           />
           <button
@@ -57,7 +58,7 @@ export default function SignupPage() {
               placeholder="John"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
             />
           </div>
           <div>
@@ -67,7 +68,7 @@ export default function SignupPage() {
               placeholder="Doe"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
             />
           </div>
         </div>
@@ -82,13 +83,13 @@ export default function SignupPage() {
               <input
                 type="email"
                 placeholder="johndoe@gmail.com"
-                className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+                className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
               />
             ) : (
               <input
                 type="tel"
                 placeholder="+1 (555) 000-0000"
-                className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+                className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
               />
             )}
           </div>
@@ -101,7 +102,7 @@ export default function SignupPage() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="password@@1"
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
             />
             <button
               type="button"
@@ -156,12 +157,12 @@ export default function SignupPage() {
         <div className="mt-auto flex flex-col items-center gap-8">
           {/* Terms text */}
           <p className="text-center text-[13px] text-zinc-500 max-w-xs leading-relaxed">
-            By continuing you agree to Campus's <a href="#" className="font-semibold text-zinc-800 hover:text-black transition-colors">Terms of Service</a> and <a href="#" className="font-semibold text-zinc-800 hover:text-black transition-colors">Privacy Policy</a>
+            By continuing you agree to Uni-verse's <a href="#" className="font-bold text-zinc-900 hover:underline transition-colors">Terms of Service</a> and <a href="#" className="font-bold text-zinc-900 hover:underline transition-colors">Privacy Policy</a>
           </p>
 
           {/* Login switch */}
           <p className="text-[13px] text-zinc-500">
-            Already have an account? <Link href="/login" className="font-semibold text-zinc-800 hover:text-black transition-colors">Login</Link>
+            Already have an account? <Link href="/login" className="font-bold text-zinc-900 hover:underline decoration-[#E5FF66] decoration-2 underline-offset-4 transition-colors">Login</Link>
           </p>
         </div>
       </div>

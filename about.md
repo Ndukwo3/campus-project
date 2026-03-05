@@ -110,6 +110,10 @@ Campus is built using modern scalable technologies:
 
 This architecture enables realtime communication and rapid expansion across universities.
 
+### Design System & Typography
+
+- **Primary Font Family:** Montserrat
+
 ---
 
 ## Vision
