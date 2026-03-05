@@ -8,6 +8,8 @@ import Image from "next/image";
 export default function SignupPage() {
   const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   const [showPassword, setShowPassword] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-zinc-900 font-sans px-6 py-12">
@@ -46,6 +48,30 @@ export default function SignupPage() {
           </button>
         </div>
 
+        {/* Form Group - Name */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm text-zinc-500 mb-2 px-1">First Name</label>
+            <input
+              type="text"
+              placeholder="John"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-zinc-500 mb-2 px-1">Last Name</label>
+            <input
+              type="text"
+              placeholder="Doe"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+            />
+          </div>
+        </div>
+
         {/* Form Group - Email/Phone */}
         <div className="mb-6">
           <label className="block text-sm text-zinc-500 mb-2 px-1">
@@ -55,7 +81,7 @@ export default function SignupPage() {
             {authMethod === "email" ? (
               <input
                 type="email"
-                placeholder="email@gmail.com"
+                placeholder="johndoe@gmail.com"
                 className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
               />
             ) : (
