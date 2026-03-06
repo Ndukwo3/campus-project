@@ -68,12 +68,12 @@ export default function NotificationsPage() {
       <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md px-4 h-16 flex items-center justify-between border-b border-zinc-100">
         <div className="flex items-center gap-3">
           <Link href="/" className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-zinc-100 transition">
-            <ArrowLeft size={24} />
+            <ArrowLeft size={24} className="text-black" />
           </Link>
           <h1 className="text-xl font-bold text-black">Notifications</h1>
         </div>
         <button className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-zinc-100 transition">
-          <MoreHorizontal size={24} />
+          <MoreHorizontal size={24} className="text-black" />
         </button>
       </div>
 
