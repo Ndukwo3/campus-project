@@ -10,12 +10,12 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-white pb-[100px] max-w-md mx-auto relative font-sans">
       {/* Header Bar */}
       <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white z-10">
-        <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition">
-          <ArrowLeft size={20} className="text-zinc-800" />
+        <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 transition">
+          <ArrowLeft size={20} className="text-black" />
         </Link>
-        <span className="font-bold text-lg tracking-tight">Profile</span>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition">
-          <Settings size={20} className="text-zinc-800" />
+        <span className="font-bold text-lg tracking-tight text-black">Profile</span>
+        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 transition">
+          <Settings size={20} className="text-black" />
         </button>
       </div>
 
@@ -38,15 +38,15 @@ export default function ProfilePage() {
             </button>
           </div>
           
-          <h2 className="text-2xl font-bold text-zinc-900 mb-1">Samuel Adebayo</h2>
-          <p className="text-zinc-500 text-sm font-medium mb-4">@sam_dev • 300 Level CS</p>
+          <h2 className="text-2xl font-bold text-black mb-1 leading-tight">Samuel Adebayo</h2>
+          <p className="text-black text-[15px] font-bold mb-4 opacity-100">@sam_dev • 300 Level CS</p>
           
           <div className="flex gap-4 w-full">
             <button className="flex-1 bg-[#1A1A24] text-white py-3 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black transition">
               <Edit3 size={18} />
               Edit Profile
             </button>
-            <button className="w-12 h-12 bg-zinc-100 rounded-2xl flex items-center justify-center text-zinc-800 hover:bg-zinc-200 transition">
+            <button className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center text-black hover:bg-stone-200 transition">
               <Bookmark size={20} />
             </button>
           </div>
@@ -56,16 +56,16 @@ export default function ProfilePage() {
       {/* Stats Section */}
       <div className="flex justify-around py-6 border-y border-zinc-100 mx-6">
         <div className="flex flex-col items-center">
-          <span className="text-lg font-bold">124</span>
-          <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Posts</span>
+          <span className="text-lg font-bold text-black">124</span>
+          <span className="text-xs text-black font-bold uppercase tracking-wider">Posts</span>
         </div>
         <div className="flex flex-col items-center">
-          <span className="text-lg font-bold">1.2k</span>
-          <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Followers</span>
+          <span className="text-lg font-bold text-black">1.2k</span>
+          <span className="text-xs text-black font-bold uppercase tracking-wider">Followers</span>
         </div>
         <div className="flex flex-col items-center">
-          <span className="text-lg font-bold">850</span>
-          <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Following</span>
+          <span className="text-lg font-bold text-black">850</span>
+          <span className="text-xs text-black font-bold uppercase tracking-wider">Following</span>
         </div>
       </div>
 
@@ -73,16 +73,16 @@ export default function ProfilePage() {
       <div className="px-6 py-6 flex flex-col gap-4">
         <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-sm text-zinc-800">University</h3>
+            <h3 className="font-bold text-sm text-black">University</h3>
             <span className="text-[10px] font-bold bg-[#E5FF66] px-2 py-0.5 rounded-full uppercase">Verified</span>
           </div>
-          <p className="text-sm font-medium text-zinc-600">University of Lagos (UNILAG)</p>
-          <p className="text-xs text-zinc-400 mt-1">Computer Science Department</p>
+          <p className="text-sm font-bold text-black">University of Lagos (UNILAG)</p>
+          <p className="text-sm text-black font-bold mt-1">Computer Science Department</p>
         </div>
 
         <div className="flex flex-col gap-2">
-          <h3 className="font-bold text-sm px-1">About Me</h3>
-          <p className="text-sm text-zinc-600 leading-relaxed px-1 font-medium">
+          <h3 className="font-bold text-base text-black px-1">About Me</h3>
+          <p className="text-sm text-black leading-relaxed px-1 font-bold">
             Building the next generation of campus tech! Passionate about UI/UX and Fullstack dev. Coffee & Code ☕️💻
           </p>
         </div>
@@ -95,12 +95,12 @@ export default function ProfilePage() {
           <span className="text-[10px] font-bold uppercase tracking-widest text-black">Posts</span>
         </button>
         <button className="flex-1 py-4 flex flex-col items-center gap-1 group">
-          <Bookmark size={22} className="text-zinc-300 group-hover:text-zinc-900 transition" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300 group-hover:text-zinc-900 transition">Saved</span>
+          <Bookmark size={22} className="text-black/30 group-hover:text-black transition" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-black/30 group-hover:text-black transition">Saved</span>
         </button>
         <button className="flex-1 py-4 flex flex-col items-center gap-1 group">
-          <Tag size={22} className="text-zinc-300 group-hover:text-zinc-900 transition" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300 group-hover:text-zinc-900 transition">Tagged</span>
+          <Tag size={22} className="text-black/30 group-hover:text-black transition" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-black/30 group-hover:text-black transition">Tagged</span>
         </button>
       </div>
 
