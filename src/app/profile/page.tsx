@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Settings, Grid, Bookmark, Tag, ChevronRight, Edit3, Camera } from "lucide-react";
+import { ArrowLeft, Settings, Grid, Bookmark, Tag, ChevronRight, Edit3, Camera, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -38,7 +38,10 @@ export default function ProfilePage() {
             </button>
           </div>
           
-          <h2 className="text-2xl font-bold text-black mb-1 leading-tight">Samuel Adebayo</h2>
+          <div className="flex items-center gap-1.5 mb-1">
+            <h2 className="text-2xl font-bold text-black leading-tight">Samuel Adebayo</h2>
+            <CheckCircle2 size={20} className="fill-black text-white" />
+          </div>
           <p className="text-black text-[15px] font-bold mb-4 opacity-100">@sam_dev • 300 Level CS</p>
           
           <div className="flex gap-4 w-full">
@@ -74,9 +77,9 @@ export default function ProfilePage() {
         <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-sm text-black">University</h3>
-            <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded-full uppercase">Verified</span>
+            <CheckCircle2 size={16} className="fill-black text-white" />
           </div>
-          <p className="text-sm font-normal text-black font-medium">University of Lagos (UNILAG)</p>
+          <p className="text-sm font-normal text-black">University of Lagos (UNILAG)</p>
           <p className="text-sm text-black font-normal mt-1">Computer Science Department</p>
         </div>
 
