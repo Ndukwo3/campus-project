@@ -75,9 +75,8 @@ export default function ProfilePage() {
       {/* Bio / University Section */}
       <div className="px-6 py-6 flex flex-col gap-4">
         <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center mb-2">
             <h3 className="font-bold text-sm text-black">University</h3>
-            <CheckCircle2 size={16} className="fill-black text-white" />
           </div>
           <p className="text-sm font-normal text-black">University of Lagos (UNILAG)</p>
           <p className="text-sm text-black font-normal mt-1">Computer Science Department</p>
