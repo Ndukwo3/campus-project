@@ -70,7 +70,7 @@ export default function NotificationsPage() {
           <Link href="/" className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-zinc-100 transition">
             <ArrowLeft size={24} />
           </Link>
-          <h1 className="text-xl font-bold">Notifications</h1>
+          <h1 className="text-xl font-bold text-black">Notifications</h1>
         </div>
         <button className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-zinc-100 transition">
           <MoreHorizontal size={24} />
@@ -99,7 +99,7 @@ export default function NotificationsPage() {
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start gap-2">
                 <p className="text-[15px] leading-snug">
-                  <span className="font-bold">{notification.user}</span>{" "}
+                  <span className="font-bold text-black">{notification.user}</span>{" "}
                   <span className="text-zinc-600">{notification.content}</span>
                 </p>
                 {notification.isUnread && (
