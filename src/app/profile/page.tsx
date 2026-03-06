@@ -57,15 +57,15 @@ export default function ProfilePage() {
       <div className="flex justify-around py-6 border-y border-zinc-100 mx-6">
         <div className="flex flex-col items-center">
           <span className="text-lg font-bold text-black">124</span>
-          <span className="text-xs text-black font-bold uppercase tracking-wider">Posts</span>
+          <span className="text-xs text-black/40 font-bold uppercase tracking-wider">Posts</span>
         </div>
         <div className="flex flex-col items-center">
           <span className="text-lg font-bold text-black">1.2k</span>
-          <span className="text-xs text-black font-bold uppercase tracking-wider">Followers</span>
+          <span className="text-xs text-black/40 font-bold uppercase tracking-wider">Followers</span>
         </div>
         <div className="flex flex-col items-center">
           <span className="text-lg font-bold text-black">850</span>
-          <span className="text-xs text-black font-bold uppercase tracking-wider">Following</span>
+          <span className="text-xs text-black/40 font-bold uppercase tracking-wider">Following</span>
         </div>
       </div>
 
@@ -74,15 +74,15 @@ export default function ProfilePage() {
         <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-sm text-black">University</h3>
-            <span className="text-[10px] font-bold bg-[#E5FF66] px-2 py-0.5 rounded-full uppercase">Verified</span>
+            <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded-full uppercase">Verified</span>
           </div>
-          <p className="text-sm font-bold text-black">University of Lagos (UNILAG)</p>
-          <p className="text-sm text-black font-bold mt-1">Computer Science Department</p>
+          <p className="text-sm font-normal text-black font-medium">University of Lagos (UNILAG)</p>
+          <p className="text-sm text-black font-normal mt-1">Computer Science Department</p>
         </div>
 
         <div className="flex flex-col gap-2">
           <h3 className="font-bold text-base text-black px-1">About Me</h3>
-          <p className="text-sm text-black leading-relaxed px-1 font-bold">
+          <p className="text-sm text-black leading-relaxed px-1 font-normal">
             Building the next generation of campus tech! Passionate about UI/UX and Fullstack dev. Coffee & Code ☕️💻
           </p>
         </div>
