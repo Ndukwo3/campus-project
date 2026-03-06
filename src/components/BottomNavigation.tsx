@@ -12,8 +12,8 @@ export default function BottomNavigation() {
   const isProfile = pathname === "/profile";
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 w-full flex justify-center pb-6 pt-4 bg-gradient-to-t from-white via-white to-transparent pointer-events-none z-50">
-      <div className="flex items-center justify-between w-full max-w-md px-8 h-[68px] bg-white rounded-[34px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] pointer-events-auto mx-4">
+    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-zinc-100 z-50 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-center justify-between w-full px-8 h-[68px]">
         
         {/* Home */}
         <Link 

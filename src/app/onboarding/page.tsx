@@ -169,7 +169,7 @@ export default function OnboardingPage() {
     setIsCompleting(true);
     // Simulate API call and wait for animation
     setTimeout(() => {
-      router.push("/feed");
+      router.push("/");
     }, 2500);
   };
 
