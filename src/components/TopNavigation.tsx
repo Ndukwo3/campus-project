@@ -11,9 +11,9 @@ export default function TopNavigation() {
           <Bell size={20} strokeWidth={1.5} />
           <div className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-[#E5FF66] border border-white"></div>
         </Link>
-        <button className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-black hover:bg-zinc-200 transition">
+        <Link href="/search" className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-black hover:bg-zinc-200 transition">
           <Search size={20} strokeWidth={1.5} />
-        </button>
+        </Link>
       </div>
     </div>
   );

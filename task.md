@@ -71,3 +71,4 @@
 - [ ] UX Improvements
   - [ ] Mobile responsiveness
   - [ ] Clean onboarding and navigation refinement
+- [x] Fix hydration mismatch in layout.tsx (suppressHydrationWarning)

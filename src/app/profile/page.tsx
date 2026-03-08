@@ -42,7 +42,7 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-bold text-black leading-tight">Samuel Adebayo</h2>
             <CheckCircle2 size={20} className="fill-black text-white" />
           </div>
-          <p className="text-black text-[15px] font-bold mb-4 opacity-100">@sam_dev • 300 Level CS</p>
+          <p className="text-zinc-500 text-[14px] font-medium mb-4">@sam_dev • 300 Level CS</p>
           
           <div className="flex gap-4 w-full">
             <button className="flex-1 bg-[#1A1A24] text-white py-3 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black transition">

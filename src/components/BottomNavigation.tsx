@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, MessageSquare, Plus, Film, User } from "lucide-react";
+import { Home, MessageSquare, Plus, Search, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,46 +10,51 @@ export default function BottomNavigation() {
   const isHome = pathname === "/";
   const isMessages = pathname === "/messages";
   const isProfile = pathname === "/profile";
+  const isSearch = pathname === "/search";
 
   return (
-    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-zinc-100 z-50 pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center justify-between w-full px-8 h-[68px]">
+    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 backdrop-blur-xl border-t border-zinc-100/50 z-50 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-center justify-between w-full px-8 h-[72px]">
         
         {/* Home */}
         <Link 
           href="/" 
-          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition ${isHome ? "text-black" : "text-zinc-400 hover:text-black"}`}
+          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition-all duration-300 ${isHome ? "text-zinc-900 scale-110" : "text-zinc-400 hover:text-zinc-600"}`}
         >
-          <Home size={24} strokeWidth={isHome ? 2.5 : 2} />
-          {isHome && <div className="h-1 w-1 rounded-full bg-black"></div>}
+          <Home size={22} strokeWidth={isHome ? 2.5 : 2} />
+          <div className={`h-1 w-1 rounded-full bg-zinc-900 transition-all duration-300 ${isHome ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
+
+        {/* Search */}
+        <Link 
+          href="/search" 
+          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition-all duration-300 ${isSearch ? "text-zinc-900 scale-110" : "text-zinc-400 hover:text-zinc-600"}`}
+        >
+          <Search size={22} strokeWidth={isSearch ? 2.5 : 2} />
+          <div className={`h-1 w-1 rounded-full bg-zinc-900 transition-all duration-300 ${isSearch ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
+        </Link>
+
+        {/* Center Action Button */}
+        <button className="flex items-center justify-center w-14 h-11 rounded-2xl bg-[#E5FF66] text-black shadow-[0_4px_15px_rgba(229,255,102,0.4)] hover:bg-[#d4f936] active:scale-90 transition-all mb-4">
+          <Plus size={24} strokeWidth={3} />
+        </button>
 
         {/* Messages */}
         <Link 
           href="/messages" 
-          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition ${isMessages ? "text-black" : "text-zinc-400 hover:text-black"}`}
+          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition-all duration-300 ${isMessages ? "text-zinc-900 scale-110" : "text-zinc-400 hover:text-zinc-600"}`}
         >
-          <MessageSquare size={24} strokeWidth={isMessages ? 2.5 : 2} />
-          {isMessages && <div className="h-1 w-1 rounded-full bg-black"></div>}
+          <MessageSquare size={22} strokeWidth={isMessages ? 2.5 : 2} />
+          <div className={`h-1 w-1 rounded-full bg-zinc-900 transition-all duration-300 ${isMessages ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
-
-        {/* Create Post (Center FAB) - Just a button for now */}
-        <button className="flex items-center justify-center w-14 h-10 rounded-2xl bg-[#E5FF66] text-black hover:bg-[#d4f936] transition shadow-sm mb-1 z-10">
-          <Plus size={24} strokeWidth={2.5} />
-        </button>
-
-        {/* Video - Placeholder for now */}
-        <button className="flex flex-col items-center justify-center gap-1.5 w-12 text-zinc-400 hover:text-black transition">
-          <Film size={24} strokeWidth={2} />
-        </button>
-
+        
         {/* Profile */}
         <Link 
           href="/profile" 
-          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition ${isProfile ? "text-black" : "text-zinc-400 hover:text-black"}`}
+          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition-all duration-300 ${isProfile ? "text-zinc-900 scale-110" : "text-zinc-400 hover:text-zinc-600"}`}
         >
-          <User size={24} strokeWidth={isProfile ? 2.5 : 2} />
-          {isProfile && <div className="h-1 w-1 rounded-full bg-black"></div>}
+          <User size={22} strokeWidth={isProfile ? 2.5 : 2} />
+          <div className={`h-1 w-1 rounded-full bg-zinc-900 transition-all duration-300 ${isProfile ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
       </div>
     </div>
