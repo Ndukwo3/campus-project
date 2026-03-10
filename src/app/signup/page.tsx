@@ -1,26 +1,83 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, EyeOff, Eye } from "lucide-react";
+import { ArrowLeft, EyeOff, Eye, Loader2 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 
 export default function SignupPage() {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   const [showPassword, setShowPassword] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: signupError } = await supabase.auth.signUp({
+        email: authMethod === "email" ? email : `${phone}@campus.com`, // Fallback for phone-like signup in MVP
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            full_name: `${firstName} ${lastName}`,
+          },
+        },
+      });
+
+      if (signupError) {
+        if (signupError.message.includes("User already registered")) {
+          setError("This email is already in use. Try logging in instead.");
+        } else {
+          setError(signupError.message);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        if (data.session) {
+          // Automatic login successful
+          router.push("/onboarding");
+        } else {
+          // Email confirmation is likely enabled
+          setError("Account created! Please check your email to confirm your account before logging in.");
+          setIsLoading(false);
+        }
+      } else {
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      setError("Network error. Please try again or check your internet.");
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-zinc-900 font-sans px-6 py-12">
       {/* App Bar */}
       <div className="flex items-center mb-8">
-        <button
+        <Link
+          href="/login"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5 text-zinc-800" />
-        </button>
+        </Link>
       </div>
 
       <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
@@ -49,75 +106,96 @@ export default function SignupPage() {
           </button>
         </div>
 
-        {/* Form Group - Name */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <label className="block text-sm text-zinc-500 mb-2 px-1">First Name</label>
-            <input
-              type="text"
-              placeholder="John"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-zinc-500 mb-2 px-1">Last Name</label>
-            <input
-              type="text"
-              placeholder="Doe"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
-            />
-          </div>
-        </div>
-
-        {/* Form Group - Email/Phone */}
-        <div className="mb-6">
-          <label className="block text-sm text-zinc-500 mb-2 px-1">
-            {authMethod === "email" ? "Email" : "Phone number"}
-          </label>
-          <div className="relative">
-            {authMethod === "email" ? (
+        <form onSubmit={handleSignup}>
+          {/* Form Group - Name */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm text-zinc-500 mb-2 px-1">First Name</label>
               <input
-                type="email"
-                placeholder="johndoe@gmail.com"
+                type="text"
+                placeholder="John"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
                 className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
               />
-            ) : (
+            </div>
+            <div>
+              <label className="block text-sm text-zinc-500 mb-2 px-1">Last Name</label>
               <input
-                type="tel"
-                placeholder="+1 (555) 000-0000"
+                type="text"
+                placeholder="Doe"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
                 className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
               />
-            )}
+            </div>
           </div>
-        </div>
 
-        {/* Form Group - Password */}
-        <div className="mb-8">
-          <label className="block text-sm text-zinc-500 mb-2 px-1">Password</label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="password@@1"
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
-            >
-              {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-            </button>
+          {/* Form Group - Email/Phone */}
+          <div className="mb-6">
+            <label className="block text-sm text-zinc-500 mb-2 px-1">
+              {authMethod === "email" ? "Email" : "Phone number"}
+            </label>
+            <div className="relative">
+              {authMethod === "email" ? (
+                <input
+                  type="email"
+                  placeholder="johndoe@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
+                />
+              ) : (
+                <input
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
+                />
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Primary Action Button */}
-        <button className="w-full bg-[#1A1A24] text-white rounded-2xl py-4.5 font-medium text-[15px] hover:bg-black transition-colors mb-10 shadow-sm">
-          Create Account
-        </button>
+          {/* Form Group - Password */}
+          <div className="mb-8">
+            <label className="block text-sm text-zinc-500 mb-2 px-1">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="password@@1"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
+              >
+                {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          {error && <p className="text-red-500 text-sm mb-4 px-1">{error}</p>}
+
+          {/* Primary Action Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-[#1A1A24] text-white rounded-2xl py-4.5 font-medium text-[15px] hover:bg-black transition-colors mb-10 shadow-sm flex items-center justify-center gap-2"
+          >
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isLoading ? "Creating Account..." : "Create Account"}
+          </button>
+        </form>
 
         {/* Divider */}
         <div className="relative flex items-center justify-center mb-8">

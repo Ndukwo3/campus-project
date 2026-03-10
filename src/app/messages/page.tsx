@@ -1,11 +1,13 @@
 "use client";
 
-import { Search, MoreVertical, Edit, Plus } from "lucide-react";
+import { Search, MoreVertical, Edit, Plus, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import BottomNavigation from "@/components/BottomNavigation";
+import { createClient } from "@/lib/supabase";
 
-const chats = [
+const mockChats = [
   {
     id: 1,
     name: "Chidi Obi",
@@ -62,6 +64,59 @@ const activeUsers = [
 ];
 
 export default function MessagesPage() {
+  const supabase = createClient();
+  const [chats, setChats] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMessages() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch latest messages for each conversation
+      // This is a simplified query for MVP. Usually, a more robust join is needed.
+      const { data: recentMessages, error } = await supabase
+        .from('messages')
+        .select(`
+          id, content, created_at, is_read, sender_id, receiver_id,
+          sender:sender_id (full_name, avatar_url, username),
+          receiver:receiver_id (full_name, avatar_url, username)
+        `)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+
+      if (recentMessages && recentMessages.length > 0) {
+        // Group by conversation partner
+        const conversationMap = new Map();
+        recentMessages.forEach((msg: any) => {
+          const partner = msg.sender_id === user.id ? msg.receiver : msg.sender;
+          const partnerData = Array.isArray(partner) ? partner[0] : partner;
+          const partnerId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+          
+          if (!conversationMap.has(partnerId) && partnerData) {
+            conversationMap.set(partnerId, {
+              id: partnerId,
+              name: partnerData.full_name || partnerData.username,
+              avatar: partnerData.avatar_url || "/dummy/nigerian_avatar_2_1772720155980.png",
+              lastMessage: msg.content,
+              time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              unread: msg.is_read ? 0 : (msg.receiver_id === user.id ? 1 : 0),
+              online: true, // Placeholder online status
+            });
+          }
+        });
+        setChats(Array.from(conversationMap.values()));
+      } else {
+        setChats(mockChats); // Fallback to mock data if no messages
+      }
+      setIsLoading(false);
+    }
+    fetchMessages();
+  }, [supabase]);
+
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-[110px] max-w-md mx-auto relative font-sans">
       {/* Premium Header with Backdrop Blur */}
@@ -116,10 +171,14 @@ export default function MessagesPage() {
         </div>
         
         <div className="flex flex-col gap-1">
-          {chats.map((chat) => (
+          {isLoading ? (
+            <div className="flex justify-center p-20">
+              <Loader2 className="w-8 h-8 animate-spin text-zinc-200" />
+            </div>
+          ) : chats.map((chat) => (
             <Link 
               key={chat.id} 
-              href="/messages/chat"
+              href={`/messages/chat?id=${chat.id}`}
               className="flex items-center gap-4 p-3 rounded-[28px] hover:bg-white hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] active:scale-[0.98] transition-all cursor-pointer group"
             >
               <div className="relative shrink-0">

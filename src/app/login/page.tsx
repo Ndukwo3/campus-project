@@ -1,71 +1,133 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, EyeOff, Eye } from "lucide-react";
+import { ArrowLeft, EyeOff, Eye, Loader2 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log("Attempting login with email:", email);
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (loginError) {
+        console.error("Login call returned error:", loginError);
+        // Custom message for invalid credentials which often means user not found or wrong password
+        if (loginError.message.includes("Invalid login credentials")) {
+          setError("Account not found or password incorrect. Don't have an account? Sign up below.");
+        } else {
+          setError(loginError.message);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("Login successful, user data:", data);
+
+      if (data.user) {
+        router.push("/");
+      } else {
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      console.error("Critical error during login fetch:", err);
+      setError("Network error: Failed to connect to Supabase. Please check your internet connection.");
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-zinc-900 font-sans px-6 py-12">
       {/* App Bar */}
       <div className="flex items-center mb-8">
-        <button
+        <Link
+          href="/"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5 text-zinc-800" />
-        </button>
+        </Link>
       </div>
 
       <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
         <h1 className="text-4xl font-bold text-center mb-2 tracking-tight">Login</h1>
         <p className="text-zinc-500 text-center mb-10 font-medium">Welcome back to <span className="text-zinc-900 font-bold italic underline decoration-[#E5FF66] decoration-4 underline-offset-4">Uni-verse</span></p>
 
-        {/* Form Group - Email */}
-        <div className="mb-6">
-          <label className="block text-sm text-zinc-500 mb-2 px-1">Email</label>
-          <div className="relative">
-            <input
-              type="email"
-              placeholder="email@gmail.com"
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
-            />
+        <form onSubmit={handleLogin}>
+          {/* Form Group - Email */}
+          <div className="mb-6">
+            <label className="block text-sm text-zinc-500 mb-2 px-1">Email</label>
+            <div className="relative">
+              <input
+                type="email"
+                placeholder="email@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Form Group - Password */}
-        <div className="mb-2">
-          <label className="block text-sm text-zinc-500 mb-2 px-1">Password</label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="password@@1"
-              className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
-            >
-              {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-            </button>
+          {/* Form Group - Password */}
+          <div className="mb-2">
+            <label className="block text-sm text-zinc-500 mb-2 px-1">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="password@@1"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-medium"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
+              >
+                {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Forgot Password Link */}
-        <div className="flex justify-end mb-8 px-1">
-          <Link href="#" className="text-[13px] font-medium text-zinc-500 hover:text-zinc-800 transition-colors">
-            Forgot Password?
-          </Link>
-        </div>
+          {/* Forgot Password Link */}
+          <div className="flex justify-end mb-8 px-1">
+            <Link href="#" className="text-[13px] font-medium text-zinc-500 hover:text-zinc-800 transition-colors">
+              Forgot Password?
+            </Link>
+          </div>
 
-        {/* Primary Action Button */}
-        <button className="w-full bg-[#1A1A24] text-white rounded-2xl py-4.5 font-medium text-[15px] hover:bg-black transition-colors mb-10 shadow-sm">
-          Login
-        </button>
+          {error && <p className="text-red-500 text-sm mb-4 px-1">{error}</p>}
+
+          {/* Primary Action Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-[#1A1A24] text-white rounded-2xl py-4.5 font-medium text-[15px] hover:bg-black transition-colors mb-10 shadow-sm flex items-center justify-center gap-2"
+          >
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isLoading ? "Logging in..." : "Login"}
+          </button>
+        </form>
 
         {/* Divider */}
         <div className="relative flex items-center justify-center mb-8">
