@@ -5,134 +5,39 @@ import Link from "next/link";
 import Image from "next/image";
 import BottomNavigation from "@/components/BottomNavigation";
 
-const recentNotifications = [
-  {
-    id: 1,
-    type: "like",
-    user: "Chidi Obi",
-    username: "chidi.obi",
-    avatar: "/dummy/nigerian_avatar_2_1772720155980.png",
-    content: "liked your post.",
-    time: "3m",
-    preview: "/dummy/nigerian_post_image_1772720254070.png",
-  },
-  {
-    id: 2,
-    type: "like",
-    user: "Zainab Ibrahim",
-    username: "zainab_vibe",
-    avatar: "/dummy/nigerian_avatar_6_1772720236907.png",
-    content: "liked your story.",
-    time: "12m",
-    preview: "/dummy/nigerian_avatar_4_1772720200827.png",
-  },
-  {
-    id: 3,
-    type: "follow",
-    user: "Alvian",
-    username: "alvian_tech",
-    avatar: "/dummy/nigerian_avatar_5_1772720218967.png",
-    content: "started following you.",
-    time: "42m",
-  },
-  {
-    id: 4,
-    type: "like",
-    user: "Ngozi Okafor",
-    username: "ngozi_styl",
-    avatar: "/dummy/nigerian_avatar_4_1772720200827.png",
-    content: "liked your story.",
-    time: "2h",
-    preview: "/dummy/nigerian_avatar_1_1772720135560.png",
-  }
-];
-
-const olderNotifications = [
-  {
-    id: 5,
-    type: "like",
-    user: "Raders",
-    username: "raders_hub",
-    avatar: "/dummy/nigerian_avatar_3_1772720174186.png",
-    content: "liked your post.",
-    time: "Oct, 31",
-  },
-  {
-    id: 6,
-    type: "comment",
-    user: "Bambang",
-    username: "bambang_j",
-    avatar: "/dummy/nigerian_avatar_1_1772720135560.png",
-    content: "commented: Fresh and vibrant.",
-    time: "Oct, 30",
-    preview: "/dummy/nigerian_post_image_1772720254070.png",
-  },
-  {
-    id: 7,
-    type: "like",
-    user: "Dare",
-    username: "dare_dev",
-    avatar: "/dummy/nigerian_avatar_2_1772720155980.png",
-    content: "liked your story.",
-    time: "Oct, 28",
-    preview: "/dummy/nigerian_avatar_6_1772720236907.png",
-  },
-  {
-    id: 8,
-    type: "follow",
-    user: "Alvian",
-    username: "alvian_tech",
-    avatar: "/dummy/nigerian_avatar_5_1772720218967.png",
-    content: "started following you.",
-    time: "Oct, 25",
-    isFollowing: true,
-  },
-  {
-    id: 9,
-    type: "comment",
-    user: "Fateme",
-    username: "fateme_x",
-    avatar: "/dummy/nigerian_avatar_6_1772720236907.png",
-    content: "commented: Fresh and vibrant.",
-    time: "Oct, 25",
-    preview: "/dummy/nigerian_avatar_4_1772720200827.png",
-  }
-];
-
 export default function NotificationsPage() {
+  // Placeholder state for real-time notifications
+  const notifications: any[] = [];
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-[100px] max-w-md mx-auto relative font-sans">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-[#F8F9FA]/80 backdrop-blur-md px-6 py-6 flex items-center justify-between">
-        <Link href="/" className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-zinc-50 transition">
+        <Link href="/" className="w-12 h-12 flex items-center justify-center rounded-[20px] bg-white shadow-sm hover:bg-zinc-50 transition active:scale-95">
           <ArrowLeft size={20} className="text-zinc-800" />
         </Link>
-        <h1 className="text-xl font-bold text-zinc-800">Notification</h1>
-        <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-zinc-50 transition">
+        <h1 className="text-xl font-extrabold tracking-tight text-zinc-900">Notifications</h1>
+        <button className="w-12 h-12 flex items-center justify-center rounded-[20px] bg-white shadow-sm hover:bg-zinc-50 transition active:scale-95">
           <MoreVertical size={20} className="text-zinc-800" />
         </button>
       </div>
 
-      <main className="px-6 space-y-8">
-        {/* Recent Section */}
-        <section>
-          <h2 className="text-base font-bold text-zinc-800 mb-4 px-1">Recent</h2>
-          <div className="bg-white rounded-[32px] p-2 shadow-sm border border-zinc-100/50">
-            {recentNotifications.map((noti) => (
-              <NotificationItem key={noti.id} {...noti} />
-            ))}
+      <main className="px-6 py-4 flex flex-col items-center justify-center min-h-[60vh]">
+        {notifications.length > 0 ? (
+          <div className="w-full space-y-8">
+            {/* Real notifications will be mapped here */}
           </div>
-        </section>
-
-        {/* Older Section */}
-        <section>
-          <h2 className="text-base font-bold text-zinc-800 mb-4 px-1">Last 7 Days</h2>
-          <div className="bg-white rounded-[32px] p-2 shadow-sm border border-zinc-100/50">
-            {olderNotifications.map((noti) => (
-              <NotificationItem key={noti.id} {...noti} />
-            ))}
+        ) : (
+          <div className="flex flex-col items-center justify-center text-center max-w-[280px]">
+            <div className="w-20 h-20 bg-white shadow-sm rounded-full flex items-center justify-center mb-6 border-4 border-zinc-50">
+              <Bell className="w-8 h-8 text-zinc-300" />
+            </div>
+            <h3 className="text-[17px] font-black tracking-tight text-zinc-900 mb-2">You're all caught up!</h3>
+            <p className="text-[14px] font-medium leading-relaxed text-zinc-500">
+              We'll let you know when someone interacts with you or your posts.
+            </p>
           </div>
-        </section>
+        )}
       </main>
 
       <BottomNavigation />

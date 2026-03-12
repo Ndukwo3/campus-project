@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ArrowLeft, X, Filter, Users, Hash, TrendingUp, ChevronRight, UserPlus, Loader2 } from "lucide-react";
+import { Search, ArrowLeft, X, Filter, Users, Hash, TrendingUp, ChevronRight, UserPlus, Loader2, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -144,8 +144,12 @@ export default function SearchPage() {
                   {students.length > 0 ? (
                     students.map((student) => (
                       <div key={student.id} className="flex items-center gap-3 px-3 py-4 hover:bg-zinc-50/50 transition-colors rounded-2xl group">
-                        <div className="h-14 w-14 rounded-2xl overflow-hidden bg-zinc-100 shrink-0 group-hover:scale-95 transition-transform">
-                          <Image src={student.avatar_url || "/assets/top_student_1.png"} alt={student.full_name || student.username} width={56} height={56} className="h-full w-full object-cover" />
+                        <div className="h-14 w-14 rounded-2xl overflow-hidden bg-zinc-100 shrink-0 group-hover:scale-95 transition-transform flex items-center justify-center">
+                          {student.avatar_url ? (
+                            <Image src={student.avatar_url} alt={student.full_name || student.username} width={56} height={56} className="h-full w-full object-cover" />
+                          ) : (
+                            <User className="text-zinc-300 w-7 h-7" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0 pr-1">
                           <h3 className="text-[15px] font-bold text-zinc-900 truncate tracking-tight">{student.full_name || student.username}</h3>

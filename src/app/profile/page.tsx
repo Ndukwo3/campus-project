@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowLeft, Settings, Grid, Bookmark, Tag, ChevronRight, Edit3, Camera, CheckCircle2, Loader2 } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { ArrowLeft, Settings, Grid, Bookmark, Tag, ChevronRight, Edit3, Camera, CheckCircle2, Loader2, User, Trash2, X, Maximize2, ImagePlus } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import BottomNavigation from "@/components/BottomNavigation";
 import { createClient } from "@/lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -14,12 +15,18 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
   const [editBio, setEditBio] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState("posts");
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     async function fetchProfileData() {
@@ -92,24 +99,101 @@ export default function ProfilePage() {
     setIsUpdating(false);
   };
 
-  const handleMockUpload = async () => {
+  const handleUploadClick = () => {
+    setShowPhotoOptions(true);
+  };
+
+  const handleGalleryClick = () => {
+    setShowPhotoOptions(false);
+    fileInputRef.current?.click();
+  };
+
+  const handleCameraClick = () => {
+    setShowPhotoOptions(false);
+    cameraInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     setIsUpdating(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // In a real app, this would be a Supabase Storage upload
-    // For now, we'll just set a dummy URL to trigger the "tick"
-    const dummyAvatar = "/dummy/nigerian_avatar_1_1772720135560.png";
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update({ avatar_url: dummyAvatar })
-      .eq('id', user.id);
-
-    if (!error) {
-      setProfile({ ...profile, avatar_url: dummyAvatar });
+    if (!user) {
+      setIsUpdating(false);
+      return;
     }
-    setIsUpdating(false);
+
+    try {
+      // 1. Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { 
+          upsert: true,
+          contentType: file.type // Ensure correct content type
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // 3. Update Profile in Database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // 4. Update Local State
+      setProfile({ ...profile, avatar_url: publicUrl });
+    } catch (err: any) {
+      console.error("Upload error:", err.message);
+      // Fallback for demo if bucket doesn't exist yet - you can still see the file picker work
+      alert("Note: Upload failed. Please ensure you have created an 'avatars' bucket in Supabase Storage with public access. For now, testing the file picker functionality is successful.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (!profile?.avatar_url) return;
+    
+    setIsUpdating(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setIsUpdating(false);
+      return;
+    }
+
+    try {
+      // 1. Remove from database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: null })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Optional: Delete from storage if you want to save space
+      // For MVP, we'll just null the reference in the profile
+      
+      // 2. Update local state
+      setProfile({ ...profile, avatar_url: null });
+      setShowImageViewer(false);
+    } catch (err: any) {
+      console.error("Delete error:", err.message);
+      alert("Failed to delete photo. Please try again.");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   if (isLoading) {
@@ -130,9 +214,12 @@ export default function ProfilePage() {
           <ArrowLeft size={20} className="text-black" />
         </Link>
         <span className="font-bold text-lg tracking-tight text-black">Profile</span>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 transition">
+        <Link 
+          href="/settings"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 transition"
+        >
           <Settings size={20} className="text-black" />
-        </button>
+        </Link>
       </div>
 
       {/* Profile Info Section */}
@@ -140,20 +227,33 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center">
           {/* Avatar with Ring */}
           <div className="relative">
-            <div className={`w-28 h-28 rounded-full ring-4 ${profile?.avatar_url ? "ring-[#E5FF66]" : "ring-zinc-200"} ring-offset-4 overflow-hidden mb-4 shadow-lg transition-all`}>
-              <Image 
-                src={profile?.avatar_url || "/dummy/nigerian_avatar_1_1772720135560.png"} 
-                alt="Profile" 
-                width={112} 
-                height={112} 
-                className={`object-cover w-full h-full ${!profile?.avatar_url ? "grayscale opacity-50" : ""}`}
-              />
+            <div 
+              onClick={() => profile?.avatar_url && setShowImageViewer(true)}
+              className={`w-28 h-28 rounded-full ring-4 ${profile?.avatar_url ? "ring-[#E5FF66] cursor-pointer" : "ring-zinc-200"} ring-offset-4 overflow-hidden mb-4 shadow-lg transition-all flex items-center justify-center bg-zinc-50 relative group`}
+            >
+              {profile?.avatar_url ? (
+                <>
+                  <Image 
+                    src={profile.avatar_url} 
+                    alt="Profile" 
+                    width={112} 
+                    height={112} 
+                    className="object-cover w-full h-full"
+                  />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Maximize2 size={24} className="text-white" />
+                  </div>
+                </>
+              ) : (
+                <User className="w-12 h-12 text-zinc-300" />
+              )}
             </div>
             <button 
-              onClick={handleMockUpload}
-              className="absolute bottom-4 right-0 w-8 h-8 bg-[#E5FF66] rounded-full flex items-center justify-center border-4 border-white text-black shadow-sm active:scale-90 transition-transform"
+              onClick={handleUploadClick}
+              disabled={isUpdating}
+              className="absolute bottom-4 right-0 w-8 h-8 bg-[#E5FF66] rounded-full flex items-center justify-center border-4 border-white text-black shadow-sm active:scale-90 transition-transform disabled:opacity-50"
             >
-              <Camera size={14} strokeWidth={2.5} />
+              {isUpdating ? <Loader2 size={12} className="animate-spin" /> : <Camera size={14} strokeWidth={2.5} />}
             </button>
           </div>
           
@@ -166,13 +266,16 @@ export default function ProfilePage() {
           <div className="flex gap-4 w-full">
             <button 
               onClick={() => setIsEditing(true)}
-              className="flex-1 bg-[#1A1A24] text-white py-3 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black transition active:scale-[0.98]"
+              className="flex-1 bg-[#1A1A24] text-white py-3 rounded-2xl text-[15px] font-bold shadow-[0_4px_10px_rgba(26,26,36,0.2)] active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Edit3 size={18} />
               Edit Profile
             </button>
-            <button className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center text-black hover:bg-stone-200 transition">
-              <Bookmark size={20} />
+            <button 
+              onClick={() => setIsSaved(!isSaved)}
+              className={`w-14 items-center justify-center flex rounded-2xl transition active:scale-95 ${isSaved ? "bg-[#1A1A24] text-[#E5FF66]" : "bg-stone-100 text-black hover:bg-stone-200"}`}
+            >
+              <Bookmark size={22} fill={isSaved ? "currentColor" : "none"} />
             </button>
           </div>
         </div>
@@ -230,7 +333,7 @@ export default function ProfilePage() {
                 <span className={`text-sm font-medium transition-all ${profile?.bio ? "text-zinc-400 line-through opacity-50" : "text-zinc-700"}`}>Write a short bio</span>
               </div>
               
-              <div className="flex items-center gap-3 cursor-pointer group/item" onClick={handleMockUpload}>
+              <div className="flex items-center gap-3 cursor-pointer group/item" onClick={handleUploadClick}>
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${profile?.avatar_url ? "bg-[#1A1A24] border-[#1A1A24]" : "border-zinc-300 group-hover/item:border-black"}`}>
                   {profile?.avatar_url && <CheckCircle2 size={14} className="text-white fill-white" />}
                 </div>
@@ -259,41 +362,94 @@ export default function ProfilePage() {
             </p>
           )}
         </div>
+
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          accept="image/*" 
+          className="hidden" 
+        />
+        <input 
+          type="file" 
+          ref={cameraInputRef} 
+          onChange={handleFileChange} 
+          accept="image/*" 
+          capture="user" 
+          className="hidden" 
+        />
       </div>
 
       {/* Tabs */}
       <div className="px-6 flex items-center border-b border-zinc-100 mb-4">
-        <button className="flex-1 py-4 flex flex-col items-center gap-1 group border-b-2 border-black">
-          <Grid size={22} className="text-black" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-black">Posts</span>
+        <button 
+          onClick={() => setActiveTab("posts")}
+          className={`flex-1 py-4 flex flex-col items-center gap-1 group ${activeTab === "posts" ? "border-b-2 border-black" : ""}`}
+        >
+          <Grid size={22} className={activeTab === "posts" ? "text-black" : "text-black/30 group-hover:text-black transition"} />
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${activeTab === "posts" ? "text-black" : "text-black/30 group-hover:text-black transition"}`}>Posts</span>
         </button>
-        <button className="flex-1 py-4 flex flex-col items-center gap-1 group">
-          <Bookmark size={22} className="text-black/30 group-hover:text-black transition" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-black/30 group-hover:text-black transition">Saved</span>
+        <button 
+          onClick={() => setActiveTab("saved")}
+          className={`flex-1 py-4 flex flex-col items-center gap-1 group ${activeTab === "saved" ? "border-b-2 border-black" : ""}`}
+        >
+          <Bookmark size={22} className={activeTab === "saved" ? "text-black" : "text-black/30 group-hover:text-black transition"} />
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${activeTab === "saved" ? "text-black" : "text-black/30 group-hover:text-black transition"}`}>Saved</span>
         </button>
-        <button className="flex-1 py-4 flex flex-col items-center gap-1 group">
-          <Tag size={22} className="text-black/30 group-hover:text-black transition" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-black/30 group-hover:text-black transition">Tagged</span>
+        <button 
+          onClick={() => setActiveTab("tagged")}
+          className={`flex-1 py-4 flex flex-col items-center gap-1 group ${activeTab === "tagged" ? "border-b-2 border-black" : ""}`}
+        >
+          <Tag size={22} className={activeTab === "tagged" ? "text-black" : "text-black/30 group-hover:text-black transition"} />
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${activeTab === "tagged" ? "text-black" : "text-black/30 group-hover:text-black transition"}`}>Tagged</span>
         </button>
       </div>
 
-      {/* Posts Grid */}
-      <div className="px-6 grid grid-cols-3 gap-2">
-        {posts.length > 0 ? (
-          posts.map((post) => (
-            <div key={post.id} className="aspect-square bg-zinc-100 rounded-lg overflow-hidden relative">
-              <Image 
-                src={post.image_url || "/dummy/nigerian_post_image_1772720254070.png"} 
-                alt="Post" 
-                fill 
-                className="object-cover" 
-                unoptimized
-              />
+      {/* Tab Content */}
+      <div className="px-6">
+        {activeTab === "posts" && (
+          <div className="grid grid-cols-3 gap-2">
+            {posts.length > 0 ? (
+              posts.map((post) => (
+                <div key={post.id} className="aspect-square bg-zinc-100 rounded-lg overflow-hidden relative group cursor-pointer">
+                  <Image 
+                    src={post.image_url || "/dummy/nigerian_post_image_1772720254070.png"} 
+                    alt="Post" 
+                    fill 
+                    className="object-cover group-hover:scale-105 transition duration-500" 
+                  />
+                  <div className="absolute inset-0 bg-black/5 group-hover:bg-black/20 transition-colors" />
+                </div>
+              ))
+            ) : (
+              <div className="col-span-3 py-16 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
+                  <Grid className="text-zinc-400 w-8 h-8" />
+                </div>
+                <p className="font-bold text-lg text-black mb-1">No Posts Yet</p>
+                <p className="text-zinc-500 text-sm">When you share a post, it will appear here on your profile.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "saved" && (
+          <div className="py-16 flex flex-col items-center justify-center text-center animate-in fade-in">
+            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
+              <Bookmark className="text-zinc-400 w-8 h-8" />
             </div>
-          ))
-        ) : (
-          <div className="col-span-3 py-10 text-center text-zinc-400 text-sm">
-            No posts yet. Share something with your campus!
+            <p className="font-bold text-lg text-black mb-1">Feature Coming Soon</p>
+            <p className="text-zinc-500 text-sm">Saved posts functionality is currently under development.</p>
+          </div>
+        )}
+
+        {activeTab === "tagged" && (
+          <div className="py-16 flex flex-col items-center justify-center text-center animate-in fade-in">
+            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
+              <Tag className="text-zinc-400 w-8 h-8" />
+            </div>
+            <p className="font-bold text-lg text-black mb-1">Feature Coming Soon</p>
+            <p className="text-zinc-500 text-sm">Tagged posts functionality is currently under development.</p>
           </div>
         )}
       </div>
@@ -367,6 +523,111 @@ export default function ProfilePage() {
         </>
       )}
 
+      {/* Image Viewer / Delete Modal */}
+      <AnimatePresence>
+        {showImageViewer && profile?.avatar_url && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] bg-black flex flex-col"
+            >
+              <div className="p-6 flex items-center justify-between">
+                <button onClick={() => setShowImageViewer(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white transition-colors">
+                  <ArrowLeft size={24} />
+                </button>
+                <button 
+                  onClick={handleDeleteAvatar}
+                  disabled={isUpdating}
+                  className="px-4 py-2 bg-red-500/10 text-red-500 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-red-500 hover:text-white transition-all transform active:scale-95 disabled:opacity-50"
+                >
+                  <Trash2 size={18} />
+                  Delete Photo
+                </button>
+              </div>
+              
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="flex-1 relative flex items-center justify-center p-4"
+              >
+                 <div className="w-full max-w-sm aspect-square relative rounded-[40px] overflow-hidden shadow-2xl">
+                   <Image 
+                     src={profile.avatar_url} 
+                     alt="Enlarged profile" 
+                     fill 
+                     className="object-cover"
+                     unoptimized
+                   />
+                 </div>
+              </motion.div>
+              
+              <div className="p-10 flex justify-center">
+                 <p className="text-zinc-500 text-sm font-medium">Profile Preview</p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Photo Options Modal */}
+      <AnimatePresence>
+        {showPhotoOptions && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowPhotoOptions(false)}
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              className="w-full max-w-[340px] bg-white rounded-[40px] px-6 pt-8 pb-10 shadow-2xl relative z-20"
+            >
+              <h2 className="text-xl font-black text-black mb-8 px-1 text-center">Profile Photo</h2>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button 
+                  onClick={handleCameraClick}
+                  className="flex flex-col items-center justify-center gap-4 bg-zinc-50 hover:bg-zinc-100 p-6 rounded-[32px] transition-all active:scale-95 group border border-transparent hover:border-zinc-200"
+                >
+                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                    <Camera size={28} className="text-black" />
+                  </div>
+                  <span className="font-bold text-[13px] text-black">Take Photo</span>
+                </button>
+
+                <button 
+                  onClick={handleGalleryClick}
+                  className="flex flex-col items-center justify-center gap-4 bg-zinc-50 hover:bg-zinc-100 p-6 rounded-[32px] transition-all active:scale-95 group border border-transparent hover:border-zinc-200"
+                >
+                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                    <ImagePlus size={28} className="text-black" />
+                  </div>
+                  <span className="font-bold text-[13px] text-black">Gallery</span>
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setShowPhotoOptions(false)}
+                className="mt-8 w-full py-4 bg-zinc-100 rounded-2xl text-sm font-bold text-zinc-500 hover:bg-zinc-200 hover:text-black transition active:scale-95"
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Bottom Navigation */}
       <BottomNavigation />
     </div>
   );

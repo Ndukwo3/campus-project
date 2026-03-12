@@ -7,65 +7,12 @@ import { useState, useEffect } from "react";
 import BottomNavigation from "@/components/BottomNavigation";
 import { createClient } from "@/lib/supabase";
 
-const mockChats = [
-  {
-    id: 1,
-    name: "Chidi Obi",
-    avatar: "/dummy/nigerian_avatar_2_1772720155980.png",
-    lastMessage: "Are you coming for the GST tutorial tomorrow?",
-    time: "12:30 PM",
-    unread: 2,
-    online: true,
-  },
-  {
-    id: 2,
-    name: "Ngozi Okafor",
-    avatar: "/dummy/nigerian_avatar_4_1772720200827.png",
-    lastMessage: "I just sent the notes to your email.",
-    time: "11:45 AM",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: 3,
-    name: "Ayo Balogun",
-    avatar: "/dummy/nigerian_avatar_3_1772720174186.png",
-    lastMessage: "Let's meet at the Faculty of Science.",
-    time: "10:15 AM",
-    unread: 0,
-    online: true,
-  },
-  {
-    id: 4,
-    name: "Zainab Ibrahim",
-    avatar: "/dummy/nigerian_avatar_6_1772720236907.png",
-    lastMessage: "Happy Birthday bro! Have a blast 🎂",
-    time: "Yesterday",
-    unread: 0,
-    online: true,
-  },
-  {
-    id: 5,
-    name: "Emeka John",
-    avatar: "/dummy/nigerian_avatar_5_1772720218967.png",
-    lastMessage: "Bro, did you see the result yet?",
-    time: "Wednesday",
-    unread: 1,
-    online: false,
-  },
-];
-
-const activeUsers = [
-  { id: 1, name: "Ayo", image: "/dummy/nigerian_avatar_3_1772720174186.png" },
-  { id: 2, name: "Ngozi", image: "/dummy/nigerian_avatar_4_1772720200827.png" },
-  { id: 3, name: "Chidi", image: "/dummy/nigerian_avatar_2_1772720155980.png" },
-  { id: 4, name: "Zainab", image: "/dummy/nigerian_avatar_6_1772720236907.png" },
-  { id: 5, name: "Emeka", image: "/dummy/nigerian_avatar_5_1772720218967.png" },
-];
+// Realtime handling will be done here
 
 export default function MessagesPage() {
   const supabase = createClient();
   const [chats, setChats] = useState<any[]>([]);
+  const [activeUsers, setActiveUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -110,7 +57,7 @@ export default function MessagesPage() {
         });
         setChats(Array.from(conversationMap.values()));
       } else {
-        setChats(mockChats); // Fallback to mock data if no messages
+        setChats([]); // Fallback to empty state
       }
       setIsLoading(false);
     }
@@ -140,27 +87,40 @@ export default function MessagesPage() {
           <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-zinc-400">Active Now</h2>
           <span className="w-2 h-2 bg-[#4ADE80] rounded-full animate-pulse"></span>
         </div>
-        <div className="flex gap-5 overflow-x-auto px-6 pb-2 scrollbar-hide">
-          {activeUsers.map((user) => (
-            <div key={user.id} className="flex flex-col items-center gap-3 shrink-0 group">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-full overflow-hidden p-[2.5px] bg-gradient-to-tr from-[#E5FF66] to-[#4ADE80] ring-1 ring-zinc-100/50">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-white">
-                    <Image 
-                      src={user.image} 
-                      alt={user.name} 
-                      width={64} 
-                      height={64} 
-                      className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" 
-                    />
+        
+        {activeUsers.length > 0 ? (
+          <div className="flex gap-5 overflow-x-auto px-6 pb-2 scrollbar-hide">
+            {activeUsers.map((user) => (
+              <div key={user.id} className="flex flex-col items-center gap-3 shrink-0 group">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full overflow-hidden p-[2.5px] bg-gradient-to-tr from-[#E5FF66] to-[#4ADE80] ring-1 ring-zinc-100/50">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white">
+                      <Image 
+                        src={user.image} 
+                        alt={user.name} 
+                        width={64} 
+                        height={64} 
+                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" 
+                      />
+                    </div>
                   </div>
+                  <div className="absolute bottom-0 right-0 w-4.5 h-4.5 bg-[#4ADE80] rounded-full border-[3px] border-white shadow-sm"></div>
                 </div>
-                <div className="absolute bottom-0 right-0 w-4.5 h-4.5 bg-[#4ADE80] rounded-full border-[3px] border-white shadow-sm"></div>
+                <span className="text-[11px] font-bold text-zinc-600 tracking-tight">{user.name}</span>
               </div>
-              <span className="text-[11px] font-bold text-zinc-600 tracking-tight">{user.name}</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="px-6 py-4 flex items-center gap-3">
+             <div className="w-16 h-16 rounded-full border-2 border-dashed border-zinc-200 flex items-center justify-center bg-zinc-50 shrink-0">
+               <Plus className="w-6 h-6 text-zinc-300" />
+             </div>
+             <div>
+               <p className="text-[13px] font-medium text-zinc-600">No active friends found</p>
+               <p className="text-[11px] text-zinc-400">Connections will appear here when online.</p>
+             </div>
+          </div>
+        )}
       </div>
 
       {/* Chat List Section */}
@@ -175,7 +135,7 @@ export default function MessagesPage() {
             <div className="flex justify-center p-20">
               <Loader2 className="w-8 h-8 animate-spin text-zinc-200" />
             </div>
-          ) : chats.map((chat) => (
+          ) : chats.length > 0 ? chats.map((chat) => (
             <Link 
               key={chat.id} 
               href={`/messages/chat?id=${chat.id}`}
@@ -215,7 +175,15 @@ export default function MessagesPage() {
                 </div>
               </div>
             </Link>
-          ))}
+          )) : (
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+               <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mb-4">
+                 <MoreVertical className="w-8 h-8 text-zinc-300" />
+               </div>
+               <h3 className="text-[15px] font-bold text-zinc-900 mb-1">No messages yet</h3>
+               <p className="text-[13px] font-medium text-zinc-500 max-w-[200px]">Start a conversation with your peers to collaborate!</p>
+            </div>
+          )}
         </div>
       </div>
 

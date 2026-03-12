@@ -13,24 +13,24 @@
   - [ ] Storage setup (profile avatars only, enforced size/type limits)
   - [ ] Row Level Security (RLS) policies basics
 - [ ] Authentication
-  - [ ] Email signup/login via Supabase Auth
-  - [ ] Basic onboarding flow (Select university, department, level)
-  - [ ] Profile creation
+  - [x] Email signup/login via Supabase Auth
+  - [x] Basic onboarding flow (Select university, department, level)
+  - [x] Profile creation
 
 ## Phase 2 — User System
 
-- [ ] Student Profiles
-  - [ ] Display Username, Bio, Department, Level, University badge
-  - [ ] Profile image upload (avatar only)
-- [ ] User Discovery
-  - [ ] View students in the same university
-  - [ ] Filter by department
-  - [ ] Basic search functionality
+- [x] Student Profiles
+  - [x] Display Username, Bio, Department, Level, University badge
+  - [x] Profile image upload (avatar only)
+- [x] User Discovery
+  - [x] View students in the same university
+  - [x] Filter by department
+  - [x] Basic search functionality
 
 ## Phase 3 — Social Feed
 
 - [ ] University Feed
-  - [ ] Create text-only posts
+  - [x] Create text-only posts
   - [ ] Like and comment on posts
   - [ ] Realtime updates via Supabase Realtime
 - [ ] Moderation System
@@ -38,10 +38,10 @@
 
 ## Phase 4 — Messaging System
 
-- [ ] Realtime Chat
-  - [ ] One-to-one messaging
-  - [ ] Conversation list with timestamps
-  - [ ] Basic online status
+- [x] Realtime Chat
+  - [x] One-to-one messaging
+  - [x] Conversation list with timestamps
+  - [x] Basic online status
 
 ## Phase 5 — Study Groups
 

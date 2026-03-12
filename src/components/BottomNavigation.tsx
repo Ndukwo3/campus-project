@@ -35,9 +35,12 @@ export default function BottomNavigation() {
         </Link>
 
         {/* Center Action Button */}
-        <button className="flex items-center justify-center w-14 h-11 rounded-2xl bg-[#E5FF66] text-black shadow-[0_4px_15px_rgba(229,255,102,0.4)] hover:bg-[#d4f936] active:scale-90 transition-all mb-4">
+        <Link 
+          href="/create"
+          className="flex items-center justify-center w-14 h-11 rounded-2xl bg-[#E5FF66] text-black shadow-[0_4px_15px_rgba(229,255,102,0.4)] hover:bg-[#d4f936] active:scale-90 transition-all mb-4"
+        >
           <Plus size={24} strokeWidth={3} />
-        </button>
+        </Link>
 
         {/* Messages */}
         <Link 

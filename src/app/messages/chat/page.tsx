@@ -143,7 +143,7 @@ function ChatContent() {
             <div className="relative">
               <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#E5FF66]">
                 <Image 
-                  src={partner?.avatar_url || "/dummy/nigerian_avatar_2_1772720155980.png"} 
+                  src={partner?.avatar_url || "/dummy/default_avatar.png"} 
                   alt={partner?.full_name || "User"} 
                   width={44} 
                   height={44} 
@@ -154,7 +154,7 @@ function ChatContent() {
             </div>
             <div>
               <h3 className="font-bold text-[15px] text-zinc-900 leading-tight">
-                {partner?.full_name || partner?.username || "Chidi Obi"}
+                {partner?.full_name || partner?.username || "Loading..."}
               </h3>
               <p className="text-[11px] font-medium text-[#4ADE80]">Online</p>
             </div>
@@ -183,7 +183,7 @@ function ChatContent() {
               {!isMe && (
                 <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 mb-1">
                   <Image 
-                    src={partner?.avatar_url || "/dummy/nigerian_avatar_2_1772720155980.png"} 
+                    src={partner?.avatar_url || "/dummy/default_avatar.png"} 
                     alt="Avatar" 
                     width={32} 
                     height={32} 
