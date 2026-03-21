@@ -251,6 +251,15 @@ export default function OnboardingPage() {
 
       if (profileUpdateError) throw profileUpdateError;
 
+      // 4. Send Welcome Notification
+      const { error: notificationError } = await supabase.from('notifications').insert({
+        user_id: user.id,
+        type: 'welcome',
+        content: "Welcome to Campus! Explore the feed, connect with students in your university, and share your first story! 🎉",
+        is_read: false
+      });
+      if (notificationError) console.error("Could not send welcome notification (table might not exist yet):", notificationError);
+
       // Finish animation and redirect
       setTimeout(() => {
         router.push("/");

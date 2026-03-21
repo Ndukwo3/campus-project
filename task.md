@@ -7,9 +7,9 @@
   - [x] Setup Supabase project and client
   - [x] Configure environment variables (Supabase, AI API keys)
   - [ ] Setup Vercel deployment
-- [ ] Database Design & Setup
+- [x] Database Design & Setup
   - [x] Core tables (`users`, `universities`, `departments`, `profiles`, `posts`, `messages`, `groups`, `group_members`, `reports`)
-  - [ ] Seed `universities` and `departments` (prevent duplicates)
+  - [x] Seed `universities` and `departments` (prevent duplicates)
   - [ ] Storage setup (profile avatars only, enforced size/type limits)
   - [ ] Row Level Security (RLS) policies basics
 - [ ] Authentication
@@ -31,8 +31,8 @@
 
 - [ ] University Feed
   - [x] Create text-only posts
-  - [ ] Like and comment on posts
-  - [ ] Realtime updates via Supabase Realtime
+  - [x] Like and comment on posts
+  - [x] Realtime updates via Supabase Realtime
 - [ ] Moderation System
   - [ ] Basic reporting mechanism for MVP text feed
 
@@ -52,10 +52,10 @@
 
 ## Phase 6 — AI Academic Assistant
 
-- [ ] AI Integration
-  - [ ] Integrate external AI API (using secure server-side env vars)
-  - [ ] Interface for asking academic questions
-  - [ ] Support generating explanations, study summaries, and quick revision help
+- [x] AI Integration
+  - [x] Integrate external AI API (using secure server-side env vars)
+  - [x] Interface for asking academic questions
+  - [x] Support generating explanations, study summaries, and quick revision help
 
 ## Phase 7 — Multi‑University Scaling
 

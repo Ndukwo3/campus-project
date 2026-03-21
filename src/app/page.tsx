@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import { formatRelativeTime } from "@/lib/utils";
 import TopNavigation from "@/components/TopNavigation";
 import StoriesBar from "@/components/StoriesBar";
 import FeedCard from "@/components/FeedCard";
 import BottomNavigation from "@/components/BottomNavigation";
+import CommentModal from "@/components/CommentModal";
+import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { Loader2, Sparkles } from "lucide-react";
+import Toast from "@/components/Toast";
 
 export default function Home() {
   const router = useRouter();
@@ -16,17 +20,44 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [isPostingOptimistic, setIsPostingOptimistic] = useState(false);
+  
+  // Modal States
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [selectedPostForComment, setSelectedPostForComment] = useState<any>(null);
+  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedPostForDelete, setSelectedPostForDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchPosts = async (userId: string) => {
+  // Toast State
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
+    message: "",
+    type: "success",
+    isVisible: false,
+  });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ message, type, isVisible: true });
+  };
+
+  const [userUniId, setUserUniId] = useState<string | undefined>(undefined);
+  const uniIdRef = useRef<string | undefined>(undefined);
+
+  const fetchPosts = async (userId: string, universityId?: string) => {
     // Fetch posts with author info
-    const { data: dbPosts, error } = await supabase
+    let query = supabase
       .from('posts')
       .select(`
         *,
         profiles:user_id (username, full_name, avatar_url),
         universities:university_id (name)
-      `)
-      .order('created_at', { ascending: false });
+      `);
+    
+    if (universityId) {
+      query = query.eq('university_id', universityId);
+    }
+
+    const { data: dbPosts, error } = await query.order('created_at', { ascending: false });
 
     if (dbPosts) {
       // Fetch user's likes to determine isLiked status
@@ -46,6 +77,35 @@ export default function Home() {
     }
   };
 
+  const openDeleteModal = (postId: string) => {
+    setSelectedPostForDelete(postId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeletePost = async () => {
+    if (!selectedPostForDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', selectedPostForDelete);
+
+      if (error) throw error;
+
+      // Optimistic update
+      setPosts(prev => prev.filter(p => p.id !== selectedPostForDelete));
+      setIsDeleteModalOpen(false);
+    } catch (err: any) {
+      console.error("Error deleting post:", err.message);
+      showToast("Failed to delete post", "error");
+    } finally {
+      setIsDeleting(false);
+      setSelectedPostForDelete(null);
+    }
+  };
+
   useEffect(() => {
     async function checkUserAndInit() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -56,7 +116,17 @@ export default function Home() {
       }
 
       setUser(authUser);
-      await fetchPosts(authUser.id);
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('university_id')
+        .eq('id', authUser.id)
+        .single();
+      
+      const uniId = profile?.university_id;
+      setUserUniId(uniId);
+      uniIdRef.current = uniId;
+      await fetchPosts(authUser.id, uniId);
       setIsLoading(false);
 
       // Check for optimistic posting state
@@ -78,7 +148,7 @@ export default function Home() {
              setIsPostingOptimistic(false);
           }
           // Re-fetch or manually add to get profile info
-          await fetchPosts(authUser.id);
+          await fetchPosts(authUser.id, uniIdRef.current);
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload) => {
           setPosts(prev => prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p));
@@ -90,7 +160,7 @@ export default function Home() {
         .channel('public:likes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, async () => {
           // Simplest is to re-sync counts/status, or we could handle locally
-          await fetchPosts(authUser.id);
+          await fetchPosts(authUser.id, uniIdRef.current);
         })
         .subscribe();
 
@@ -111,23 +181,68 @@ export default function Home() {
 
     if (post.isLiked) {
       // Unlike
-      await supabase
+      const { error } = await supabase
         .from('likes')
         .delete()
         .match({ post_id: postId, user_id: user.id });
+      
+      if (error) {
+        console.error("Unlike Error:", error);
+        showToast("Unlike failed", "error");
+      }
     } else {
       // Like
-      await supabase
+      const { error } = await supabase
         .from('likes')
         .insert({ post_id: postId, user_id: user.id });
+      
+      if (error) {
+        console.error("Like Error:", error);
+        showToast("Like failed", "error");
+      }
     }
     // State is handled by Realtime subscription or local optimistic UI if we want it faster
+  };
+
+  const handleCommentClick = (postId: string) => {
+    const post = posts.find((p: any) => p.id === postId);
+    if (post) {
+      setSelectedPostForComment(post);
+      setIsCommentModalOpen(true);
+    }
+  };
+
+  const handleReport = async (postId: string) => {
+    if (!user) return;
+    
+    const reason = window.prompt("Why are you reporting this post? (e.g. Inappropriate content, spam)");
+    if (!reason) return;
+
+    const { error } = await supabase
+      .from('reports')
+      .insert({
+        reporter_id: user.id,
+        post_id: postId,
+        reason: reason
+      });
+
+    if (error) {
+      showToast("Failed to send report. Please try again.", "error");
+    } else {
+      showToast("Report sent. Thank you for your help!");
+    }
   };
 
   // Removed blocking loading screen to allow instant optimistic UI
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-[100px] max-w-md mx-auto relative shadow-sm border-x border-zinc-100/50 h-full">
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        isVisible={toast.isVisible} 
+        onClose={() => setToast({ ...toast, isVisible: false })} 
+      />
       <TopNavigation />
       <StoriesBar />
       
@@ -153,15 +268,20 @@ export default function Home() {
             <FeedCard
               key={post.id}
               id={post.id}
+              authorId={post.user_id}
+              currentUserId={user?.id}
               authorName={post.profiles?.full_name || post.profiles?.username || "Anonymous"}
               authorImage={post.profiles?.avatar_url || null}
-              timePosted={new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              timePosted={formatRelativeTime(new Date(post.created_at))}
               postImage={post.image_url || null}
               likes={post.likes_count || 0}
               comments={post.comments_count || 0}
               description={post.content}
               isLiked={post.isLiked}
               onLike={handleLike}
+              onComment={handleCommentClick}
+              onReport={handleReport}
+              onDelete={openDeleteModal}
             />
           ))
         ) : (
@@ -178,6 +298,23 @@ export default function Home() {
       </main>
 
       <BottomNavigation />
+
+      {/* Comment Modal */}
+      {selectedPostForComment && (
+        <CommentModal
+          isOpen={isCommentModalOpen}
+          onClose={() => setIsCommentModalOpen(false)}
+          postId={selectedPostForComment.id}
+          postAuthor={selectedPostForComment.profiles?.full_name || selectedPostForComment.profiles?.username || "Anonymous"}
+          postContent={selectedPostForComment.content}
+        />
+      )}
+      <DeleteConfirmationModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDeletePost}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

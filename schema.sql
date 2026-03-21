@@ -119,7 +119,7 @@ BEGIN
   END IF;
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 13. Trigger to sync likes_count
 DROP TRIGGER IF EXISTS on_post_like ON likes;
@@ -127,7 +127,28 @@ CREATE TRIGGER on_post_like
   AFTER INSERT OR DELETE ON likes
   FOR EACH ROW EXECUTE FUNCTION handle_post_like();
 
--- 14. Stories table (NEW)
+-- 14. Function to sync comments_count
+CREATE OR REPLACE FUNCTION handle_post_comment()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+    UPDATE posts SET comments_count = comments_count + 1 WHERE id = NEW.post_id;
+    RETURN NEW;
+  ELSIF (TG_OP = 'DELETE') THEN
+    UPDATE posts SET comments_count = comments_count - 1 WHERE id = OLD.post_id;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 15. Trigger to sync comments_count
+DROP TRIGGER IF EXISTS on_post_comment ON comments;
+CREATE TRIGGER on_post_comment
+  AFTER INSERT OR DELETE ON comments
+  FOR EACH ROW EXECUTE FUNCTION handle_post_comment();
+
+-- 16. Stories table (NEW)
 CREATE TABLE IF NOT EXISTS stories (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -138,6 +159,15 @@ CREATE TABLE IF NOT EXISTS stories (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   expires_at TIMESTAMP WITH TIME ZONE DEFAULT (timezone('utc'::text, now()) + interval '24 hours') NOT NULL,
   CONSTRAINT image_or_content CHECK (image_url IS NOT NULL OR content IS NOT NULL)
+);
+
+-- 15. Follows table (NEW)
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  following_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  PRIMARY KEY (follower_id, following_id),
+  CONSTRAINT no_self_follow CHECK (follower_id <> following_id)
 );
 
 -- 15. ENSURE REALTIME IS ENABLED SAFELY
@@ -176,6 +206,13 @@ BEGIN
     WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'stories'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE stories;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'follows'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE follows;
   END IF;
 END $$;
 
@@ -315,4 +352,16 @@ CREATE POLICY "Authenticated users can create stories" ON stories
 
 CREATE POLICY "Users can delete own stories" ON stories
   FOR DELETE USING (auth.uid() = user_id);
+
+-- Follows: Anyone can view, authenticated users can toggle
+ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Follows are viewable by everyone" ON follows
+  FOR SELECT USING (true);
+
+CREATE POLICY "Authenticated users can follow" ON follows
+  FOR INSERT WITH CHECK (auth.uid() = follower_id);
+
+CREATE POLICY "Users can unfollow" ON follows
+  FOR DELETE USING (auth.uid() = follower_id);
 

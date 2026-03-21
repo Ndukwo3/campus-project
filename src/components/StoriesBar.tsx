@@ -2,15 +2,16 @@
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { Plus, User, Loader2, Camera, Edit2, X } from "lucide-react";
+import { Plus, User, Loader2, Camera, Edit2, X, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import StoryViewer from "./StoryViewer";
+import Toast from "./Toast";
 
 const COLORS = ["#E5FF66", "#FF6666", "#66B2FF", "#B266FF", "#FFB266", "#66FFB2"];
 
 export default function StoriesBar() {
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -26,7 +27,20 @@ export default function StoriesBar() {
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Toast State
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
+    message: "",
+    type: "success",
+    isVisible: false,
+  });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ message, type, isVisible: true });
+  };
+
   useEffect(() => {
+    let timer: NodeJS.Timeout;
+
     async function fetchCampusData() {
       // 1. Get current user session
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -97,6 +111,15 @@ export default function StoriesBar() {
         ];
 
         setCampusStudents(combined);
+
+        // Auto-refresh when the next story expires
+        if (storiesData && storiesData.length > 0) {
+          const nextExpiry = Math.min(...storiesData.map((s: any) => new Date(s.expires_at).getTime()));
+          const msUntilExpiry = nextExpiry - Date.now();
+          if (msUntilExpiry > 0) {
+            timer = setTimeout(() => setRefreshKey(prev => prev + 1), msUntilExpiry + 1000);
+          }
+        }
       }
       setLoading(false);
     }
@@ -111,6 +134,7 @@ export default function StoriesBar() {
       .subscribe();
 
     return () => {
+      if (timer) clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, [supabase, refreshKey]);
@@ -150,7 +174,31 @@ export default function StoriesBar() {
       setRefreshKey(prev => prev + 1);
     } catch (err: any) {
       console.error("Story upload failed:", err.message);
-      alert("Failed to upload story. Make sure you have created the 'stories' storage bucket.");
+      showToast("Failed to upload story. Please check your connection.", "error");
+    } finally {
+      setIsUploading(false);
+      setIsChoiceMenuOpen(false);
+    }
+  };
+
+  const handleDeleteStories = async () => {
+    if (!currentUser) return;
+    
+    // We'll keep window.confirm for now as it's a critical action, 
+    // but the user mostly complained about the success/error alerts.
+    if (!confirm("Delete all your active stories?")) return;
+    
+    setIsUploading(true);
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .delete()
+        .eq('user_id', currentUser.id);
+      if (error) throw error;
+      setRefreshKey(prev => prev + 1);
+      showToast("All stories deleted successfully!");
+    } catch (err: any) {
+      showToast("Failed to delete story: " + err.message, "error");
     } finally {
       setIsUploading(false);
       setIsChoiceMenuOpen(false);
@@ -173,8 +221,9 @@ export default function StoriesBar() {
       setStoryText("");
       setIsTextModalOpen(false);
       setRefreshKey(prev => prev + 1);
+      showToast("Status posted successfully!");
     } catch (err: any) {
-      alert("Failed to post text status: " + err.message);
+      showToast("Failed to post status: " + err.message, "error");
     } finally {
       setIsUploading(false);
     }
@@ -201,6 +250,12 @@ export default function StoriesBar() {
 
   return (
     <div className="w-full bg-white pt-2 pb-4">
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        isVisible={toast.isVisible} 
+        onClose={() => setToast({ ...toast, isVisible: false })} 
+      />
       <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide shrink-0 items-start">
         <AnimatePresence>
           {/* "You" Story Circle */}
@@ -277,8 +332,7 @@ export default function StoriesBar() {
                     </div>
                   </div>
                 </div>
-                {/* Active Status Badge (Real or simulated based on activity) */}
-                <div className="absolute top-1 right-1 w-3 h-3 bg-[#4ADE80] rounded-full border-2 border-white" />
+                {/* Online status indicator can be added here with real presence logic */}
               </div>
               <span className="text-[11px] font-bold text-zinc-600 mt-1 max-w-[70px] truncate">
                 {student.full_name?.split(' ')[0] || student.username?.replace('@', '')}
@@ -311,8 +365,19 @@ export default function StoriesBar() {
               className="bg-white shadow-2xl rounded-3xl border border-zinc-100 overflow-hidden w-full max-w-[280px] z-[101]"
             >
               <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
-                <h3 className="text-sm font-bold text-center text-zinc-800">Create Story</h3>
+                <h3 className="text-sm font-bold text-center text-zinc-800">Stories</h3>
               </div>
+              {myStories.length > 0 && (
+                <button 
+                  onClick={handleDeleteStories}
+                  className="w-full px-4 py-4 flex items-center gap-3 hover:bg-red-50/50 transition-colors text-sm font-bold text-red-600 border-b border-zinc-50"
+                >
+                  <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                    <Trash2 size={20} />
+                  </div>
+                  Delete my Live Stories
+                </button>
+              )}
               <button 
                 onClick={() => { setIsChoiceMenuOpen(false); fileInputRef.current?.click(); }}
                 className="w-full px-4 py-4 flex items-center gap-3 hover:bg-zinc-50 transition-colors text-sm font-bold text-zinc-800 border-b border-zinc-50"

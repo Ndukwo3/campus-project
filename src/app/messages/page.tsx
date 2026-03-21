@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, MoreVertical, Edit, Plus, Loader2 } from "lucide-react";
+import { Search, MoreVertical, Edit, Plus, Loader2, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -47,11 +47,11 @@ export default function MessagesPage() {
             conversationMap.set(partnerId, {
               id: partnerId,
               name: partnerData.full_name || partnerData.username,
-              avatar: partnerData.avatar_url || "/dummy/nigerian_avatar_2_1772720155980.png",
+              avatar: partnerData.avatar_url,
               lastMessage: msg.content,
               time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               unread: msg.is_read ? 0 : (msg.receiver_id === user.id ? 1 : 0),
-              online: true, // Placeholder online status
+              online: false, // Start with false, can be updated with presence
             });
           }
         });
@@ -143,13 +143,19 @@ export default function MessagesPage() {
             >
               <div className="relative shrink-0">
                 <div className="w-[60px] h-[60px] rounded-full overflow-hidden bg-zinc-100 ring-4 ring-transparent group-hover:ring-[#E5FF66]/30 transition-all">
-                  <Image 
-                    src={chat.avatar} 
-                    alt={chat.name} 
-                    width={60} 
-                    height={60} 
-                    className="object-cover w-full h-full" 
-                  />
+                  {chat.avatar ? (
+                    <Image 
+                      src={chat.avatar} 
+                      alt={chat.name} 
+                      width={60} 
+                      height={60} 
+                      className="object-cover w-full h-full" 
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-50 text-zinc-300">
+                      <User size={30} />
+                    </div>
+                  )}
                 </div>
                 {chat.online && (
                   <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#4ADE80] rounded-full border-2 border-white shadow-sm"></div>

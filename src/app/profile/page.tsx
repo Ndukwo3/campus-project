@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import BottomNavigation from "@/components/BottomNavigation";
 import { createClient } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
+import Toast from "@/components/Toast";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -27,6 +28,50 @@ export default function ProfilePage() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState("posts");
   const [isSaved, setIsSaved] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  
+  // Toast State
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
+    message: "",
+    type: "success",
+    isVisible: false,
+  });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ message, type, isVisible: true });
+  };
+  
+  // Crop States
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [tempImageFile, setTempImageFile] = useState<File | null>(null);
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
+  const [isFinalizingUpload, setIsFinalizingUpload] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [touchStartDist, setTouchStartDist] = useState(0);
+
+  // ... (inside the Modal)
+  const handlePinchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].pageX - e.touches[1].pageX,
+        e.touches[0].pageY - e.touches[1].pageY
+      );
+      setTouchStartDist(dist);
+    }
+  };
+
+  const handlePinchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchStartDist > 0) {
+      const dist = Math.hypot(
+        e.touches[0].pageX - e.touches[1].pageX,
+        e.touches[0].pageY - e.touches[1].pageY
+      );
+      const zoomFactor = dist / touchStartDist;
+      setZoom(Math.min(Math.max(1, zoom * zoomFactor), 4));
+      setTouchStartDist(dist);
+    }
+  };
 
   useEffect(() => {
     async function fetchProfileData() {
@@ -61,6 +106,15 @@ export default function ProfilePage() {
       if (postsData) {
         setPosts(postsData);
       }
+      
+      // Fetch follows counts
+      const [{ count: followers }, { count: following }] = await Promise.all([
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id)
+      ]);
+      
+      setFollowerCount(followers || 0);
+      setFollowingCount(following || 0);
 
       setIsLoading(false);
     }
@@ -94,7 +148,10 @@ export default function ProfilePage() {
         full_name: combinedFullName || "New Student", 
         bio: editBio 
       });
+      showToast("Profile updated successfully!");
       setIsEditing(false);
+    } else {
+      showToast("Failed to update profile", "error");
     }
     setIsUpdating(false);
   };
@@ -117,24 +174,58 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUpdating(true);
+    // Open Crop Modal instead of immediate upload
+    setTempImageFile(file);
+    setTempImageUrl(URL.createObjectURL(file));
+    setIsCropModalOpen(true);
+    
+    // Clear the input so same file can be chosen again
+    e.target.value = '';
+  };
+
+  const handleConfirmedCrop = async () => {
+    if (!tempImageFile) return;
+
+    setIsFinalizingUpload(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setIsUpdating(false);
+      setIsFinalizingUpload(false);
       return;
     }
 
     try {
-      // 1. Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
+      // 1. Create a canvas to extract the center square
+      const img = new globalThis.Image();
+      img.src = tempImageUrl!;
+      
+      await new Promise((resolve) => { img.onload = resolve; });
+      
+      const canvas = document.createElement('canvas');
+      const sizeFull = Math.min(img.width, img.height);
+      const size = sizeFull / zoom;
+      canvas.width = 500; // Standard avatar size
+      canvas.height = 500;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error("Canvas context failed");
+      
+      const sourceX = (img.width - size) / 2;
+      const sourceY = (img.height - size) / 2;
+      
+      ctx.drawImage(img, sourceX, sourceY, size, size, 0, 0, 500, 500);
+      
+      const blob = await new Promise<Blob>((resolve) => 
+        canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.9)
+      );
+
+      const fileExt = tempImageFile.name.split('.').pop();
       const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `${fileName}`; 
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { 
+        .upload(filePath, blob, { 
           upsert: true,
-          contentType: file.type // Ensure correct content type
+          contentType: tempImageFile.type || 'image/jpeg'
         });
 
       if (uploadError) throw uploadError;
@@ -151,15 +242,30 @@ export default function ProfilePage() {
         .eq('id', user.id);
 
       if (updateError) throw updateError;
-
-      // 4. Update Local State
+      
+      // 4. Update local state
       setProfile({ ...profile, avatar_url: publicUrl });
+      
+      // 5. Automatically create a social post in the News Feed!
+      await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          university_id: profile?.university_id,
+          content: "[[USER_PROFILE_UPDATE]]",
+          image_url: publicUrl,
+          likes_count: 0,
+          comments_count: 0
+        });
+
+      showToast("Profile updated successfully!");
     } catch (err: any) {
       console.error("Upload error:", err.message);
-      // Fallback for demo if bucket doesn't exist yet - you can still see the file picker work
-      alert("Note: Upload failed. Please ensure you have created an 'avatars' bucket in Supabase Storage with public access. For now, testing the file picker functionality is successful.");
     } finally {
-      setIsUpdating(false);
+      setIsFinalizingUpload(false);
+      setIsCropModalOpen(false);
+      setTempImageUrl(null);
+      setTempImageFile(null);
     }
   };
 
@@ -190,7 +296,7 @@ export default function ProfilePage() {
       setShowImageViewer(false);
     } catch (err: any) {
       console.error("Delete error:", err.message);
-      alert("Failed to delete photo. Please try again.");
+      showToast("Failed to delete photo. Please try again.", "error");
     } finally {
       setIsUpdating(false);
     }
@@ -208,6 +314,12 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-white pb-[100px] max-w-md mx-auto relative font-sans overflow-x-hidden">
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        isVisible={toast.isVisible} 
+        onClose={() => setToast({ ...toast, isVisible: false })} 
+      />
       {/* Header Bar */}
       <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white z-10">
         <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 transition">
@@ -257,9 +369,9 @@ export default function ProfilePage() {
             </button>
           </div>
           
-          <div className="flex items-center gap-1.5 mb-1 text-center justify-center w-full">
-            <h2 className="text-2xl font-bold text-black leading-tight truncate px-4">{profile?.full_name || "New Student"}</h2>
-            {profile?.full_name !== "New Student" && <CheckCircle2 size={20} className="fill-black text-white flex-shrink-0" />}
+          <div className="flex items-center justify-center gap-1.5 mb-1 w-full max-w-[280px] mx-auto">
+            <h2 className="text-2xl font-black text-black leading-tight truncate">{profile?.full_name || "New Student"}</h2>
+            {profile?.full_name !== "New Student" && <CheckCircle2 size={18} className="fill-black text-white shrink-0" />}
           </div>
           <p className="text-zinc-500 text-[14px] font-medium mb-4">{profile?.username} • {profile?.level || "Undergraduate"}</p>
           
@@ -281,19 +393,19 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stats Section */}
-      <div className="flex justify-around py-6 border-y border-zinc-100 mx-6">
-        <div className="flex flex-col items-center">
-          <span className="text-lg font-bold text-black">{posts.length}</span>
-          <span className="text-xs text-black/40 font-bold uppercase tracking-wider">Posts</span>
+      {/* Stats Section - Modern Look */}
+      <div className="flex justify-between py-8 px-10 bg-white mx-0 border-b border-zinc-50">
+        <div className="flex flex-col items-center gap-1 group cursor-pointer">
+          <span className="text-2xl font-black text-black group-hover:scale-110 transition-transform">{posts.length}</span>
+          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Posts</span>
         </div>
-        <div className="flex flex-col items-center">
-          <span className="text-lg font-bold text-black">0</span>
-          <span className="text-xs text-black/40 font-bold uppercase tracking-wider">Followers</span>
+        <div className="flex flex-col items-center gap-1 group cursor-pointer">
+          <span className="text-2xl font-black text-black group-hover:scale-110 transition-transform">{followerCount}</span>
+          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Followers</span>
         </div>
-        <div className="flex flex-col items-center">
-          <span className="text-lg font-bold text-black">0</span>
-          <span className="text-xs text-black/40 font-bold uppercase tracking-wider">Following</span>
+        <div className="flex flex-col items-center gap-1 group cursor-pointer">
+          <span className="text-2xl font-black text-black group-hover:scale-110 transition-transform">{followingCount}</span>
+          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Following</span>
         </div>
       </div>
 
@@ -307,47 +419,80 @@ export default function ProfilePage() {
           <p className="text-sm text-black font-normal mt-1">{profile?.departments?.name || "Select Department"}</p>
         </div>
 
-        {/* Profile Completion Guide */}
+        {/* Redesigned Profile Completion Progress */}
         {!isProfileComplete && (
-          <div className="bg-[#E5FF66]/10 border border-[#E5FF66]/30 p-5 rounded-3xl mb-4 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-3 opacity-20 transform translate-x-1 translate-y--1 group-hover:scale-110 transition-transform">
-              <CheckCircle2 size={60} className="text-black" />
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 bg-[#1A1A24] rounded-[32px] p-6 shadow-2xl relative overflow-hidden group"
+          >
+            {/* Subtle light effect */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#E5FF66]/5 rounded-full blur-3xl -mr-10 -mt-10" />
+            
+            <div className="relative z-10">
+              <div className="flex justify-between items-end mb-4">
+                <div>
+                  <h3 className="text-white font-black text-xl mb-1 tracking-tight">Profile Strength</h3>
+                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Complete your identity</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[#E5FF66] text-3xl font-black italic">
+                    {Math.round(
+                      ((profile?.full_name !== "New Student" ? 1 : 0) + 
+                       (profile?.bio ? 1 : 0) + 
+                       (profile?.avatar_url ? 1 : 0)) / 3 * 100
+                    )}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Modern Progress Bar */}
+              <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden mb-6">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ 
+                    width: `${((profile?.full_name !== "New Student" ? 1 : 0) + 
+                                (profile?.bio ? 1 : 0) + 
+                                (profile?.avatar_url ? 1 : 0)) / 3 * 100}%` 
+                  }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-[#E5FF66] to-[#4ADE80] rounded-full"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-6">
+                {[
+                  { label: "Name", done: profile?.full_name !== "New Student" },
+                  { label: "Bio", done: !!profile?.bio },
+                  { label: "Photo", done: !!profile?.avatar_url }
+                ].map((item, idx) => (
+                  <div 
+                    key={idx}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all
+                      ${item.done ? "bg-[#E5FF66] text-black" : "bg-white/5 text-zinc-500 border border-white/10"}`}
+                  >
+                    {item.done && <CheckCircle2 size={10} strokeWidth={3} />}
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => {
+                  if (profile?.full_name === "New Student" || !profile?.bio) {
+                    setIsEditing(true);
+                  } else if (!profile?.avatar_url) {
+                    handleUploadClick();
+                  } else {
+                    setIsEditing(true);
+                  }
+                }}
+                className="w-full bg-white text-black py-4 rounded-2xl text-[14px] font-black tracking-tight hover:bg-[#E5FF66] transition-all active:scale-[0.98] shadow-lg shadow-black/20"
+              >
+                Continue Setup
+              </button>
             </div>
-            
-            <h3 className="font-extrabold text-[#1A1A24] text-lg mb-4 relative z-10 flex items-center gap-2">
-              Finish setting up your profile 🚀
-            </h3>
-            
-            <div className="flex flex-col gap-3 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${profile?.full_name !== "New Student" ? "bg-[#1A1A24] border-[#1A1A24]" : "border-zinc-300"}`}>
-                  {profile?.full_name !== "New Student" && <CheckCircle2 size={14} className="text-white fill-white" />}
-                </div>
-                <span className={`text-sm font-medium transition-all ${profile?.full_name !== "New Student" ? "text-zinc-400 line-through opacity-50" : "text-zinc-700"}`}>Add your full name</span>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${profile?.bio ? "bg-[#1A1A24] border-[#1A1A24]" : "border-zinc-300"}`}>
-                  {profile?.bio && <CheckCircle2 size={14} className="text-white fill-white" />}
-                </div>
-                <span className={`text-sm font-medium transition-all ${profile?.bio ? "text-zinc-400 line-through opacity-50" : "text-zinc-700"}`}>Write a short bio</span>
-              </div>
-              
-              <div className="flex items-center gap-3 cursor-pointer group/item" onClick={handleUploadClick}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${profile?.avatar_url ? "bg-[#1A1A24] border-[#1A1A24]" : "border-zinc-300 group-hover/item:border-black"}`}>
-                  {profile?.avatar_url && <CheckCircle2 size={14} className="text-white fill-white" />}
-                </div>
-                <span className={`text-sm font-medium transition-all ${profile?.avatar_url ? "text-zinc-400 line-through opacity-50" : "text-zinc-700 group-hover/item:text-black"}`}>Upload a profile photo</span>
-              </div>
-            </div>
-            
-            <button 
-              onClick={() => setIsEditing(true)}
-              className="mt-5 w-full bg-[#1A1A24] text-white py-2.5 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-all"
-            >
-              Complete Setup
-            </button>
-          </div>
+          </motion.div>
         )}
 
         <div className="flex flex-col gap-2">
@@ -380,45 +525,48 @@ export default function ProfilePage() {
         />
       </div>
 
-      {/* Tabs */}
-      <div className="px-6 flex items-center border-b border-zinc-100 mb-4">
-        <button 
-          onClick={() => setActiveTab("posts")}
-          className={`flex-1 py-4 flex flex-col items-center gap-1 group ${activeTab === "posts" ? "border-b-2 border-black" : ""}`}
-        >
-          <Grid size={22} className={activeTab === "posts" ? "text-black" : "text-black/30 group-hover:text-black transition"} />
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${activeTab === "posts" ? "text-black" : "text-black/30 group-hover:text-black transition"}`}>Posts</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab("saved")}
-          className={`flex-1 py-4 flex flex-col items-center gap-1 group ${activeTab === "saved" ? "border-b-2 border-black" : ""}`}
-        >
-          <Bookmark size={22} className={activeTab === "saved" ? "text-black" : "text-black/30 group-hover:text-black transition"} />
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${activeTab === "saved" ? "text-black" : "text-black/30 group-hover:text-black transition"}`}>Saved</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab("tagged")}
-          className={`flex-1 py-4 flex flex-col items-center gap-1 group ${activeTab === "tagged" ? "border-b-2 border-black" : ""}`}
-        >
-          <Tag size={22} className={activeTab === "tagged" ? "text-black" : "text-black/30 group-hover:text-black transition"} />
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${activeTab === "tagged" ? "text-black" : "text-black/30 group-hover:text-black transition"}`}>Tagged</span>
-        </button>
+      {/* Tabs - Sleek Apple-style */}
+      <div className="px-6 flex items-center mb-6 sticky top-[72px] bg-white/80 backdrop-blur-md z-10 py-2">
+        <div className="flex-1 flex bg-zinc-50 p-1 rounded-2xl relative">
+          <button 
+            onClick={() => setActiveTab("posts")}
+            className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "posts" ? "text-black font-black" : "text-zinc-400 font-bold hover:text-zinc-600"}`}
+          >
+            <Grid size={18} />
+            <span className="text-xs">Posts</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab("saved")}
+            className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "saved" ? "text-black font-black" : "text-zinc-400 font-bold hover:text-zinc-600"}`}
+          >
+            <Bookmark size={18} />
+            <span className="text-xs text-zinc-400">Saved</span>
+          </button>
+          
+          {/* Active indicator pill */}
+          <motion.div 
+            layoutId="tab-pill"
+            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm border border-zinc-100"
+            animate={{ x: activeTab === "posts" ? 0 : "100%" }}
+            transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+          />
+        </div>
       </div>
 
       {/* Tab Content */}
       <div className="px-6">
         {activeTab === "posts" && (
           <div className="grid grid-cols-3 gap-2">
-            {posts.length > 0 ? (
-              posts.map((post) => (
-                <div key={post.id} className="aspect-square bg-zinc-100 rounded-lg overflow-hidden relative group cursor-pointer">
+            {posts.filter(p => p.image_url).length > 0 ? (
+              posts.filter(p => p.image_url).map((post) => (
+                <div key={post.id} className="aspect-square bg-zinc-50 rounded-lg overflow-hidden relative group cursor-pointer border border-zinc-100">
                   <Image 
-                    src={post.image_url || "/dummy/nigerian_post_image_1772720254070.png"} 
+                    src={post.image_url!} 
                     alt="Post" 
                     fill 
                     className="object-cover group-hover:scale-105 transition duration-500" 
                   />
-                  <div className="absolute inset-0 bg-black/5 group-hover:bg-black/20 transition-colors" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
                 </div>
               ))
             ) : (
@@ -629,6 +777,98 @@ export default function ProfilePage() {
 
       {/* Bottom Navigation */}
       <BottomNavigation />
+      
+      {/* Premium Crop Modal */}
+      <AnimatePresence>
+        {isCropModalOpen && tempImageUrl && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col p-6 items-center justify-center overflow-hidden"
+          >
+            <div className="w-full flex items-center justify-between mb-8 max-w-sm">
+              <button 
+                onClick={() => {
+                  setIsCropModalOpen(false);
+                  setTempImageUrl(null);
+                  setZoom(1);
+                }}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
+              >
+                <X size={20} />
+              </button>
+              <h3 className="font-bold text-lg text-white">Adjust Photo</h3>
+              <div className="w-10" />
+            </div>
+
+            <div 
+              className="relative w-full aspect-square max-w-sm rounded-[32px] overflow-hidden border-4 border-[#E5FF66]/20 shadow-2xl touch-none"
+              onTouchStart={handlePinchStart}
+              onTouchMove={handlePinchMove}
+            >
+               {/* Center Guide Hole Overlay */}
+               <div className="absolute inset-0 z-10 pointer-events-none">
+                 <div className="w-full h-full border-[60px] border-black/60 flex items-center justify-center">
+                    <div className="w-full h-full rounded-full border border-white/30 shadow-[0_0_0_1000px_rgba(0,0,0,0.6)]"></div>
+                 </div>
+               </div>
+               
+               <motion.div 
+                 drag 
+                 dragElastic={0.1}
+                 dragConstraints={{ top: -200, bottom: 200, left: -200, right: 200 }}
+                 className="w-full h-full cursor-move"
+               >
+                 <div className="w-full h-full flex items-center justify-center" style={{ transform: `scale(${zoom})` }}>
+                   <Image 
+                     src={tempImageUrl} 
+                     alt="Crop Preview" 
+                     fill 
+                     className="object-contain pointer-events-none" 
+                   />
+                 </div>
+               </motion.div>
+            </div>
+
+            <div className="mt-12 w-full max-w-sm px-4">
+              <div className="flex flex-col gap-6">
+                {/* Custom Styled Zoom Slider */}
+                <div className="flex items-center gap-4 text-white/50">
+                  <span className="text-xs font-black">1X</span>
+                  <input 
+                    type="range" 
+                    min="1" 
+                    max="3" 
+                    step="0.01" 
+                    value={zoom}
+                    onChange={(e) => setZoom(parseFloat(e.target.value))}
+                    className="flex-1 accent-[#E5FF66] h-1.5 rounded-full cursor-pointer appearance-none bg-white/10"
+                  />
+                  <span className="text-xs font-black">3X</span>
+                </div>
+
+                <p className="text-zinc-400 text-xs font-medium text-center">Pinch or drag to position your photo</p>
+                
+                <button 
+                  onClick={handleConfirmedCrop}
+                  disabled={isFinalizingUpload}
+                  className="w-full py-4 rounded-2xl bg-[#E5FF66] text-black font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:opacity-50 transition-all shadow-[#E5FF66]/20"
+                >
+                  {isFinalizingUpload ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Confirm Photo"
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -9,14 +9,13 @@ import { createClient } from "@/lib/supabase";
 
 const filters = ["All", "Students", "Groups", "Trending"];
 
-const trendingSearches = ["GST 201 Solutions", "LSS Elections", "Unilag Tech Meetup", "Faculty of Science"];
-
 export default function SearchPage() {
   const supabase = createClient();
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [students, setStudents] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
+  const [trending, setTrending] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -46,6 +45,17 @@ export default function SearchPage() {
         studentsQuery,
         groupsQuery
       ]);
+
+      // Fetch trending from posts
+      const { data: trendingPosts } = await supabase
+        .from('posts')
+        .select('content')
+        .order('likes_count', { ascending: false })
+        .limit(10);
+      
+      if (trendingPosts) {
+        setTrending(Array.from(new Set(trendingPosts.map(p => p.content.split(' ')[0]).filter(Boolean))));
+      }
 
       setStudents(studentData || []);
       setGroups(groupData || []);
@@ -122,11 +132,16 @@ export default function SearchPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {trendingSearches.map((tag) => (
-                    <button key={tag} className="bg-white px-4 py-2.5 rounded-xl text-[13px] font-semibold text-zinc-700 shadow-sm border border-zinc-50 hover:bg-zinc-50 transition active:scale-95">
+                  {trending.map((tag) => (
+                    <button 
+                      key={tag} 
+                      onClick={() => setSearchQuery(tag.replace('...', ''))}
+                      className="bg-white px-4 py-2.5 rounded-xl text-[13px] font-semibold text-zinc-700 shadow-sm border border-zinc-50 hover:bg-zinc-50 transition active:scale-95"
+                    >
                       {tag}
                     </button>
                   ))}
+                  {trending.length === 0 && <p className="text-xs text-zinc-400">No trends yet</p>}
                 </div>
               </section>
             )}
@@ -178,8 +193,14 @@ export default function SearchPage() {
                     groups.map((group) => (
                       <div key={group.id} className="bg-white rounded-[32px] p-2 shadow-sm border border-zinc-100/50 group overflow-hidden">
                         <div className="h-32 rounded-3xl overflow-hidden relative mb-3">
-                          <Image src={group.image_url || "/assets/techies_hangout.png"} alt={group.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          {group.image_url ? (
+                            <Image src={group.image_url} alt={group.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center">
+                              <Users className="text-zinc-300 w-10 h-10" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                           <div className="absolute bottom-3 left-3 flex items-center gap-2">
                             <span className="text-[10px] font-bold text-white uppercase tracking-tighter opacity-80">Active Community</span>
                           </div>

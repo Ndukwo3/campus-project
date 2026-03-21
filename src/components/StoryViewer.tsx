@@ -1,7 +1,7 @@
 "use client";
 
 import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -27,42 +27,43 @@ export default function StoryViewer({ user, stories, onClose }: StoryViewerProps
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
+  const handleNext = useCallback(() => {
+    if (currentIndex < stories.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setProgress(0);
+    } else {
+      onClose();
+    }
+  }, [currentIndex, stories.length, onClose]);
+
+  const handlePrev = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+      setProgress(0);
+    } else {
+      setCurrentIndex(0);
+      setProgress(0);
+    }
+  }, [currentIndex]);
+
+  // Handle auto-advancing when progress reaches 100%
+  useEffect(() => {
+    if (progress >= 100) {
+      handleNext();
+    }
+  }, [progress, handleNext]);
+
   useEffect(() => {
     const duration = 5000; // 5 seconds per story
     const interval = 50; // Update progress every 50ms
     const step = (interval / duration) * 100;
 
     const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          handleNext();
-          return 0;
-        }
-        return prev + step;
-      });
+      setProgress((prev) => (prev < 100 ? prev + step : 100));
     }, interval);
 
     return () => clearInterval(timer);
   }, [currentIndex]);
-
-  const handleNext = () => {
-    if (currentIndex < stories.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setProgress(0);
-    } else {
-      onClose();
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setProgress(0);
-    } else {
-      setCurrentIndex(0);
-      setProgress(0);
-    }
-  };
 
   if (!stories.length) return null;
 
