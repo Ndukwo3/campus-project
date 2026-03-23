@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "The ultimate social and academic network for Nigerian university students.",
 };
 
+import { GlobalModals } from "@/components/GlobalModals";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,6 +31,7 @@ export default function RootLayout({
         className={`${montserrat.variable} ${geistMono.variable} font-sans antialiased`}
       >
         {children}
+        <GlobalModals />
       </body>
     </html>
   );

@@ -9,6 +9,7 @@ import StoriesBar from "@/components/StoriesBar";
 import FeedCard from "@/components/FeedCard";
 import BottomNavigation from "@/components/BottomNavigation";
 import CommentModal from "@/components/CommentModal";
+import ShareModal from "@/components/modals/ShareModal";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { Loader2, Sparkles } from "lucide-react";
 import Toast from "@/components/Toast";
@@ -26,6 +27,8 @@ export default function Home() {
   const [selectedPostForComment, setSelectedPostForComment] = useState<any>(null);
   
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [selectedPostForShare, setSelectedPostForShare] = useState<any>(null);
   const [selectedPostForDelete, setSelectedPostForDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -73,7 +76,20 @@ export default function Home() {
         isLiked: likedPostIds.has(post.id)
       }));
 
-      setPosts(processedPosts);
+      // Fetch user's bookmarks to determine isBookmarked status
+      const { data: userBookmarks } = await supabase
+        .from('bookmarks')
+        .select('post_id')
+        .eq('user_id', userId);
+
+      const bookmarkedPostIds = new Set(userBookmarks?.map(b => b.post_id) || []);
+
+      const finalPosts = processedPosts.map(post => ({
+        ...post,
+        isBookmarked: bookmarkedPostIds.has(post.id)
+      }));
+
+      setPosts(finalPosts);
     }
   };
 
@@ -205,11 +221,16 @@ export default function Home() {
   };
 
   const handleCommentClick = (postId: string) => {
-    const post = posts.find((p: any) => p.id === postId);
-    if (post) {
-      setSelectedPostForComment(post);
-      setIsCommentModalOpen(true);
-    }
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    
+    const postData = {
+      id: postId,
+      authorName: post.profiles?.full_name || post.profiles?.username || "Anonymous",
+      authorImage: post.profiles?.avatar_url || null,
+      description: post.content
+    };
+    window.dispatchEvent(new CustomEvent('open-comment', { detail: postData }));
   };
 
   const handleReport = async (postId: string) => {
@@ -231,6 +252,42 @@ export default function Home() {
     } else {
       showToast("Report sent. Thank you for your help!");
     }
+  };
+
+  const handleShare = (postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    
+    const postData = {
+      id: postId,
+      authorName: post.profiles?.full_name || post.profiles?.username || "Anonymous",
+      authorImage: post.profiles?.avatar_url || null,
+      description: post.content
+    };
+    window.dispatchEvent(new CustomEvent('open-share', { detail: postData }));
+  };
+
+  const handleBookmark = async (postId: string) => {
+    if (!user) return;
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    if (post.isBookmarked) {
+      // Unbookmark
+      await supabase
+        .from('bookmarks')
+        .delete()
+        .match({ post_id: postId, user_id: user.id });
+      showToast("Removed from bookmarks");
+    } else {
+      // Bookmark
+      await supabase
+        .from('bookmarks')
+        .insert({ post_id: postId, user_id: user.id });
+      showToast("Post bookmarked!");
+    }
+    // Update local state
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p));
   };
 
   // Removed blocking loading screen to allow instant optimistic UI
@@ -278,10 +335,13 @@ export default function Home() {
               comments={post.comments_count || 0}
               description={post.content}
               isLiked={post.isLiked}
+              isBookmarked={post.isBookmarked}
               onLike={handleLike}
               onComment={handleCommentClick}
               onReport={handleReport}
               onDelete={openDeleteModal}
+              onShare={handleShare}
+              onBookmark={handleBookmark}
             />
           ))
         ) : (
@@ -299,16 +359,7 @@ export default function Home() {
 
       <BottomNavigation />
 
-      {/* Comment Modal */}
-      {selectedPostForComment && (
-        <CommentModal
-          isOpen={isCommentModalOpen}
-          onClose={() => setIsCommentModalOpen(false)}
-          postId={selectedPostForComment.id}
-          postAuthor={selectedPostForComment.profiles?.full_name || selectedPostForComment.profiles?.username || "Anonymous"}
-          postContent={selectedPostForComment.content}
-        />
-      )}
+      {/* Global Modals for Comment/Share are now handled in layout.tsx via window events */}
       <DeleteConfirmationModal 
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

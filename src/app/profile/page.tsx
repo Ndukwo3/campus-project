@@ -9,6 +9,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { createClient } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Toast from "@/components/Toast";
+import FeedCard from "@/components/FeedCard";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -27,9 +28,10 @@ export default function ProfilePage() {
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState("posts");
-  const [isSaved, setIsSaved] = useState(false);
-  const [followerCount, setFollowerCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
+  const [savedPosts, setSavedPosts] = useState<any[]>([]);
+  const [connectionCount, setConnectionCount] = useState(0);
+  const [currentUserLikes, setCurrentUserLikes] = useState<Set<string>>(new Set());
+  const [currentUserBookmarks, setCurrentUserBookmarks] = useState<Set<string>>(new Set());
   
   // Toast State
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
@@ -82,14 +84,24 @@ export default function ProfilePage() {
         return;
       }
 
-      // Fetch profile with university/department info
+      // Fetch profile without nested relations to prevent failure if FK is missing
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*, universities(name), departments(name)')
+        .select('*')
         .eq('id', user.id)
         .single();
 
       if (profileData) {
+        // Fetch relations manually to be safe
+        if (profileData.university_id) {
+          const { data: uni } = await supabase.from('universities').select('name').eq('id', profileData.university_id).maybeSingle();
+          if (uni) profileData.universities = uni;
+        }
+        if (profileData.department_id) {
+          const { data: dept } = await supabase.from('departments').select('name').eq('id', profileData.department_id).maybeSingle();
+          if (dept) profileData.departments = dept;
+        }
+
         setProfile(profileData);
         setEditFirstName(profileData.first_name || "");
         setEditLastName(profileData.last_name || "");
@@ -107,20 +119,54 @@ export default function ProfilePage() {
         setPosts(postsData);
       }
       
-      // Fetch follows counts
-      const [{ count: followers }, { count: following }] = await Promise.all([
-        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
-        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id)
-      ]);
+      // Fetch user's likes to show correct icons
+      const { data: likesData } = await supabase.from('post_likes').select('post_id').eq('user_id', user.id);
+      if (likesData) setCurrentUserLikes(new Set(likesData.map(l => l.post_id)));
+
+      // Fetch user's bookmarks
+      const { data: bookmarksData } = await supabase.from('bookmarks').select('post_id').eq('user_id', user.id);
+      if (bookmarksData) setCurrentUserBookmarks(new Set(bookmarksData.map(b => b.post_id)));
       
-      setFollowerCount(followers || 0);
-      setFollowingCount(following || 0);
+      // Fetch connections count
+      const { count: connections } = await supabase
+        .from('friends')
+        .select('*', { count: 'exact', head: true })
+        .or(`user_id1.eq.${user.id},user_id2.eq.${user.id}`);
+      
+      setConnectionCount(connections || 0);
 
       setIsLoading(false);
     }
 
     fetchProfileData();
   }, [router, supabase]);
+
+  useEffect(() => {
+    async function fetchSavedPosts() {
+      if (activeTab !== "saved") return;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select(`
+          post_id,
+          posts (
+            *,
+            profiles:user_id (*)
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setSavedPosts(data.map(b => b.posts).filter(Boolean));
+      }
+    }
+
+    fetchSavedPosts();
+  }, [activeTab, supabase]);
 
   const handleSaveProfile = async () => {
     setIsUpdating(true);
@@ -378,34 +424,25 @@ export default function ProfilePage() {
           <div className="flex gap-4 w-full">
             <button 
               onClick={() => setIsEditing(true)}
-              className="flex-1 bg-[#1A1A24] text-white py-3 rounded-2xl text-[15px] font-bold shadow-[0_4px_10px_rgba(26,26,36,0.2)] active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full bg-[#1A1A24] text-white py-3 rounded-2xl text-[15px] font-bold shadow-[0_4px_10px_rgba(26,26,36,0.2)] active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Edit3 size={18} />
               Edit Profile
-            </button>
-            <button 
-              onClick={() => setIsSaved(!isSaved)}
-              className={`w-14 items-center justify-center flex rounded-2xl transition active:scale-95 ${isSaved ? "bg-[#1A1A24] text-[#E5FF66]" : "bg-stone-100 text-black hover:bg-stone-200"}`}
-            >
-              <Bookmark size={22} fill={isSaved ? "currentColor" : "none"} />
             </button>
           </div>
         </div>
       </div>
 
       {/* Stats Section - Modern Look */}
-      <div className="flex justify-between py-8 px-10 bg-white mx-0 border-b border-zinc-50">
-        <div className="flex flex-col items-center gap-1 group cursor-pointer">
+      <div className="flex justify-around py-8 px-10 bg-white mx-0 border-b border-zinc-50">
+        <div className="flex flex-col items-center gap-1 group cursor-pointer w-1/2">
           <span className="text-2xl font-black text-black group-hover:scale-110 transition-transform">{posts.length}</span>
           <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Posts</span>
         </div>
-        <div className="flex flex-col items-center gap-1 group cursor-pointer">
-          <span className="text-2xl font-black text-black group-hover:scale-110 transition-transform">{followerCount}</span>
-          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Followers</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 group cursor-pointer">
-          <span className="text-2xl font-black text-black group-hover:scale-110 transition-transform">{followingCount}</span>
-          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Following</span>
+        <div className="w-[1px] h-10 bg-zinc-100" />
+        <div className="flex flex-col items-center gap-1 group cursor-pointer w-1/2">
+          <span className="text-2xl font-black text-black group-hover:scale-110 transition-transform">{connectionCount}</span>
+          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Connections</span>
         </div>
       </div>
 
@@ -540,7 +577,7 @@ export default function ProfilePage() {
             className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "saved" ? "text-black font-black" : "text-zinc-400 font-bold hover:text-zinc-600"}`}
           >
             <Bookmark size={18} />
-            <span className="text-xs text-zinc-400">Saved</span>
+            <span className="text-xs">Bookmarks</span>
           </button>
           
           {/* Active indicator pill */}
@@ -556,21 +593,88 @@ export default function ProfilePage() {
       {/* Tab Content */}
       <div className="px-6">
         {activeTab === "posts" && (
-          <div className="grid grid-cols-3 gap-2">
-            {posts.filter(p => p.image_url).length > 0 ? (
-              posts.filter(p => p.image_url).map((post) => (
-                <div key={post.id} className="aspect-square bg-zinc-50 rounded-lg overflow-hidden relative group cursor-pointer border border-zinc-100">
-                  <Image 
-                    src={post.image_url!} 
-                    alt="Post" 
-                    fill 
-                    className="object-cover group-hover:scale-105 transition duration-500" 
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-                </div>
+          <div className="flex flex-col gap-4">
+            {posts.length > 0 ? (
+              posts.map((post) => (
+                <FeedCard 
+                  key={post.id}
+                  id={post.id}
+                  authorName={profile?.full_name || "User"}
+                  authorImage={profile?.avatar_url}
+                  timePosted={new Date(post.created_at).toLocaleDateString()}
+                  postImage={post.image_url}
+                  likes={post.likes_count || 0}
+                  comments={post.comments_count || 0}
+                  description={post.content}
+                  authorId={post.user_id}
+                  currentUserId={profile?.id}
+                  isLiked={currentUserLikes.has(post.id)}
+                  isBookmarked={currentUserBookmarks.has(post.id)}
+                  onDelete={async (id: string) => {
+                    const { error } = await supabase.from('posts').delete().eq('id', id);
+                    if (!error) {
+                      setPosts(posts.filter(p => p.id !== id));
+                      showToast("Post deleted");
+                    }
+                  }}
+                  onLike={async (id: string) => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    await supabase.rpc('toggle_post_like', { post_id_input: id, user_id_input: user.id });
+                    
+                    // Update local state if needed (though FeedCard handles it optimistically)
+                    setCurrentUserLikes(prev => {
+                      const next = new Set(prev);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      return next;
+                    });
+                  }}
+                  onBookmark={async (id: string) => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    
+                    const isBookmarked = currentUserBookmarks.has(id);
+                    if (isBookmarked) {
+                      await supabase.from('bookmarks').delete().match({ user_id: user.id, post_id: id });
+                      setCurrentUserBookmarks(prev => {
+                        const next = new Set(prev);
+                        next.delete(id);
+                        return next;
+                      });
+                      showToast("Bookmark removed");
+                    } else {
+                      await supabase.from('bookmarks').insert({ user_id: user.id, post_id: id });
+                      setCurrentUserBookmarks(prev => {
+                        const next = new Set(prev);
+                        next.add(id);
+                        return next;
+                      });
+                      showToast("Post bookmarked!");
+                    }
+                  }}
+                  onComment={(id: string) => {
+                    const postData = {
+                      id,
+                      authorName: profile?.full_name || "User",
+                      authorImage: profile?.avatar_url,
+                      description: post.content
+                    };
+                    window.dispatchEvent(new CustomEvent('open-comment', { detail: postData }));
+                  }}
+                  onShare={(id: string) => {
+                    const postData = {
+                      id,
+                      authorName: profile?.full_name || "User",
+                      authorImage: profile?.avatar_url,
+                      description: post.content
+                    };
+                    window.dispatchEvent(new CustomEvent('open-share', { detail: postData }));
+                  }}
+                />
               ))
             ) : (
-              <div className="col-span-3 py-16 flex flex-col items-center justify-center text-center">
+              <div className="py-16 flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
                   <Grid className="text-zinc-400 w-8 h-8" />
                 </div>
@@ -582,12 +686,37 @@ export default function ProfilePage() {
         )}
 
         {activeTab === "saved" && (
-          <div className="py-16 flex flex-col items-center justify-center text-center animate-in fade-in">
-            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
-              <Bookmark className="text-zinc-400 w-8 h-8" />
-            </div>
-            <p className="font-bold text-lg text-black mb-1">Feature Coming Soon</p>
-            <p className="text-zinc-500 text-sm">Saved posts functionality is currently under development.</p>
+          <div className="flex flex-col gap-4">
+            {savedPosts.length > 0 ? (
+              savedPosts.map((post) => (
+                <FeedCard 
+                  key={post.id}
+                  id={post.id}
+                  authorName={post.profiles?.full_name || "User"}
+                  authorImage={post.profiles?.avatar_url}
+                  timePosted={new Date(post.created_at).toLocaleDateString()}
+                  postImage={post.image_url}
+                  likes={post.likes_count || 0}
+                  comments={post.comments_count || 0}
+                  description={post.content}
+                  authorId={post.user_id}
+                  currentUserId={profile?.id}
+                  isBookmarked={true}
+                  onBookmark={async (id: string) => {
+                    await supabase.from('bookmarks').delete().match({ user_id: profile.id, post_id: id });
+                    setSavedPosts(savedPosts.filter(p => p.id !== id));
+                  }}
+                />
+              ))
+            ) : (
+              <div className="py-16 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
+                  <Bookmark className="text-zinc-400 w-8 h-8" />
+                </div>
+                <p className="font-bold text-lg text-black mb-1">No Bookmarks</p>
+                <p className="text-zinc-500 text-sm">Posts you bookmark will appear here for quick access.</p>
+              </div>
+            )}
           </div>
         )}
 

@@ -8,150 +8,6 @@ import { createClient } from "@/lib/supabase";
 
 type UniversityType = "Federal" | "State" | "Private";
 
-const UNIVERSITIES: Record<UniversityType, string[]> = {
-  Federal: [
-    "Abubakar Tafawa Balewa University, Bauchi",
-    "Ahmadu Bello University, Zaria",
-    "Bayero University, Kano",
-    "Federal University of Agriculture, Abeokuta",
-    "Federal University of Petroleum Resources, Effurun",
-    "Federal University of Technology, Akure",
-    "Federal University of Technology, Minna",
-    "Federal University of Technology, Owerri",
-    "Federal University, Birnin-Kebbi",
-    "Federal University, Dutse",
-    "Federal University, Dutsin-Ma",
-    "Federal University, Gashua",
-    "Federal University, Gusau",
-    "Federal University, Kashere",
-    "Federal University, Lafia",
-    "Federal University, Lokoja",
-    "Federal University, Otuoke",
-    "Federal University, Oye-Ekiti",
-    "Federal University, Wukari",
-    "Federal University, Ndifu-Alike",
-    "Federal University of Health Sciences, Azare",
-    "Federal University of Health Sciences, Ila-Orangun",
-    "Michael Okpara University of Agriculture, Umudike",
-    "Modibbo Adama University, Yola",
-    "National Open University of Nigeria",
-    "Nigerian Defence Academy, Kaduna",
-    "Nnamdi Azikiwe University, Awka",
-    "Obafemi Awolowo University, Ile-Ife",
-    "University of Abuja",
-    "University of Benin",
-    "University of Calabar",
-    "University of Ibadan",
-    "University of Ilorin",
-    "University of Jos",
-    "University of Lagos",
-    "University of Maiduguri",
-    "University of Nigeria, Nsukka",
-    "University of Port Harcourt",
-    "University of Uyo",
-    "Usmanu Danfodiyo University, Sokoto"
-  ],
-  State: [
-    "Abia State University, Uturu",
-    "Adamawa State University, Mubi",
-    "Adekunle Ajasin University, Akungba-Akoko",
-    "Akwa Ibom State University",
-    "Ambrose Alli University, Ekpoma",
-    "Bauchi State University, Gadau",
-    "Benue State University, Makurdi",
-    "Borno State University",
-    "Chukwuemeka Odumegwu Ojukwu University",
-    "Cross River University of Technology",
-    "Delta State University, Abraka",
-    "Ebonyi State University",
-    "Edo State University, Uzairue",
-    "Ekiti State University",
-    "Enugu State University of Science and Technology",
-    "Gombe State University",
-    "Ibrahim Badamasi Babangida University, Lapai",
-    "Ignatius Ajuru University of Education",
-    "Imo State University",
-    "Kaduna State University",
-    "Kano State University of Science and Technology",
-    "Kebbi State University of Science and Technology",
-    "Kogi State University",
-    "Kwara State University",
-    "Lagos State University",
-    "Nasarawa State University",
-    "Niger State University of Education",
-    "Olabisi Onabanjo University",
-    "Ondo State University of Science and Technology",
-    "Osun State University",
-    "Plateau State University",
-    "Rivers State University",
-    "Sokoto State University",
-    "Taraba State University",
-    "Umaru Musa Yar’adua University",
-    "Yobe State University",
-    "Zamfara State University"
-  ],
-  Private: [
-    "Achievers University, Owo",
-    "Adeleke University, Ede",
-    "Afe Babalola University, Ado-Ekiti",
-    "African University of Science and Technology, Abuja",
-    "Ahman Pategi University",
-    "Ajayi Crowther University",
-    "Al-Hikmah University",
-    "Al-Qalam University",
-    "American University of Nigeria",
-    "Augustine University",
-    "Babcock University",
-    "Bells University of Technology",
-    "Benson Idahosa University",
-    "Bingham University",
-    "Bowen University",
-    "Caleb University",
-    "Caritas University",
-    "Chrisland University",
-    "Clifford University",
-    "Coal City University",
-    "Covenant University",
-    "Crawford University",
-    "Dominican University",
-    "Eastern Palm University",
-    "Edwin Clark University",
-    "Elizade University",
-    "Evangel University",
-    "Fountain University",
-    "Godfrey Okoye University",
-    "Gregory University",
-    "Hallmark University",
-    "Hezekiah University",
-    "Igbinedion University",
-    "Joseph Ayo Babalola University",
-    "Kings University",
-    "Kola Daisi University",
-    "Landmark University",
-    "Lead City University",
-    "Madonna University",
-    "McPherson University",
-    "Mountain Top University",
-    "Nile University of Nigeria",
-    "Novena University",
-    "Obong University",
-    "Oduduwa University",
-    "Pan-Atlantic University",
-    "Paul University",
-    "Redeemer’s University",
-    "Renaissance University",
-    "Rhema University",
-    "Salem University",
-    "Skyline University",
-    "Summit University",
-    "Tansian University",
-    "Trinity University",
-    "University of Mkar",
-    "Veritas University",
-    "Wellspring University"
-  ],
-};
-
 const LEVELS = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level", "600 Level", "Postgraduate", "Graduate"];
 
 export default function OnboardingPage() {
@@ -160,9 +16,11 @@ export default function OnboardingPage() {
 
   const [step, setStep] = useState(1);
   const [uniType, setUniType] = useState<UniversityType>("Federal");
+  const [universities, setUniversities] = useState<any[]>([]);
   const [selectedUni, setSelectedUni] = useState("");
   const [uniSearch, setUniSearch] = useState("");
   const [isUniDropdownOpen, setIsUniDropdownOpen] = useState(false);
+  const [isLoadingUnis, setIsLoadingUnis] = useState(false);
   const [selectedDept, setSelectedDept] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
   const [username, setUsername] = useState("");
@@ -178,6 +36,31 @@ export default function OnboardingPage() {
     };
     checkUser();
   }, [supabase.auth]);
+
+  useEffect(() => {
+    const fetchUnis = async () => {
+      setIsLoadingUnis(true);
+      let query = supabase
+        .from('universities')
+        .select('name')
+        .eq('type', uniType)
+        .order('name');
+      
+      if (uniSearch) {
+        query = query.ilike('name', `%${uniSearch}%`);
+      }
+
+      const { data, error } = await query.limit(10);
+      
+      if (!error && data) {
+        setUniversities(data.map(u => u.name));
+      }
+      setIsLoadingUnis(false);
+    };
+
+    const timer = setTimeout(fetchUnis, 300);
+    return () => clearTimeout(timer);
+  }, [uniType, uniSearch, supabase]);
 
   const handleComplete = async () => {
     setIsCompleting(true);
@@ -271,10 +154,6 @@ export default function OnboardingPage() {
     }
   };
 
-  const filteredUniversities = UNIVERSITIES[uniType].filter((uni) =>
-    uni.toLowerCase().includes(uniSearch.toLowerCase())
-  );
-
   return (
     <div className="flex min-h-screen flex-col bg-white text-zinc-900 font-sans relative overflow-hidden">
       <div className={`flex flex-col min-h-screen px-6 py-12 transition-all duration-700 ${isCompleting ? "blur-md scale-[0.98] pointer-events-none" : ""}`}>
@@ -351,10 +230,15 @@ export default function OnboardingPage() {
                   <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none group-hover:text-zinc-600 transition-colors" />
                 </div>
 
-                {isUniDropdownOpen && (
+                  {isUniDropdownOpen && (
                   <ul className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-lg border border-zinc-100 max-h-60 overflow-y-auto">
-                    {filteredUniversities.length > 0 ? (
-                      filteredUniversities.map((uni) => (
+                    {isLoadingUnis ? (
+                      <li className="px-5 py-3 text-[15px] text-zinc-500 text-center flex items-center justify-center gap-2">
+                         <Loader2 className="w-4 h-4 animate-spin" />
+                         Searching...
+                      </li>
+                    ) : universities.length > 0 ? (
+                      universities.map((uni) => (
                         <li
                           key={uni}
                           onMouseDown={() => {

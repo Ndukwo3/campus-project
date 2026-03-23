@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { MoreVertical, Heart, MessageCircle, Share2, User, Flag, AlertTriangle, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { MoreVertical, Heart, MessageCircle, Share2, User, Flag, AlertTriangle, Trash2, Bookmark, BookmarkCheck } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
@@ -13,12 +14,15 @@ interface FeedCardProps {
   comments: number;
   description: string;
   isLiked?: boolean;
+  isBookmarked?: boolean;
   authorId: string;
   currentUserId?: string | null;
   onLike?: (id: string) => void;
   onComment?: (id: string) => void;
   onReport?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onShare?: (id: string) => void;
+  onBookmark?: (id: string) => void;
 }
 
 export default function FeedCard({
@@ -37,13 +41,21 @@ export default function FeedCard({
   onComment,
   onReport,
   onDelete,
+  onShare,
+  onBookmark,
+  isBookmarked = false,
 }: FeedCardProps) {
   const [localIsLiked, setLocalIsLiked] = useState(isLiked);
   const [localLikesCount, setLocalLikesCount] = useState(likes);
+  const [localIsBookmarked, setLocalIsBookmarked] = useState(isBookmarked);
 
   useEffect(() => {
     setLocalIsLiked(isLiked);
   }, [isLiked]);
+
+  useEffect(() => {
+    setLocalIsBookmarked(isBookmarked);
+  }, [isBookmarked]);
 
   useEffect(() => {
     setLocalLikesCount(likes);
@@ -87,7 +99,10 @@ export default function FeedCard({
       {/* User Header */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl overflow-hidden bg-zinc-50 border border-zinc-100 flex items-center justify-center p-[1px] shadow-sm">
+          <Link 
+            href={`/profile/${authorId}`}
+            className="w-12 h-12 rounded-2xl overflow-hidden bg-zinc-50 border border-zinc-100 flex items-center justify-center p-[1px] shadow-sm hover:scale-105 active:scale-95 transition-transform"
+          >
             {authorImage ? (
               <Image 
                 src={authorImage} 
@@ -99,9 +114,14 @@ export default function FeedCard({
             ) : (
               <User className="text-zinc-300 w-6 h-6" />
             )}
-          </div>
+          </Link>
           <div className="flex flex-col space-y-1">
-            <h3 className="font-bold text-[15px] text-zinc-900 tracking-tight leading-none">{authorName}</h3>
+            <Link 
+              href={`/profile/${authorId}`}
+              className="font-bold text-[15px] text-zinc-900 tracking-tight leading-none hover:text-black cursor-pointer"
+            >
+              {authorName}
+            </Link>
             <span className="text-[10px] font-black uppercase tracking-[0.05em] text-zinc-400 opacity-80">{timePosted}</span>
           </div>
         </div>
@@ -197,9 +217,30 @@ export default function FeedCard({
           </button>
         </div>
 
-        <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 text-zinc-400 hover:bg-[#E5FF66] hover:text-black hover:shadow-lg hover:shadow-[#E5FF66]/20 transition-all active:scale-90">
-          <Share2 size={20} strokeWidth={2.5} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => {
+              if (onBookmark) {
+                onBookmark(id);
+                setLocalIsBookmarked(!localIsBookmarked);
+              }
+            }}
+            className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all active:scale-90 ${
+              localIsBookmarked 
+              ? "bg-zinc-900 text-[#E5FF66] shadow-lg shadow-black/10" 
+              : "bg-zinc-50 text-zinc-400 hover:bg-zinc-100 border border-transparent hover:border-zinc-200"
+            }`}
+          >
+            {localIsBookmarked ? <BookmarkCheck size={20} /> : <Bookmark size={20} strokeWidth={2.5} />}
+          </button>
+
+          <button 
+            onClick={() => onShare?.(id)}
+            className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all active:scale-90 border border-transparent hover:border-zinc-800"
+          >
+            <Share2 size={20} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
     </motion.div>
   );

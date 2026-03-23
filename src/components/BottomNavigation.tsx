@@ -11,7 +11,7 @@ export default function BottomNavigation() {
   const isMessages = pathname === "/messages";
   const isProfile = pathname === "/profile";
   const isSearch = pathname === "/search";
-  const isGroups = pathname === "/groups";
+  const isCampus = pathname === "/campus";
 
   return (
     <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 backdrop-blur-xl border-t border-zinc-100/50 z-50 pb-[env(safe-area-inset-bottom)]">
@@ -35,13 +35,13 @@ export default function BottomNavigation() {
           <div className={`h-1 w-1 rounded-full bg-zinc-900 transition-all duration-300 ${isSearch ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
 
-        {/* Groups */}
+        {/* Campus */}
         <Link 
-          href="/groups" 
-          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition-all duration-300 ${isGroups ? "text-zinc-900 scale-110" : "text-zinc-400 hover:text-zinc-600"}`}
+          href="/campus" 
+          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition-all duration-300 ${isCampus ? "text-zinc-900 scale-110" : "text-zinc-400 hover:text-zinc-600"}`}
         >
-          <BookOpen size={22} strokeWidth={isGroups ? 2.5 : 2} />
-          <div className={`h-1 w-1 rounded-full bg-zinc-900 transition-all duration-300 ${isGroups ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
+          <BookOpen size={22} strokeWidth={isCampus ? 2.5 : 2} />
+          <div className={`h-1 w-1 rounded-full bg-zinc-900 transition-all duration-300 ${isCampus ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
 
         {/* Center Action Button */}

@@ -59,8 +59,16 @@ export default function StoriesBar() {
       setCurrentUser(profile);
 
       if (profile?.university_id) {
-        // 3. Fetch active stories from the same university (grouped by user)
-        // We fetch stories that haven't expired yet
+        // 3. Get connections to filter stories
+        const { data: friendsData } = await supabase
+          .from('friends')
+          .select('user_id1, user_id2')
+          .or(`user_id1.eq.${authUser.id},user_id2.eq.${authUser.id}`);
+          
+        const friendIds = friendsData?.map(f => f.user_id1 === authUser.id ? f.user_id2 : f.user_id1) || [];
+        const allowedUserIds = [authUser.id, ...friendIds];
+
+        // 4. Fetch active stories from the user and their connections
         const now = new Date().toISOString();
         const { data: storiesData } = await supabase
           .from('stories')
@@ -68,7 +76,7 @@ export default function StoriesBar() {
             *,
             profiles:user_id (id, username, full_name, avatar_url)
           `)
-          .eq('university_id', profile.university_id)
+          .in('user_id', allowedUserIds)
           .gt('expires_at', now)
           .order('created_at', { ascending: true });
 
@@ -93,22 +101,12 @@ export default function StoriesBar() {
 
         const studentsWithStories = Array.from(storyGroups.values());
 
-        // 4. Fetch other students (to fill up the bar)
-        const { data: otherStudents } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url')
-          .eq('university_id', profile.university_id)
-          .neq('id', authUser.id)
-          // Exclude those who already have stories to avoid duplicates
-          .not('id', 'in', `(${studentsWithStories.map(s => s.user.id).join(',') || '00000000-0000-0000-0000-000000000000'})`)
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        // Combine: People with stories first, then others
-        const combined = [
-          ...studentsWithStories.map(s => ({ ...s.user, stories: s.stories, hasStory: true })),
-          ...(otherStudents || []).map(s => ({ ...s, hasStory: false }))
-        ];
+        // Combine: Only local people with stories
+        const combined = studentsWithStories.map(s => ({ 
+          ...s.user, 
+          stories: s.stories, 
+          hasStory: true 
+        }));
 
         setCampusStudents(combined);
 
