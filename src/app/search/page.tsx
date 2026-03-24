@@ -300,7 +300,7 @@ export default function SearchPage() {
               placeholder="Search people, groups, posts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white shadow-sm rounded-2xl py-3.5 pl-12 pr-12 outline-none placeholder:text-zinc-400 font-medium text-sm focus:ring-2 focus:ring-[#E5FF66]/50 transition border border-transparent focus:border-white"
+              className="w-full bg-white shadow-sm rounded-2xl py-3.5 pl-12 pr-12 outline-none placeholder:text-zinc-400 font-medium text-sm text-black focus:ring-2 focus:ring-[#E5FF66]/50 transition border border-transparent focus:border-white"
             />
             {searchQuery && (
               <button 

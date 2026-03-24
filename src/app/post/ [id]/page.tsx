@@ -48,7 +48,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       // Check like/bookmark status
       if (user) {
         const [{ data: like }, { data: bookmark }] = await Promise.all([
-          supabase.from('post_likes').select('*').match({ user_id: user.id, post_id: postId }).maybeSingle(),
+          supabase.from('likes').select('*').match({ user_id: user.id, post_id: postId }).maybeSingle(),
           supabase.from('bookmarks').select('*').match({ user_id: user.id, post_id: postId }).maybeSingle()
         ]);
         setIsLiked(!!like);

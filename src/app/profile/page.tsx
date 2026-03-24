@@ -120,7 +120,7 @@ export default function ProfilePage() {
       }
       
       // Fetch user's likes to show correct icons
-      const { data: likesData } = await supabase.from('post_likes').select('post_id').eq('user_id', user.id);
+      const { data: likesData } = await supabase.from('likes').select('post_id').eq('user_id', user.id);
       if (likesData) setCurrentUserLikes(new Set(likesData.map(l => l.post_id)));
 
       // Fetch user's bookmarks
@@ -753,7 +753,7 @@ export default function ProfilePage() {
                     value={editFirstName}
                     onChange={(e) => setEditFirstName(e.target.value)}
                     placeholder="John"
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] font-bold outline-none focus:ring-2 focus:ring-[#E5FF66] transition-all"
+                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] font-bold text-black outline-none focus:ring-2 focus:ring-[#E5FF66] transition-all"
                   />
                 </div>
                 <div>
@@ -763,7 +763,7 @@ export default function ProfilePage() {
                     value={editLastName}
                     onChange={(e) => setEditLastName(e.target.value)}
                     placeholder="Doe"
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] font-bold outline-none focus:ring-2 focus:ring-[#E5FF66] transition-all"
+                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] font-bold text-black outline-none focus:ring-2 focus:ring-[#E5FF66] transition-all"
                   />
                 </div>
               </div>
@@ -775,7 +775,7 @@ export default function ProfilePage() {
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
                   placeholder="Tell us about yourself..."
-                  className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] font-medium outline-none focus:ring-2 focus:ring-[#E5FF66] transition-all resize-none"
+                  className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] font-medium text-black outline-none focus:ring-2 focus:ring-[#E5FF66] transition-all resize-none"
                 />
               </div>
             </div>

@@ -117,7 +117,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
       // Fetch user's likes and bookmarks for interaction states
       if (authUser) {
         const [ { data: likesData }, { data: bookmarksData } ] = await Promise.all([
-          supabase.from('post_likes').select('post_id').eq('user_id', authUser.id),
+          supabase.from('likes').select('post_id').eq('user_id', authUser.id),
           supabase.from('bookmarks').select('post_id').eq('user_id', authUser.id)
         ]);
         if (likesData) setCurrentUserLikes(new Set(likesData.map(l => l.post_id)));

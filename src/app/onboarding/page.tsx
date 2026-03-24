@@ -225,7 +225,7 @@ export default function OnboardingPage() {
                       // Delay closing dropdown so click on option can register
                       setTimeout(() => setIsUniDropdownOpen(false), 200);
                     }}
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium pr-12"
+                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium pr-12 text-black"
                   />
                   <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none group-hover:text-zinc-600 transition-colors" />
                 </div>
@@ -266,7 +266,7 @@ export default function OnboardingPage() {
                     placeholder="Enter your department"
                     value={selectedDept}
                     onChange={(e) => setSelectedDept(e.target.value)}
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium text-black"
                   />
                 </div>
               </div>
@@ -278,7 +278,7 @@ export default function OnboardingPage() {
                   <select
                     value={selectedLevel}
                     onChange={(e) => setSelectedLevel(e.target.value)}
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none appearance-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium pr-12 cursor-pointer"
+                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none appearance-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium pr-12 cursor-pointer text-black"
                   >
                     <option value="" disabled>Select your current level</option>
                     {LEVELS.map((level) => (
@@ -315,7 +315,7 @@ export default function OnboardingPage() {
                     placeholder="@johndoe"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium"
+                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium text-black"
                   />
                 </div>
               </div>

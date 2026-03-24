@@ -270,7 +270,7 @@ export default function StoriesBar() {
                 <div className={`flex h-full w-full items-center justify-center rounded-full bg-white ${myStories.length > 0 ? "p-0.5" : "border-2 border-zinc-100 p-0.5"}`}>
                   <div className="relative h-full w-full rounded-full overflow-hidden bg-zinc-50 flex items-center justify-center shadow-inner">
                     {currentUser?.avatar_url ? (
-                      <Image src={currentUser.avatar_url} alt="You" fill className="object-cover" />
+                      <Image src={currentUser.avatar_url} alt="You" fill sizes="(max-width: 768px) 72px, 72px" className="object-cover" />
                     ) : (
                       <User className="w-8 h-8 text-zinc-300" />
                     )}
