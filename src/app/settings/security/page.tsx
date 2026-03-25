@@ -149,7 +149,7 @@ export default function SecuritySettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-[100px] max-w-md mx-auto relative font-sans">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans transition-colors">
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
       {showChangePassword && (
         <ChangePasswordModal
@@ -167,11 +167,11 @@ export default function SecuritySettingsPage() {
         />
       )}
 
-      <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-[#F8F9FA]/80 backdrop-blur-md z-10 border-b border-zinc-100">
-        <Link href="/settings" className="w-10 h-10 flex items-center justify-center rounded-full bg-white hover:bg-zinc-50 transition shadow-sm shrink-0">
-          <ArrowLeft size={20} className="text-black" />
+      <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-[#F8F9FA]/80 dark:bg-black/80 backdrop-blur-md z-10 border-b border-zinc-100 dark:border-zinc-800/50">
+        <Link href="/settings" className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition shadow-sm shrink-0 border border-transparent dark:border-zinc-800">
+          <ArrowLeft size={20} className="text-black dark:text-white" />
         </Link>
-        <span className="font-bold text-lg tracking-tight text-black">Security</span>
+        <span className="font-bold text-[14px] uppercase tracking-[0.2em] text-black dark:text-white">Security</span>
         <div className="w-10 h-10" />
       </div>
 
@@ -179,19 +179,19 @@ export default function SecuritySettingsPage() {
 
         {/* Authentication Options */}
         <section>
-          <div className="bg-white rounded-[24px] shadow-sm border border-zinc-100/50 overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
 
             <button
               onClick={() => setShowChangePassword(true)}
-              className="flex items-center justify-between w-full px-4 py-4 border-b border-zinc-100 hover:bg-zinc-50 transition-colors"
+              className="flex items-center justify-between w-full px-4 py-5 border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center">
-                  <Key size={14} className="text-zinc-600" />
+                <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-black flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
+                  <Key size={16} className="text-zinc-600 dark:text-zinc-400" />
                 </div>
                 <div className="flex flex-col items-start">
-                  <span className="font-bold text-[15px] text-zinc-900">Change Password</span>
-                  <span className="text-[12px] text-zinc-500">Update your account password</span>
+                  <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Change Password</span>
+                  <span className="text-[12px] text-zinc-500 dark:text-zinc-500">Update your account password</span>
                 </div>
               </div>
             </button>
@@ -201,19 +201,19 @@ export default function SecuritySettingsPage() {
                 setTwoFAEnabled(!twoFAEnabled);
                 showToast(twoFAEnabled ? "Two-Factor Auth disabled." : "✅ Two-Factor Auth enabled!");
               }}
-              className="flex items-center justify-between w-full px-4 py-4 hover:bg-zinc-50 transition-colors"
+              className="flex items-center justify-between w-full px-4 py-5 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center">
-                  <ShieldCheck size={14} className={twoFAEnabled ? "text-emerald-600" : "text-zinc-600"} />
+                <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-black flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
+                  <ShieldCheck size={16} className={twoFAEnabled ? "text-emerald-500" : "text-zinc-600 dark:text-zinc-400"} />
                 </div>
                 <div className="flex flex-col items-start">
-                  <span className="font-bold text-[15px] text-zinc-900">Two-Factor Auth</span>
-                  <span className="text-[12px] text-zinc-500">Add an extra layer of security</span>
+                  <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Two-Factor Auth</span>
+                  <span className="text-[12px] text-zinc-500 dark:text-zinc-500">Add an extra layer of security</span>
                 </div>
               </div>
-              <span className={`text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${twoFAEnabled ? "text-emerald-600 bg-emerald-50" : "text-red-500 bg-red-50"}`}>
-                {twoFAEnabled ? "On" : "Off"}
+              <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${twoFAEnabled ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10" : "text-zinc-400 bg-zinc-100 dark:bg-black border border-zinc-200 dark:border-zinc-800"}`}>
+                {twoFAEnabled ? "Active" : "Off"}
               </span>
             </button>
 
@@ -222,25 +222,28 @@ export default function SecuritySettingsPage() {
 
         {/* Login Activity */}
         <section>
-          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-4 shadow-none">
+          <h3 className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] mb-3 px-4 shadow-none">
             Where you're logged in
           </h3>
-          <div className="bg-white rounded-[24px] shadow-sm border border-zinc-100/50 overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 rounded-[24px) shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
 
-            <div className="flex items-start gap-4 px-4 py-4 border-b border-zinc-100">
+            <div className="flex items-start gap-4 px-4 py-5 border-b border-zinc-100 dark:border-zinc-800/50">
               <Smartphone size={24} className="text-emerald-500 mt-1 shrink-0" />
               <div className="flex flex-col">
-                <span className="font-bold text-[15px] text-zinc-900">iPhone 14 Pro</span>
-                <span className="text-[13px] text-zinc-500">Lagos, Nigeria • Active now</span>
-                <span className="text-[11px] font-bold text-emerald-500 mt-1">Current Device</span>
+                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">iPhone 14 Pro</span>
+                <span className="text-[13px] text-zinc-500 dark:text-zinc-500">Lagos, Nigeria • Active now</span>
+                <div className="flex items-center gap-1.5 mt-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Current Device</span>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-start gap-4 px-4 py-4">
-              <Monitor size={24} className="text-zinc-400 mt-1 shrink-0" />
+            <div className="flex items-start gap-4 px-4 py-5">
+              <Monitor size={24} className="text-zinc-400 dark:text-zinc-600 mt-1 shrink-0" />
               <div className="flex flex-col flex-1">
-                <span className="font-bold text-[15px] text-zinc-900">Chrome on Windows</span>
-                <span className="text-[13px] text-zinc-500">Abuja, Nigeria • Yesterday</span>
+                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Chrome on Windows</span>
+                <span className="text-[13px] text-zinc-500 dark:text-zinc-500">Abuja, Nigeria • Yesterday</span>
               </div>
             </div>
 
@@ -250,7 +253,7 @@ export default function SecuritySettingsPage() {
         <section className="px-2">
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full bg-red-50 text-red-600 rounded-2xl py-4 font-bold text-[15px] hover:bg-red-100 transition-colors active:scale-95"
+            className="w-full bg-red-50 dark:bg-red-500/5 text-red-600 rounded-2xl py-4 font-black text-[15px] border border-red-100/50 dark:border-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/10 transition-all active:scale-[0.98]"
           >
             Log out of all devices
           </button>

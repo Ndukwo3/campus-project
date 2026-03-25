@@ -65,7 +65,7 @@ export default function StoriesBar() {
           .select('user_id1, user_id2')
           .or(`user_id1.eq.${authUser.id},user_id2.eq.${authUser.id}`);
           
-        const friendIds = friendsData?.map(f => f.user_id1 === authUser.id ? f.user_id2 : f.user_id1) || [];
+        const friendIds = (friendsData as { user_id1: string; user_id2: string }[])?.map(f => f.user_id1 === authUser.id ? f.user_id2 : f.user_id1) || [];
         const allowedUserIds = [authUser.id, ...friendIds];
 
         // 4. Fetch active stories from the user and their connections
@@ -229,12 +229,12 @@ export default function StoriesBar() {
 
   if (loading) {
     return (
-      <div className="w-full bg-white pt-2 pb-4">
+      <div className="w-full bg-white dark:bg-[#0A0A0A] pt-2 pb-4 transition-colors">
         <div className="flex gap-4 overflow-x-auto px-4 scrollbar-hide">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex flex-col items-center gap-2 animate-pulse">
-              <div className="w-[72px] h-[72px] rounded-full bg-zinc-100" />
-              <div className="w-10 h-2 bg-zinc-100 rounded-full" />
+              <div className="w-[72px] h-[72px] rounded-full bg-zinc-100 dark:bg-zinc-800" />
+              <div className="w-10 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full" />
             </div>
           ))}
         </div>
@@ -247,7 +247,7 @@ export default function StoriesBar() {
   const myStories = currentUserEntry?.stories || [];
 
   return (
-    <div className="w-full bg-white pt-2 pb-4">
+    <div className="w-full bg-white dark:bg-[#0A0A0A] pt-2 pb-4 transition-colors">
       <Toast 
         message={toast.message} 
         type={toast.type} 
@@ -267,12 +267,12 @@ export default function StoriesBar() {
                 onClick={() => myStories.length > 0 && setActiveStoryUser({ user: currentUser, stories: myStories })}
                 className={`flex h-[72px] w-[72px] items-center justify-center rounded-full ${myStories.length > 0 ? "bg-gradient-to-tr from-[#E5FF66] to-[#4ADE80] p-[2.5px]" : "bg-transparent cursor-pointer"}`}
               >
-                <div className={`flex h-full w-full items-center justify-center rounded-full bg-white ${myStories.length > 0 ? "p-0.5" : "border-2 border-zinc-100 p-0.5"}`}>
-                  <div className="relative h-full w-full rounded-full overflow-hidden bg-zinc-50 flex items-center justify-center shadow-inner">
+                <div className={`flex h-full w-full items-center justify-center rounded-full bg-white dark:bg-[#0A0A0A] ${myStories.length > 0 ? "p-0.5" : "border-2 border-zinc-100 dark:border-zinc-800 p-0.5"}`}>
+                  <div className="relative h-full w-full rounded-full overflow-hidden bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center shadow-inner">
                     {currentUser?.avatar_url ? (
                       <Image src={currentUser.avatar_url} alt="You" fill sizes="(max-width: 768px) 72px, 72px" className="object-cover" />
                     ) : (
-                      <User className="w-8 h-8 text-zinc-300" />
+                      <User className="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
                     )}
                     {isUploading && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -287,7 +287,7 @@ export default function StoriesBar() {
                 <button 
                   onClick={() => setIsChoiceMenuOpen(!isChoiceMenuOpen)}
                   disabled={isUploading}
-                  className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#E5FF66] text-black shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                  className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white dark:border-[#0A0A0A] bg-[#E5FF66] text-black shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer"
                 >
                   <Plus size={16} strokeWidth={3} />
                 </button>
@@ -302,9 +302,8 @@ export default function StoriesBar() {
                 className="hidden" 
               />
             </div>
-            <span className="text-[11px] font-bold text-zinc-900 mt-1">You</span>
+            <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 mt-1">You</span>
           </motion.div>
-          {/* ... Rest of student circles (not shown here for brevity but assuming they remain the same) */}
 
           {/* Campus Student Circles */}
           {campusStudents.filter(s => s.id !== currentUser?.id).map((student) => (
@@ -317,22 +316,21 @@ export default function StoriesBar() {
               onClick={() => student.hasStory && setActiveStoryUser({ user: student, stories: student.stories })}
             >
               <div className="relative">
-                <div className={`flex h-[72px] w-[72px] items-center justify-center rounded-full ${student.hasStory ? "bg-gradient-to-tr from-[#E5FF66] to-[#4ADE80] p-[2.5px] shadow-sm" : "bg-zinc-100 p-[1.5px]"}`}>
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-white p-0.5">
-                    <div className="relative h-full w-full rounded-full overflow-hidden bg-zinc-100 flex items-center justify-center">
+                <div className={`flex h-[72px] w-[72px] items-center justify-center rounded-full ${student.hasStory ? "bg-gradient-to-tr from-[#E5FF66] to-[#4ADE80] p-[2.5px] shadow-sm" : "bg-zinc-100 dark:bg-zinc-800 p-[1.5px]"}`}>
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-white dark:bg-[#0A0A0A] p-0.5">
+                    <div className="relative h-full w-full rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
                       {student.avatar_url ? (
                         <Image src={student.avatar_url} alt={student.username} fill className="object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-zinc-400 font-bold text-sm">
+                        <div className="w-full h-full flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold text-sm">
                           {student.username?.charAt(1).toUpperCase() || "S"}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
-                {/* Online status indicator can be added here with real presence logic */}
               </div>
-              <span className="text-[11px] font-bold text-zinc-600 mt-1 max-w-[70px] truncate">
+              <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mt-1 max-w-[70px] truncate">
                 {student.full_name?.split(' ')[0] || student.username?.replace('@', '')}
               </span>
             </motion.div>
@@ -354,23 +352,23 @@ export default function StoriesBar() {
       {/* Choice Menu Modal */}
       <AnimatePresence>
         {isChoiceMenuOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/20 backdrop-blur-sm mx-auto max-w-md" onClick={() => setIsChoiceMenuOpen(false)}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/20 dark:bg-black/60 backdrop-blur-sm mx-auto max-w-md" onClick={() => setIsChoiceMenuOpen(false)}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white shadow-2xl rounded-3xl border border-zinc-100 overflow-hidden w-full max-w-[280px] z-[101]"
+              className="bg-white dark:bg-zinc-900 shadow-2xl rounded-3xl border border-zinc-100 dark:border-zinc-800 overflow-hidden w-full max-w-[280px] z-[101]"
             >
-              <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
-                <h3 className="text-sm font-bold text-center text-zinc-800">Stories</h3>
+              <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <h3 className="text-sm font-bold text-center text-zinc-800 dark:text-zinc-100">Stories</h3>
               </div>
               {myStories.length > 0 && (
                 <button 
                   onClick={handleDeleteStories}
-                  className="w-full px-4 py-4 flex items-center gap-3 hover:bg-red-50/50 transition-colors text-sm font-bold text-red-600 border-b border-zinc-50"
+                  className="w-full px-4 py-4 flex items-center gap-3 hover:bg-red-50/50 dark:hover:bg-red-500/10 transition-colors text-sm font-bold text-red-600 border-b border-zinc-50 dark:border-zinc-800"
                 >
-                  <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                  <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-500">
                     <Trash2 size={20} />
                   </div>
                   Delete my Live Stories
@@ -378,25 +376,25 @@ export default function StoriesBar() {
               )}
               <button 
                 onClick={() => { setIsChoiceMenuOpen(false); fileInputRef.current?.click(); }}
-                className="w-full px-4 py-4 flex items-center gap-3 hover:bg-zinc-50 transition-colors text-sm font-bold text-zinc-800 border-b border-zinc-50"
+                className="w-full px-4 py-4 flex items-center gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors text-sm font-bold text-zinc-800 dark:text-zinc-100 border-b border-zinc-50 dark:border-zinc-800"
               >
-                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500">
                   <Camera size={20} />
                 </div>
                 Share a Photo
               </button>
               <button 
                 onClick={() => { setIsChoiceMenuOpen(false); setIsTextModalOpen(true); }}
-                className="w-full px-4 py-4 flex items-center gap-3 hover:bg-zinc-50 transition-colors text-sm font-bold text-zinc-800"
+                className="w-full px-4 py-4 flex items-center gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors text-sm font-bold text-zinc-800 dark:text-zinc-100"
               >
-                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
+                <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-500">
                   <Edit2 size={20} />
                 </div>
                 Type a Status
               </button>
               <button
                 onClick={() => setIsChoiceMenuOpen(false)}
-                className="w-full px-4 py-3 bg-zinc-50 text-zinc-500 text-xs font-bold hover:bg-zinc-100 transition-colors"
+                className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
               >
                 Cancel
               </button>

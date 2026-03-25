@@ -52,36 +52,36 @@ export default function PrivacySettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-[100px] max-w-md mx-auto relative font-sans">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans transition-colors">
       {toast && <Toast message={toast} />}
       {showBlocked && <BlockedUsersModal onClose={() => setShowBlocked(false)} />}
 
-      <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-[#F8F9FA]/80 backdrop-blur-md z-10 border-b border-zinc-100">
-        <Link href="/settings" className="w-10 h-10 flex items-center justify-center rounded-full bg-white hover:bg-zinc-50 transition shadow-sm shrink-0">
-          <ArrowLeft size={20} className="text-black" />
+      <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-[#F8F9FA]/80 dark:bg-black/80 backdrop-blur-md z-10 border-b border-zinc-100 dark:border-zinc-800/50">
+        <Link href="/settings" className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition shadow-sm shrink-0 border border-transparent dark:border-zinc-800">
+          <ArrowLeft size={20} className="text-black dark:text-white" />
         </Link>
-        <span className="font-bold text-lg tracking-tight text-black">Privacy</span>
+        <span className="font-bold text-[14px] uppercase tracking-[0.2em] text-black dark:text-white">Privacy</span>
         <div className="w-10 h-10" />
       </div>
 
       <main className="px-4 pt-6 space-y-8">
         {/* Visibility */}
         <section>
-          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-4 shadow-none">
-            Visibility &amp; Reach
+          <h3 className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] mb-3 px-4 shadow-none">
+            Visibility & Reach
           </h3>
-          <div className="bg-white rounded-[24px] shadow-sm border border-zinc-100/50 overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
 
-            <div className="flex flex-col gap-1 px-4 py-3.5 border-b border-zinc-100">
+            <div className="flex flex-col gap-1 px-4 py-4 border-b border-zinc-100 dark:border-zinc-800/50">
               <div className="flex items-center gap-3 mb-1">
-                <Globe size={18} className="text-zinc-500" />
-                <span className="font-bold text-[15px] text-zinc-900">Who can see my posts</span>
+                <Globe size={18} className="text-zinc-500 dark:text-zinc-400" />
+                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Who can see my posts</span>
               </div>
-              <p className="text-[13px] text-zinc-500 mb-3 pl-7">Control the audience for your social feed posts.</p>
+              <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-3 pl-7 leading-relaxed">Control the audience for your social feed posts.</p>
               <select
                 value={postVisibility}
                 onChange={e => setPostVisibility(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-[14px] font-medium text-black outline-none ml-7 max-w-[calc(100%-28px)]"
+                className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 px-4 text-[14px] font-bold text-black dark:text-white outline-none ml-7 max-w-[calc(100%-28px)] appearance-none"
               >
                 <option>Everyone</option>
                 <option>My Campus Only</option>
@@ -89,15 +89,15 @@ export default function PrivacySettingsPage() {
               </select>
             </div>
 
-            <div className="flex flex-col gap-1 px-4 py-3.5 border-b border-zinc-100">
+            <div className="flex flex-col gap-1 px-4 py-4 border-b border-zinc-100 dark:border-zinc-800/50">
               <div className="flex items-center gap-3 mb-1">
-                <Eye size={18} className="text-zinc-500" />
-                <span className="font-bold text-[15px] text-zinc-900">Profile Visibility</span>
+                <Eye size={18} className="text-zinc-500 dark:text-zinc-400" />
+                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Profile Visibility</span>
               </div>
               <select
                 value={profileVisibility}
                 onChange={e => setProfileVisibility(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-[14px] font-medium text-black outline-none ml-7 max-w-[calc(100%-28px)]"
+                className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 px-4 text-[14px] font-bold text-black dark:text-white outline-none ml-7 max-w-[calc(100%-28px)] appearance-none"
               >
                 <option>Public (Visible in search)</option>
                 <option>Campus Only</option>
@@ -105,15 +105,15 @@ export default function PrivacySettingsPage() {
               </select>
             </div>
 
-            <div className="flex flex-col gap-1 px-4 py-3.5">
+            <div className="flex flex-col gap-1 px-4 py-4">
               <div className="flex items-center gap-3 mb-1">
-                <Users size={18} className="text-zinc-500" />
-                <span className="font-bold text-[15px] text-zinc-900">Who can see my followers</span>
+                <Users size={18} className="text-zinc-500 dark:text-zinc-400" />
+                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Who can see my followers</span>
               </div>
               <select
                 value={followerVisibility}
                 onChange={e => setFollowerVisibility(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-[14px] font-medium text-black outline-none ml-7 max-w-[calc(100%-28px)]"
+                className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 px-4 text-[14px] font-bold text-black dark:text-white outline-none ml-7 max-w-[calc(100%-28px)] appearance-none"
               >
                 <option>Everyone</option>
                 <option>Connections Only</option>
@@ -125,20 +125,20 @@ export default function PrivacySettingsPage() {
 
         {/* Interactions */}
         <section>
-          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-4 shadow-none">
+          <h3 className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] mb-3 px-4 shadow-none">
             Interactions
           </h3>
-          <div className="bg-white rounded-[24px] shadow-sm border border-zinc-100/50 overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
 
-            <div className="flex flex-col gap-1 px-4 py-3.5 border-b border-zinc-100">
+            <div className="flex flex-col gap-1 px-4 py-4 border-b border-zinc-100 dark:border-zinc-800/50">
               <div className="flex items-center gap-3 mb-1">
-                <Navigation size={18} className="text-zinc-500" />
-                <span className="font-bold text-[15px] text-zinc-900">Who can send me messages</span>
+                <Navigation size={18} className="text-zinc-500 dark:text-zinc-400" />
+                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Who can send me messages</span>
               </div>
               <select
                 value={canMessage}
                 onChange={e => setCanMessage(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-[14px] font-medium text-black outline-none ml-7 max-w-[calc(100%-28px)]"
+                className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 px-4 text-[14px] font-bold text-black dark:text-white outline-none ml-7 max-w-[calc(100%-28px)] appearance-none"
               >
                 <option>Everyone</option>
                 <option>Connections Only</option>
@@ -146,15 +146,15 @@ export default function PrivacySettingsPage() {
               </select>
             </div>
 
-            <div className="flex flex-col gap-1 px-4 py-3.5">
+            <div className="flex flex-col gap-1 px-4 py-4">
               <div className="flex items-center gap-3 mb-1">
-                <Hash size={18} className="text-zinc-500" />
-                <span className="font-bold text-[15px] text-zinc-900">Who can tag me in posts</span>
+                <Hash size={18} className="text-zinc-500 dark:text-zinc-400" />
+                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Who can tag me in posts</span>
               </div>
               <select
                 value={canTag}
                 onChange={e => setCanTag(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-[14px] font-medium text-black outline-none ml-7 max-w-[calc(100%-28px)]"
+                className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 px-4 text-[14px] font-bold text-black dark:text-white outline-none ml-7 max-w-[calc(100%-28px)] appearance-none"
               >
                 <option>Everyone</option>
                 <option>Connections Only</option>
@@ -166,19 +166,19 @@ export default function PrivacySettingsPage() {
 
         {/* Blocking */}
         <section>
-          <div className="bg-white rounded-[24px] shadow-sm border border-zinc-100/50 overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
             <button
               onClick={() => setShowBlocked(true)}
-              className="flex items-center justify-between w-full px-4 py-4 hover:bg-zinc-50 transition-colors"
+              className="flex items-center justify-between w-full px-4 py-5 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <ShieldAlert size={18} className="text-red-500" />
-                <span className="font-bold text-[15px] text-zinc-900">Blocked Users</span>
+                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Blocked Users</span>
               </div>
-              <span className="text-[13px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full">0</span>
+              <span className="text-[13px] font-black text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-black px-3 py-1 rounded-full">0</span>
             </button>
           </div>
-          <p className="text-[12px] text-zinc-400 mt-3 px-4 text-center">
+          <p className="text-[12px] text-zinc-400 dark:text-zinc-600 mt-4 px-4 text-center font-medium leading-relaxed">
             Blocked users cannot see your profile, posts, or send you messages.
           </p>
         </section>
@@ -187,7 +187,7 @@ export default function PrivacySettingsPage() {
         <div className="pt-2 pb-8 px-2">
           <button
             onClick={handleSave}
-            className="w-full bg-black text-white rounded-2xl py-4 font-bold text-[15px] shadow-lg hover:bg-zinc-800 transition-colors active:scale-95"
+            className="w-full bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black rounded-2xl py-4 font-black text-[15px] shadow-lg shadow-zinc-200 dark:shadow-none hover:opacity-90 transition-all active:scale-[0.98]"
           >
             Save Privacy Settings
           </button>

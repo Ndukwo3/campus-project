@@ -1,11 +1,13 @@
 "use client";
 
-import { Search, ArrowLeft, X, Filter, Users, Hash, TrendingUp, ChevronRight, UserPlus, Loader2, User, MessageSquare, Check } from "lucide-react";
+import { Search, ArrowLeft, X, Filter, Users, Hash, TrendingUp, ChevronRight, UserPlus, Loader2, User, MessageSquare, Check, Flame } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import BottomNavigation from "@/components/BottomNavigation";
+import SearchSkeleton from "@/components/skeletons/SearchSkeleton";
 import { createClient } from "@/lib/supabase";
 
 const filters = ["All", "Students", "Groups", "Trending"];
@@ -72,7 +74,7 @@ export default function SearchPage() {
           .limit(100); // High limit to show everyone while user base is small
           
         let uniqueMap = new Map();
-        allUsers?.forEach(s => {
+        (allUsers as any[])?.forEach((s: any) => {
           if (!excludedIds.has(s.id) && !uniqueMap.has(s.id)) {
              uniqueMap.set(s.id, s);
           }
@@ -88,7 +90,7 @@ export default function SearchPage() {
         if (sErr) console.error("Error searching students:", sErr);
         
         // Improved local sorting: connections first, then exact matches, then others
-        fetchedStudents = (searchRes || []).sort((a, b) => {
+        fetchedStudents = (searchRes as any[] || []).sort((a: any, b: any) => {
           const aStat = statuses[a.id] || 'none';
           const bStat = statuses[b.id] || 'none';
           
@@ -131,7 +133,7 @@ export default function SearchPage() {
         
         const counts: Record<string, number> = {};
         
-        trendingPosts.forEach(p => {
+        trendingPosts.forEach((p: { content: string }) => {
           const content = p.content.toLowerCase();
           
           // 1. Extract hashtags separately and weight them higher
@@ -286,144 +288,188 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-[100px] max-w-md mx-auto relative font-sans">
-      {/* Search Header */}
-      <div className="sticky top-0 z-30 bg-[#F8F9FA]/80 backdrop-blur-md px-6 pt-8 pb-4">
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/" className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-zinc-50 transition shrink-0">
-            <ArrowLeft size={20} className="text-zinc-800" />
-          </Link>
-          <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5 group-focus-within:text-zinc-600 transition-colors" />
-            <input
-              type="text"
-              placeholder="Search people, groups, posts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white shadow-sm rounded-2xl py-3.5 pl-12 pr-12 outline-none placeholder:text-zinc-400 font-medium text-sm text-black focus:ring-2 focus:ring-[#E5FF66]/50 transition border border-transparent focus:border-white"
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery("")}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Horizontal Filters */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-          {filters.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap active:scale-95 ${
-                activeFilter === filter 
-                ? "bg-[#1A1A24] text-white shadow-md shadow-zinc-200" 
-                : "bg-white text-zinc-500 shadow-sm border border-zinc-100/50"
-              }`}
+    <div className="min-h-screen bg-white dark:bg-black pb-[110px] max-w-md mx-auto relative font-sans overflow-x-hidden transition-colors">
+      {/* Search Header Container */}
+      <div className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50">
+        <div className="px-6 pt-10 pb-5">
+          <div className="flex items-center gap-4 mb-6">
+            <Link 
+              href="/" 
+              prefetch={true}
+              className="w-11 h-11 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 active:scale-95 transition-all shrink-0 group hover:bg-zinc-100 dark:hover:bg-zinc-800"
             >
-              {filter}
-            </button>
-          ))}
+              <ArrowLeft size={18} strokeWidth={2.5} className="group-hover:-translate-x-0.5 transition-transform" />
+            </Link>
+            <div className="relative flex-1 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 w-4.5 h-4.5 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" />
+              <input
+                type="text"
+                placeholder="Find peers, groups, news..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl py-3.5 pl-11 pr-11 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 font-bold text-[13.5px] text-black dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:ring-4 focus:ring-[#E5FF66]/20 transition-all border border-zinc-100/50 dark:border-zinc-800 focus:border-[#E5FF66]/50"
+              />
+              <AnimatePresence>
+                {searchQuery && (
+                  <motion.button 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
+                  >
+                    <X size={12} strokeWidth={3} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Horizontal Filters */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {filters.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`px-6 py-2 rounded-[14px] text-xs font-black transition-all whitespace-nowrap active:scale-95 border ${
+                  activeFilter === filter 
+                  ? "bg-zinc-900 dark:bg-[#E5FF66] border-zinc-900 dark:border-[#E5FF66] text-white dark:text-black shadow-lg shadow-zinc-200 dark:shadow-none" 
+                  : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <main className="px-6 space-y-8 mt-4">
+      <main className="px-5 mt-6 space-y-9 relative min-h-[60vh]">
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-zinc-300" />
-          </div>
+          <SearchSkeleton />
         ) : (
           <>
-            {/* Trending Section */}
+            {/* Trending Section - Styled like a premium tag collection */}
             {(activeFilter === "All" || activeFilter === "Trending") && (
-              <section>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp size={18} className="text-zinc-400" />
-                    <h2 className="text-[17px] font-bold text-zinc-800">Trending Now</h2>
+              <motion.section
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-center justify-between mb-5 px-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center">
+                       <Flame size={16} className="text-orange-500" fill="currentColor" />
+                    </div>
+                    <h2 className="text-[17px] font-black tracking-tight text-zinc-900 dark:text-zinc-100">Trending Now</h2>
                   </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300 dark:text-zinc-600">Live Updates</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {trending.map((tag) => (
-                    <button 
+                <div className="flex flex-wrap gap-2.5">
+                  {trending.map((tag, i) => (
+                    <motion.button 
                       key={tag} 
-                      onClick={() => setSearchQuery(tag.replace('...', ''))}
-                      className="bg-white px-4 py-2.5 rounded-xl text-[13px] font-semibold text-zinc-700 shadow-sm border border-zinc-50 hover:bg-zinc-50 transition active:scale-95"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      onClick={() => setSearchQuery(tag)}
+                      className="bg-white dark:bg-zinc-900 px-5 py-3 rounded-2xl text-[13px] font-bold text-zinc-800 dark:text-zinc-100 shadow-[0_4px_15px_rgba(0,0,0,0.02)] dark:shadow-none border border-zinc-100 dark:border-zinc-800 hover:border-[#E5FF66] dark:hover:border-[#E5FF66] hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all group flex items-center gap-2"
                     >
                       {tag}
-                    </button>
+                    </motion.button>
                   ))}
-                  {trending.length === 0 && <p className="text-xs text-zinc-400">No trends yet</p>}
+                  {trending.length === 0 && (
+                    <div className="w-full py-4 text-center bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                       <p className="text-[11px] font-bold text-zinc-400 dark:text-zinc-600">Waiting for trends to ignite...</p>
+                    </div>
+                  )}
                 </div>
-              </section>
+              </motion.section>
             )}
 
             {/* Suggested Students */}
             {(activeFilter === "All" || activeFilter === "Students") && (
               <section>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-[17px] font-bold text-zinc-800">
-                    {searchQuery ? "Search Results" : "People you may know"}
+                <div className="flex items-center justify-between mb-4 px-1">
+                  <h2 className="text-[17px] font-black tracking-tight text-zinc-900 dark:text-zinc-100">
+                    {searchQuery ? "Campus Results" : "People you may know"}
                   </h2>
-                  <Link href="#" className="text-xs font-bold text-zinc-400 uppercase tracking-widest hover:text-zinc-600">See All</Link>
+                  <link href="#" className="flex items-center gap-1 text-[11px] font-black text-zinc-400 dark:text-zinc-600 hover:text-black dark:hover:text-white transition-colors" />
+                    REFRESH <Users size={12} />
                 </div>
-                <div className="bg-white rounded-[32px] p-2 shadow-sm border border-zinc-100/50 flex flex-col gap-1">
-                  {students.length > 0 ? (
-                    students.map((student) => {
-                      const status = connectionStatuses[student.id] || 'none';
-                      return (
-                        <div key={student.id} className="flex items-center gap-3 px-3 py-4 hover:bg-zinc-50/50 transition-colors rounded-2xl group">
-                          <div className="h-14 w-14 rounded-2xl overflow-hidden bg-zinc-100 shrink-0 group-hover:scale-95 transition-transform flex items-center justify-center">
-                            {student.avatar_url ? (
-                              <Image src={student.avatar_url} alt={student.full_name || student.username} width={56} height={56} className="h-full w-full object-cover" />
-                            ) : (
-                              <User className="text-zinc-300 w-7 h-7" />
-                            )}
-                          </div>
-                          <Link 
-                            href={`/profile/${student.id}`}
-                            className="flex-1 min-w-0 pr-1 cursor-pointer"
+                <div className="flex flex-col gap-1.5">
+                  <AnimatePresence mode="popLayout">
+                    {students.length > 0 ? (
+                      students.map((student, i) => {
+                        const status = connectionStatuses[student.id] || 'none';
+                        return (
+                          <motion.div
+                            key={student.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 + i * 0.05 }}
+                            layout
                           >
-                            <h3 className="text-[15px] font-bold text-zinc-900 truncate tracking-tight hover:text-black">{student.full_name || student.username}</h3>
-                            <p className="text-[13px] font-medium text-zinc-500 truncate">{student.universities?.name || "Nigerian University"}</p>
-                          </Link>
-                          {student.id !== currentUser?.id && (
-                            <button 
-                              onClick={() => status === 'connected' ? handleMessageClick(student.id) : handleConnect(student.id)}
-                              disabled={isActionLoading === student.id || status === 'pending_sent'}
-                              className={`h-10 w-10 flex items-center justify-center rounded-2xl shadow-sm active:scale-90 transition ${
-                                status === 'connected'
-                                ? "bg-white border border-zinc-100 text-black hover:bg-zinc-50"
-                                : status === 'pending_sent'
-                                ? "bg-zinc-100 text-zinc-500"
-                                : status === 'pending_received'
-                                ? "bg-black text-white"
-                                : "bg-[#E5FF66] text-black"
-                              }`}
-                            >
-                              {isActionLoading === student.id ? (
-                                <Loader2 size={16} className="animate-spin" />
-                              ) : status === 'connected' ? (
-                                <MessageSquare size={18} strokeWidth={2.5} />
-                              ) : status === 'pending_sent' ? (
-                                <Check size={18} strokeWidth={3} />
-                              ) : status === 'pending_received' ? (
-                                <UserPlus size={18} strokeWidth={2.5} />
-                              ) : (
-                                <UserPlus size={18} strokeWidth={2.5} />
+                            <div className="flex items-center gap-4 px-4 py-4 bg-white dark:bg-zinc-900/50 hover:bg-zinc-50/50 dark:hover:bg-zinc-800 transition-all rounded-[32px] group border border-zinc-50 dark:border-zinc-800 hover:border-zinc-100 dark:hover:border-zinc-700 ring-1 ring-transparent hover:ring-zinc-50/50 dark:hover:ring-zinc-800">
+                              <Link 
+                                href={`/profile/${student.id}`}
+                                className="h-[60px] w-[60px] rounded-[24px] overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0 relative active:scale-95 transition-transform"
+                              >
+                                {student.avatar_url ? (
+                                  <Image src={student.avatar_url} alt={student.full_name || student.username} width={60} height={60} className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+                                     <User className="text-zinc-300 dark:text-zinc-700 w-8 h-8" />
+                                  </div>
+                                )}
+                              </Link>
+                              <Link 
+                                href={`/profile/${student.id}`}
+                                className="flex-1 min-w-0"
+                              >
+                                <h3 className="text-[15.5px] font-bold text-zinc-900 dark:text-zinc-100 truncate tracking-tight">{student.full_name || student.username}</h3>
+                                <p className="text-[12.5px] font-medium text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{student.universities?.name || "Lagos City, NG"}</p>
+                              </Link>
+                              {student.id !== currentUser?.id && (
+                                <button 
+                                  onClick={() => status === 'connected' ? handleMessageClick(student.id) : handleConnect(student.id)}
+                                  disabled={isActionLoading === student.id || status === 'pending_sent'}
+                                  className={`h-11 w-11 flex items-center justify-center rounded-[20px] transition-all duration-300 active:scale-90 ${
+                                    status === 'connected'
+                                    ? "bg-zinc-900 dark:bg-[#E5FF66] text-[#E5FF66] dark:text-black shadow-lg shadow-black/10"
+                                    : status === 'pending_sent'
+                                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-300 dark:text-zinc-600"
+                                    : status === 'pending_received'
+                                    ? "bg-black dark:bg-white text-white dark:text-black"
+                                    : "bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-100 dark:border-zinc-700 hover:bg-[#E5FF66] hover:border-[#E5FF66] dark:hover:bg-[#E5FF66] dark:hover:border-[#E5FF66] shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
+                                  }`}
+                                >
+                                  {isActionLoading === student.id ? (
+                                    <Loader2 size={16} className="animate-spin" />
+                                  ) : status === 'connected' ? (
+                                    <MessageSquare size={20} strokeWidth={2.5} />
+                                  ) : status === 'pending_sent' ? (
+                                    <Check size={20} strokeWidth={4} />
+                                  ) : (
+                                    <UserPlus size={20} strokeWidth={2.5} />
+                                  )}
+                                </button>
                               )}
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="p-6 text-center text-sm text-zinc-400">No students found</p>
-                  )}
+                            </div>
+                          </motion.div>
+                        );
+                      })
+                    ) : (
+                      <div className="py-20 flex flex-col items-center text-center px-10">
+                         <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-6">
+                            <Search className="text-zinc-200 dark:text-zinc-800 w-10 h-10" />
+                         </div>
+                         <h3 className="text-lg font-black text-zinc-900 dark:text-zinc-100 mb-2">No students found</h3>
+                         <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Try searching for a name, username, or even their university.</p>
+                      </div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </section>
             )}
@@ -431,41 +477,51 @@ export default function SearchPage() {
             {/* Campus Groups */}
             {(activeFilter === "All" || activeFilter === "Groups") && (
               <section>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-[17px] font-bold text-zinc-800">Campus Groups</h2>
+                <div className="flex items-center justify-between mb-5 px-1">
+                  <h2 className="text-[17px] font-black tracking-tight text-zinc-900 dark:text-zinc-100">Communities</h2>
+                  <Link href="/campus" className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white">SEE MAP</Link>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {groups.length > 0 ? (
-                    groups.map((group) => (
-                      <div key={group.id} className="bg-white rounded-[32px] p-2 shadow-sm border border-zinc-100/50 group overflow-hidden">
-                        <div className="h-32 rounded-3xl overflow-hidden relative mb-3">
-                          {group.image_url ? (
-                            <Image src={group.image_url} alt={group.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center">
-                              <Users className="text-zinc-300 w-10 h-10" />
+                <div className="grid grid-cols-2 gap-4 pb-12">
+                  <AnimatePresence>
+                    {groups.length > 0 ? (
+                      groups.map((group, i) => (
+                        <motion.div 
+                          key={group.id} 
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.2 + i * 0.05 }}
+                          className="bg-white dark:bg-zinc-900 rounded-[40px] p-2.5 shadow-[0_10px_35px_rgba(0,0,0,0.025)] dark:shadow-none border border-zinc-100/50 dark:border-zinc-800 group overflow-hidden flex flex-col h-full"
+                        >
+                          <div className="h-32 rounded-[32px] overflow-hidden relative mb-4 shrink-0">
+                            {group.image_url ? (
+                              <Image src={group.image_url} alt={group.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 flex items-center justify-center">
+                                <Users className="text-zinc-200 dark:text-zinc-700 w-9 h-9" />
+                              </div>
+                            )}
+                            <div className="absolute top-2 right-2 px-2.5 py-1.5 bg-white/90 dark:bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/50 dark:border-zinc-800">
+                               <p className="text-[10px] font-black text-black dark:text-[#E5FF66]">HOT</p>
                             </div>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                          <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-white uppercase tracking-tighter opacity-80">Active Community</span>
                           </div>
-                        </div>
-                        <div className="px-2 pb-2">
-                          <h3 className="text-sm font-bold text-zinc-900 mb-1 leading-tight truncate">{group.name}</h3>
-                          <button 
-                            onClick={() => handleJoinGroup(group.id)}
-                            disabled={isActionLoading === group.id}
-                            className="w-full py-2 bg-[#E5FF66] rounded-xl text-[11px] font-bold text-black hover:bg-black hover:text-white transition flex items-center justify-center gap-2"
-                          >
-                            {isActionLoading === group.id ? <Loader2 size={14} className="animate-spin" /> : "Join Group"}
-                          </button>
-                        </div>
+                          <div className="px-2 pb-2 flex-1 flex flex-col">
+                            <h3 className="text-[14px] font-extrabold text-zinc-900 dark:text-zinc-100 mb-1 leading-tight line-clamp-1">{group.name}</h3>
+                            <button 
+                              onClick={() => handleJoinGroup(group.id)}
+                              disabled={isActionLoading === group.id}
+                              className="w-full mt-auto py-3 bg-[#1A1A24] dark:bg-zinc-800 rounded-2xl text-[11px] font-black text-white hover:bg-black dark:hover:bg-zinc-700 transition-all active:scale-95 shadow-lg shadow-zinc-200 dark:shadow-none group-hover:bg-[#E5FF66] group-hover:text-black group-hover:shadow-[#E5FF66]/20"
+                            >
+                              {isActionLoading === group.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "EXPLORE"}
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="col-span-2 py-12 text-center text-sm font-bold text-zinc-300 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-900/50 rounded-[40px] border border-dashed border-zinc-200 dark:border-zinc-800">
+                        Searching communities...
                       </div>
-                    ))
-                  ) : (
-                    <div className="col-span-2 py-8 text-center text-sm text-zinc-400">No groups found</div>
-                  )}
+                    )}
+                  </AnimatePresence>
                 </div>
               </section>
             )}

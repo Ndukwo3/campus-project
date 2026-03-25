@@ -7,10 +7,10 @@ export default function AuthLogo() {
         <GraduationCap className="h-6 w-6 text-black" strokeWidth={2.5} />
       </div>
       <div className="flex flex-col">
-        <span className="text-[20px] font-black tracking-tighter text-zinc-900 leading-none">
+        <span className="text-[20px] font-black tracking-tighter text-zinc-900 dark:text-zinc-100 leading-none">
           Uni-verse
         </span>
-        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E5FF66] bg-zinc-900 px-1 inline-block mt-0.5 rounded-[2px] w-fit">
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E5FF66] dark:text-black bg-zinc-900 dark:bg-[#E5FF66] px-1 inline-block mt-0.5 rounded-[2px] w-fit">
           Beta
         </span>
       </div>

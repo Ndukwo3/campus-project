@@ -11,6 +11,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import CommentModal from "@/components/CommentModal";
 import ShareModal from "@/components/modals/ShareModal";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
+import FeedCardSkeleton from "@/components/skeletons/FeedCardSkeleton";
 import { Loader2, Sparkles } from "lucide-react";
 import Toast from "@/components/Toast";
 
@@ -69,9 +70,9 @@ export default function Home() {
         .select('post_id')
         .eq('user_id', userId);
 
-      const likedPostIds = new Set(userLikes?.map(l => l.post_id) || []);
+      const likedPostIds = new Set(userLikes?.map((l: any) => l.post_id) || []);
 
-      const processedPosts = dbPosts.map(post => ({
+      const processedPosts = (dbPosts || []).map((post: any) => ({
         ...post,
         isLiked: likedPostIds.has(post.id)
       }));
@@ -82,11 +83,20 @@ export default function Home() {
         .select('post_id')
         .eq('user_id', userId);
 
-      const bookmarkedPostIds = new Set(userBookmarks?.map(b => b.post_id) || []);
+      const bookmarkedPostIds = new Set(userBookmarks?.map((b: any) => b.post_id) || []);
 
-      const finalPosts = processedPosts.map(post => ({
+      // Fetch user's reposts to determine isReposted status
+      const { data: userReposts } = await supabase
+        .from('reposts')
+        .select('post_id')
+        .eq('user_id', userId);
+
+      const repostedPostIds = new Set(userReposts?.map((r: any) => r.post_id) || []);
+
+      const finalPosts = processedPosts.map((post: any) => ({
         ...post,
-        isBookmarked: bookmarkedPostIds.has(post.id)
+        isBookmarked: bookmarkedPostIds.has(post.id),
+        isReposted: repostedPostIds.has(post.id)
       }));
 
       setPosts(finalPosts);
@@ -111,7 +121,7 @@ export default function Home() {
       if (error) throw error;
 
       // Optimistic update
-      setPosts(prev => prev.filter(p => p.id !== selectedPostForDelete));
+      setPosts(prev => prev.filter((p: any) => p.id !== selectedPostForDelete));
       setIsDeleteModalOpen(false);
     } catch (err: any) {
       console.error("Error deleting post:", err.message);
@@ -154,35 +164,26 @@ export default function Home() {
       };
       checkPostingState();
 
-      // 1. Subscribe to new posts
+      // 2. Subscribe to REALTIME post changes
       const postsSubscription = supabase
         .channel('public:posts')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload) => {
-          // A new post just arrived! Remove the optimistic loading slate
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload: any) => {
           if (payload.new) {
              sessionStorage.removeItem('isPosting');
              setIsPostingOptimistic(false);
           }
-          // Re-fetch or manually add to get profile info
           await fetchPosts(authUser.id, uniIdRef.current);
         })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload) => {
-          setPosts(prev => prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p));
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload: any) => {
+          setPosts(prev => prev.map((p: any) => p.id === payload.new.id ? { ...p, ...payload.new } : p));
+        })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload: any) => {
+          setPosts(prev => prev.filter((p: any) => p.id !== payload.old.id));
         })
         .subscribe();
 
-      // 2. Subscribe to like changes for live counts
-      const likesSubscription = supabase
-        .channel('public:likes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, async () => {
-          // Simplest is to re-sync counts/status, or we could handle locally
-          await fetchPosts(authUser.id, uniIdRef.current);
-        })
-        .subscribe();
-
-    return () => {
+      return () => {
         supabase.removeChannel(postsSubscription);
-        supabase.removeChannel(likesSubscription);
       };
     }
 
@@ -192,7 +193,7 @@ export default function Home() {
   const handleLike = async (postId: string) => {
     if (!user) return;
 
-    const post = posts.find(p => p.id === postId);
+    const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
 
     if (post.isLiked) {
@@ -221,7 +222,7 @@ export default function Home() {
   };
 
   const handleCommentClick = (postId: string) => {
-    const post = posts.find(p => p.id === postId);
+    const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
     
     const postData = {
@@ -255,7 +256,7 @@ export default function Home() {
   };
 
   const handleShare = (postId: string) => {
-    const post = posts.find(p => p.id === postId);
+    const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
     
     const postData = {
@@ -269,7 +270,7 @@ export default function Home() {
 
   const handleBookmark = async (postId: string) => {
     if (!user) return;
-    const post = posts.find(p => p.id === postId);
+    const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
 
     if (post.isBookmarked) {
@@ -287,13 +288,44 @@ export default function Home() {
       showToast("Post bookmarked!");
     }
     // Update local state
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p));
+    setPosts(prev => prev.map((p: any) => p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p));
+  };
+
+  const handleRepost = async (postId: string) => {
+    if (!user) return;
+    const post = posts.find((p: any) => p.id === postId);
+    if (!post) return;
+
+    if (post.isReposted) {
+      // Unrepost
+      const { error } = await supabase
+        .from('reposts')
+        .delete()
+        .match({ post_id: postId, user_id: user.id });
+      
+      if (!error) {
+        showToast("Repost removed");
+        setPosts(prev => prev.map((p: any) => p.id === postId ? { ...p, isReposted: false } : p));
+      }
+    } else {
+      // Repost
+      const { error } = await supabase
+        .from('reposts')
+        .insert({ post_id: postId, user_id: user.id });
+      
+      if (!error) {
+        showToast("Post reposted!");
+        setPosts(prev => prev.map((p: any) => p.id === postId ? { ...p, isReposted: true } : p));
+      } else {
+        showToast("Repost failed", "error");
+      }
+    }
   };
 
   // Removed blocking loading screen to allow instant optimistic UI
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-[100px] max-w-md mx-auto relative shadow-sm border-x border-zinc-100/50 h-full">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black pb-[100px] max-w-md mx-auto relative shadow-sm border-x border-zinc-100/50 dark:border-zinc-800/50 h-full transition-colors">
       <Toast 
         message={toast.message} 
         type={toast.type} 
@@ -306,21 +338,27 @@ export default function Home() {
       {/* Optimistic UI: Posting Banner */}
       {isPostingOptimistic && (
         <div className="px-5 mb-4">
-          <div className="bg-white rounded-3xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-zinc-100 flex items-center gap-3 animate-pulse">
-            <div className="w-10 h-10 rounded-full bg-zinc-100 relative overflow-hidden">
-               <div className="absolute inset-0 bg-gradient-to-tr from-zinc-200 to-zinc-100 animate-[spin_2s_linear_infinite]" />
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none border border-zinc-100 dark:border-zinc-800 flex items-center gap-3 animate-pulse">
+            <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden text-zinc-300 dark:text-zinc-700">
+               <div className="absolute inset-0 bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 animate-[spin_2s_linear_infinite]" />
             </div>
             <div className="flex-1">
-              <div className="w-24 h-4 bg-zinc-200 rounded-full mb-2"></div>
-              <div className="w-48 h-3 bg-zinc-100 rounded-full"></div>
+              <div className="w-24 h-4 bg-zinc-200 dark:bg-zinc-800 rounded-full mb-2"></div>
+              <div className="w-48 h-3 bg-zinc-100 dark:bg-zinc-800/50 rounded-full"></div>
             </div>
-            <p className="text-[13px] font-bold text-zinc-400">Posting...</p>
+            <p className="text-[13px] font-bold text-zinc-400 dark:text-zinc-500">Posting...</p>
           </div>
         </div>
       )}
 
       <main className="px-4 mt-2 mb-8">
-        {posts.length > 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col gap-6">
+            <FeedCardSkeleton />
+            <FeedCardSkeleton />
+            <FeedCardSkeleton />
+          </div>
+        ) : posts.length > 0 ? (
           posts.map((post) => (
             <FeedCard
               key={post.id}
@@ -336,21 +374,23 @@ export default function Home() {
               description={post.content}
               isLiked={post.isLiked}
               isBookmarked={post.isBookmarked}
+              isReposted={post.isReposted}
               onLike={handleLike}
               onComment={handleCommentClick}
               onReport={handleReport}
               onDelete={openDeleteModal}
               onShare={handleShare}
               onBookmark={handleBookmark}
+              onRepost={handleRepost}
             />
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-20 px-10 text-center">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-zinc-100">
+            <div className="w-20 h-20 bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
               <Sparkles className="w-10 h-10 text-[#E5FF66]" />
             </div>
-            <h3 className="text-lg font-bold text-zinc-900 mb-2">Welcome to the Feed!</h3>
-            <p className="text-zinc-500 text-sm leading-relaxed">
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Welcome to the Feed!</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed">
               There aren't any posts from your university yet. Be the first to share something amazing!
             </p>
           </div>

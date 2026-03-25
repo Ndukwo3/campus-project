@@ -137,9 +137,9 @@ export default function StoryViewer({ user, stories, onClose }: StoryViewerProps
               />
             ) : (
               <div 
-                className="px-8 text-center"
+                className="w-full px-8 text-center"
               >
-                <h2 className="text-3xl font-black text-black leading-tight tracking-tight">
+                <h2 className="text-3xl font-black text-black leading-tight tracking-tight break-words whitespace-pre-wrap">
                   {currentStory.content}
                 </h2>
               </div>

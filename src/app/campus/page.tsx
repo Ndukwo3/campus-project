@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, ArrowLeft, Plus, Users, Search, ChevronRight, User } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Sparkles, ArrowLeft, Users, Search, ChevronRight, User, 
+  Library, Hash, GraduationCap, Calendar, ShoppingBag, 
+  Home, UserCheck, LayoutGrid 
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -71,11 +76,11 @@ export default function CampusPage() {
         .select('group_id')
         .eq('user_id', userId);
 
-      const userGroupIds = new Set(userMemberships?.map(m => m.group_id) || []);
+      const userGroupIds = new Set((userMemberships as any[])?.map((m: any) => m.group_id) || []);
 
-      const processedAll = allGroups || [];
-      setGroups(processedAll.filter(g => !userGroupIds.has(g.id)));
-      setMyGroups(processedAll.filter(g => userGroupIds.has(g.id)));
+      const processedAll = (allGroups as any[]) || [];
+      setGroups(processedAll.filter((g: any) => !userGroupIds.has(g.id)));
+      setMyGroups(processedAll.filter((g: any) => userGroupIds.has(g.id)));
     } catch (err) {
       console.error(err);
     } finally {
@@ -96,15 +101,15 @@ export default function CampusPage() {
 
       if (error) throw error;
       
-      showToast("Successfully joined the group!");
+      showToast("Successfully joined the community!");
       if (profile) fetchGroups(profile.university_id, user.id);
     } catch (err: any) {
-      showToast(err.message || "Failed to join group", "error");
+      showToast(err.message || "Failed to join community", "error");
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FDFDFD] max-w-md mx-auto relative font-sans">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-black max-w-md mx-auto relative font-sans transition-colors">
        <Toast 
         message={toast.message} 
         type={toast.type} 
@@ -113,121 +118,183 @@ export default function CampusPage() {
       />
 
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl px-6 pt-10 pb-5 flex items-center justify-between border-b border-zinc-100/50">
-        <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900">Campus</h1>
-        <button 
-          onClick={() => setIsCreateModalOpen(true)}
-          className="w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-900 text-[#E5FF66] shadow-lg active:scale-95 transition-all"
-        >
-          <Plus size={20} />
-        </button>
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-xl px-6 pt-10 pb-5 flex items-center justify-between border-b border-zinc-100/50 dark:border-zinc-800/50">
+        <div className="flex flex-col">
+          <h1 className="text-[34px] font-black tracking-tight text-zinc-900 dark:text-white uppercase italic">Campus</h1>
+          <p className="text-[11px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-0.5">University Operations Hub</p>
+        </div>
+        <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-zinc-400">
+           <Search size={22} />
+        </div>
       </div>
 
-      <main className="flex-1 px-6 py-6 pb-40 space-y-8 overflow-y-auto scrollbar-hide">
-        {/* Horizontal Filters */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-          {["All Groups", "My Groups", "Recommended"].map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter.toLowerCase())}
-              className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-                activeFilter === filter.toLowerCase() 
-                ? "bg-zinc-900 text-white shadow-md" 
-                : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
-              }`}
+      <main className="flex-1 px-6 py-8 pb-40 space-y-12 overflow-y-auto scrollbar-hide">
+        {/* Hub Bento Grid */}
+        <section className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            {/* Top Row: Library (Dominant) & Hubs */}
+            <motion.div
+              onClick={() => router.push("/library")}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="col-span-1 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-[44px] p-8 flex flex-col justify-between h-[260px] shadow-2xl relative overflow-hidden group border border-transparent dark:border-zinc-100 cursor-pointer"
             >
-              {filter}
-            </button>
-          ))}
-        </div>
+              <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl group-hover:scale-150 transition-all duration-1000" />
+              <div className="w-16 h-16 rounded-[24px] bg-blue-500/10 dark:bg-zinc-900/5 flex items-center justify-center text-blue-400 dark:text-blue-600 shadow-inner">
+                <Library size={36} strokeWidth={2.5} />
+              </div>
+              <div className="space-y-1 z-10">
+                <h3 className="font-black text-[26px] uppercase italic leading-[0.9] tracking-tighter">Library</h3>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] opacity-40">Academic Hub</p>
+              </div>
+            </motion.div>
 
-        {/* My Groups Section */}
-        {(activeFilter === "all groups" || activeFilter === "my groups") && (
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[17px] font-bold text-zinc-900 leading-none">Joined Communities</h2>
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{myGroups.length} Groups</span>
-            </div>
-            
-            <div className="space-y-3">
-              {myGroups.length > 0 ? myGroups.map((group) => (
-                <Link 
-                  key={group.id}
-                  href={`/groups/${group.id}`}
-                  className="flex items-center gap-4 p-4 rounded-3xl bg-white border border-zinc-100/50 shadow-sm hover:shadow-md active:scale-[0.98] transition-all group"
-                >
-                  <div className="w-14 h-14 rounded-2xl overflow-hidden bg-zinc-100 flex items-center justify-center relative shrink-0">
-                    {group.image_url ? (
-                      <Image src={group.image_url} alt={group.name} fill className="object-cover" />
-                    ) : (
-                      <Users className="text-zinc-300 w-7 h-7" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-[15px] text-zinc-900 truncate">{group.name}</h3>
-                    <p className="text-[12px] font-medium text-zinc-500 truncate mt-0.5">{group.description || "Active community member"}</p>
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-zinc-50 flex items-center justify-center text-zinc-400 group-hover:bg-[#E5FF66] group-hover:text-black transition-colors">
-                    <ChevronRight size={18} />
-                  </div>
-                </Link>
-              )) : (
-                <div className="py-8 px-6 bg-zinc-50/50 rounded-3xl border border-dashed border-zinc-200 text-center">
-                   <p className="text-sm font-bold text-zinc-400">No joined groups yet</p>
+            <div className="col-span-1 h-[260px] flex flex-col gap-4">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 bg-zinc-50 dark:bg-zinc-900/40 rounded-[38px] p-6 border border-zinc-100 dark:border-zinc-800/50 flex flex-col justify-between group cursor-pointer transition-all hover:bg-white dark:hover:bg-zinc-900 shadow-sm"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-[#E5FF66]/10 dark:bg-[#E5FF66]/10 flex items-center justify-center text-[#E5FF66] dark:text-[#E2FF3D]">
+                  <Users size={24} />
                 </div>
-              )}
-            </div>
-          </section>
-        )}
+                <h3 className="font-black text-[13px] uppercase tracking-wider text-zinc-900 dark:text-white">Communities</h3>
+              </motion.div>
 
-        {/* Recommended/Explore Groups */}
-        {(activeFilter === "all groups" || activeFilter === "recommended") && (
-          <section>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <h2 className="text-[17px] font-bold text-zinc-900 leading-none">Discover More</h2>
-              <Search size={18} className="text-zinc-400" />
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 bg-zinc-50 dark:bg-zinc-900/40 rounded-[38px] p-6 border border-zinc-100 dark:border-zinc-800/50 flex flex-col justify-between group cursor-pointer transition-all hover:bg-white dark:hover:bg-zinc-900 shadow-sm"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  <Hash size={24} />
+                </div>
+                <h3 className="font-black text-[13px] uppercase tracking-wider text-zinc-900 dark:text-white">Channels</h3>
+              </motion.div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {groups.length > 0 ? groups.map((group) => (
-                <div key={group.id} className="bg-white rounded-[32px] p-2 shadow-sm border border-zinc-100/50 group overflow-hidden flex flex-col h-full">
-                  <div className="h-28 rounded-3xl overflow-hidden relative mb-3 bg-zinc-100 shrink-0">
-                    {group.image_url ? (
-                      <Image src={group.image_url} alt={group.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center">
-                        <Users className="text-zinc-300 w-8 h-8" />
-                      </div>
-                    )}
-                    <div className="absolute top-2 right-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm">
-                      <p className="text-[9px] font-black text-zinc-800 uppercase tracking-tighter">Recommended</p>
+            {/* Bottom Row: Events (Full Width) */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="col-span-2 bg-[#E5FF66] dark:bg-[#E5FF66] rounded-[40px] p-7 flex items-center justify-between shadow-xl relative overflow-hidden group"
+            >
+              <div className="flex gap-6 items-center">
+                <div className="w-14 h-14 rounded-2xl bg-black/5 flex items-center justify-center text-black">
+                  <Calendar size={32} />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-black text-2xl text-black uppercase italic leading-none tracking-tight">University Events</h3>
+                  <p className="text-[11px] font-black text-black/60 uppercase tracking-[0.1em]">Don't miss out</p>
+                </div>
+              </div>
+              <ChevronRight size={24} className="text-black/40 group-hover:translate-x-1 transition-transform" />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Featured Communities Section */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-[18px] font-black text-zinc-900 dark:text-white uppercase italic">Featured Hubs</h2>
+            <div className="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl gap-2">
+              <button className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center text-zinc-900 dark:text-white">
+                <LayoutGrid size={14} />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+            {["All", "My Communities", "Suggested"].map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter.toLowerCase())}
+                className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border-2 ${
+                  activeFilter === filter.toLowerCase() 
+                  ? "bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black shadow-lg border-transparent" 
+                  : "bg-white dark:bg-zinc-950 text-zinc-400 dark:text-zinc-600 border-zinc-100 dark:border-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+
+          {/* Joined Communities Area */}
+          {(activeFilter === "all" || activeFilter === "my communities") && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-[12px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">Joined</h3>
+                <span className="text-[10px] font-black text-black dark:text-[#E5FF66] bg-[#E5FF66] dark:bg-zinc-900 px-2 py-0.5 rounded-md">
+                  {myGroups.length}
+                </span>
+              </div>
+              <div className="space-y-3">
+                {myGroups.length > 0 ? myGroups.map((group) => (
+                  <Link 
+                    key={group.id}
+                    href={`/groups/${group.id}`}
+                    className="flex items-center gap-4 p-4 rounded-[32px] bg-white dark:bg-zinc-950 border border-zinc-100/80 dark:border-zinc-800/50 shadow-sm hover:shadow-xl hover:shadow-black/5 active:scale-[0.98] transition-all group overflow-hidden relative"
+                  >
+                    <div className="absolute inset-y-0 left-0 w-1 bg-[#E5FF66] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-900/50 flex items-center justify-center relative shrink-0 border border-zinc-100 dark:border-zinc-800/80 group-hover:scale-105 transition-transform">
+                      {group.image_url ? (
+                        <Image src={group.image_url} alt={group.name} fill className="object-cover" />
+                      ) : (
+                        <Users className="text-zinc-300 dark:text-zinc-700 w-7 h-7" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-[15px] text-zinc-900 dark:text-white truncate">{group.name}</h3>
+                      <p className="text-[12px] font-medium text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{group.description || "Active community member"}</p>
+                    </div>
+                    <ChevronRight size={18} className="text-zinc-300 group-hover:text-[#E5FF66] transition-colors" />
+                  </Link>
+                )) : (
+                  <div className="py-10 text-center bg-zinc-50/50 dark:bg-zinc-900/10 rounded-[40px] border-2 border-dashed border-zinc-100 dark:border-zinc-800/50">
+                    <p className="text-xs font-bold text-zinc-400">No active communities</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Discovery Area */}
+          {(activeFilter === "all" || activeFilter === "suggested") && (
+            <div className="space-y-5 pt-4">
+              <h3 className="text-[12px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest px-1">Discovery</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {groups.length > 0 ? groups.map((group) => (
+                  <div key={group.id} className="bg-white dark:bg-zinc-950 rounded-[36px] p-2 shadow-sm border border-zinc-100/60 dark:border-zinc-800/60 group overflow-hidden flex flex-col h-full">
+                    <div className="h-32 rounded-[30px] overflow-hidden relative mb-4 bg-zinc-100 dark:bg-zinc-900 shrink-0">
+                      {group.image_url ? (
+                        <Image src={group.image_url} alt={group.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 flex items-center justify-center">
+                          <Users className="text-zinc-300 dark:text-zinc-700 w-8 h-8" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="px-3 pb-4 flex-1 flex flex-col">
+                      <h3 className="text-sm font-black text-zinc-900 dark:text-white mb-2 leading-tight line-clamp-1 italic uppercase">{group.name}</h3>
+                      <button 
+                        onClick={() => handleJoinGroup(group.id)}
+                        className="w-full py-3 bg-zinc-900 dark:bg-[#E5FF66] rounded-2xl text-[10px] font-black text-white dark:text-black hover:bg-black dark:hover:bg-white transition-all active:scale-95 shadow-lg mt-auto uppercase tracking-widest"
+                      >
+                        Join
+                      </button>
                     </div>
                   </div>
-                  <div className="px-2 pb-2 flex-1 flex flex-col">
-                    <h3 className="text-sm font-bold text-zinc-900 mb-1 leading-tight line-clamp-1">{group.name}</h3>
-                    <p className="text-[11px] text-zinc-500 font-medium mb-3 line-clamp-2 min-h-[32px] leading-snug">
-                       {group.description || "Join this academic community."}
-                    </p>
-                    <button 
-                      onClick={() => handleJoinGroup(group.id)}
-                      className="w-full py-2.5 bg-zinc-900 rounded-xl text-[11px] font-bold text-white hover:bg-black transition-all active:scale-95 shadow-sm mt-auto"
-                    >
-                      Join Community
-                    </button>
+                )) : (
+                  <div className="col-span-2 py-20 text-center">
+                    <Construction size={40} className="text-zinc-200 mx-auto mb-4" />
+                    <h3 className="text-sm font-black text-zinc-400">More hubs coming soon</h3>
                   </div>
-                </div>
-              )) : (
-                <div className="col-span-2 py-10 text-center">
-                   <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-zinc-100">
-                     <Construction size={28} className="text-zinc-300" />
-                   </div>
-                   <h3 className="text-[15px] font-bold text-zinc-900 mb-1">More groups coming</h3>
-                   <p className="text-xs text-zinc-400 px-10 leading-relaxed">We're finding more communities in your university!</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </section>
-        )}
+          )}
+        </section>
       </main>
 
       {profile && user && (
@@ -236,7 +303,7 @@ export default function CampusPage() {
           onClose={() => setIsCreateModalOpen(false)} 
           onSuccess={(id) => {
             fetchGroups(profile.university_id, user.id);
-            showToast("Group created successfully!");
+            showToast("Community created successfully!");
           }}
           universityId={profile.university_id}
           userId={user.id}

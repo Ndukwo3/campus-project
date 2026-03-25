@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { ArrowLeft, User, CheckCircle2, Loader2, Grid, MessageSquare, UserPlus, Check } from "lucide-react";
+import { ArrowLeft, User, CheckCircle2, Loader2, Grid, Bookmark, MessageSquare, UserPlus, Check, Maximize2, Repeat2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -25,6 +25,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentUserLikes, setCurrentUserLikes] = useState<Set<string>>(new Set());
   const [currentUserBookmarks, setCurrentUserBookmarks] = useState<Set<string>>(new Set());
+  const [currentUserReposts, setCurrentUserReposts] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<"posts" | "reposts">("posts");
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [reposts, setReposts] = useState<any[]>([]);
 
   // Toast State
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
@@ -116,19 +120,66 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
       // Fetch user's likes and bookmarks for interaction states
       if (authUser) {
-        const [ { data: likesData }, { data: bookmarksData } ] = await Promise.all([
+        const [ { data: likesData }, { data: bookmarksData }, { data: repostsData } ] = await Promise.all([
           supabase.from('likes').select('post_id').eq('user_id', authUser.id),
-          supabase.from('bookmarks').select('post_id').eq('user_id', authUser.id)
+          supabase.from('bookmarks').select('post_id').eq('user_id', authUser.id),
+          supabase.from('reposts').select('post_id').eq('user_id', authUser.id)
         ]);
-        if (likesData) setCurrentUserLikes(new Set(likesData.map(l => l.post_id)));
-        if (bookmarksData) setCurrentUserBookmarks(new Set(bookmarksData.map(b => b.post_id)));
+        if (likesData) setCurrentUserLikes(new Set(likesData.map((l: any) => l.post_id)));
+        if (bookmarksData) setCurrentUserBookmarks(new Set(bookmarksData.map((b: any) => b.post_id)));
+        if (repostsData) setCurrentUserReposts(new Set(repostsData.map((r: any) => r.post_id)));
       }
 
       setIsLoading(false);
     }
-
     fetchData();
   }, [userId, router, supabase]);
+
+  useEffect(() => {
+    async function fetchUserReposts() {
+      if (activeTab !== "reposts") return;
+      
+      const { data, error } = await supabase
+        .from('reposts')
+        .select(`
+          id,
+          post_id,
+          created_at,
+          posts (
+            *,
+            profiles:user_id (username, full_name, avatar_url)
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (data) setReposts(data);
+    }
+    fetchUserReposts();
+  }, [activeTab, userId, supabase]);
+
+  const handleRepost = async (postId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return router.push("/login");
+
+    if (currentUserReposts.has(postId)) {
+      await supabase.from('reposts').delete().match({ user_id: user.id, post_id: postId });
+      setCurrentUserReposts(prev => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
+      showToast("Repost removed");
+    } else {
+      await supabase.from('reposts').insert({ user_id: user.id, post_id: postId });
+      setCurrentUserReposts(prev => {
+        const next = new Set(prev);
+        next.add(postId);
+        return next;
+      });
+      showToast("Post reposted!");
+    }
+  };
 
   const handleConnect = async () => {
     if (!currentUser) return router.push("/login");
@@ -260,7 +311,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="min-h-screen bg-white pb-[100px] max-w-md mx-auto relative font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans overflow-x-hidden transition-colors">
       <Toast 
         message={toast.message} 
         type={toast.type} 
@@ -269,42 +320,58 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
       />
 
       {/* Header Bar */}
-      <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white/80 backdrop-blur-xl z-30 border-b border-zinc-50">
-        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-50 hover:bg-zinc-100 transition active:scale-90">
-          <ArrowLeft size={20} className="text-black" />
+      <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white/80 dark:bg-black/80 backdrop-blur-xl z-30 border-b border-zinc-100/50 dark:border-zinc-800/50">
+        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition active:scale-90">
+          <ArrowLeft size={20} className="text-black dark:text-white" />
         </button>
-        <span className="font-black text-sm tracking-[0.1em] uppercase text-zinc-400">Student Profile</span>
+        <span className="font-black text-xs tracking-[0.1em] uppercase text-zinc-400 dark:text-zinc-600">Profile</span>
         <div className="w-10" />
       </div>
 
-      <div className="px-6 pt-8 pb-6">
+      {/* Profile Info Section */}
+      <div className="px-6 pt-2 pb-6">
         <div className="flex flex-col items-center">
-          <div className="relative mb-6">
-            <div className="w-32 h-32 rounded-[40px] overflow-hidden bg-zinc-50 border-4 border-zinc-100 shadow-2xl flex items-center justify-center">
+          {/* Avatar with Ring */}
+          <div className="relative">
+            <div 
+              onClick={() => profile?.avatar_url && setShowImageViewer(true)}
+              className={`w-28 h-28 rounded-full ring-4 ${profile?.avatar_url ? "ring-[#E5FF66] cursor-pointer" : "ring-zinc-200 dark:ring-zinc-800"} ring-offset-4 ring-offset-white dark:ring-offset-black overflow-hidden mb-4 shadow-lg transition-all flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 relative group`}
+            >
               {profile?.avatar_url ? (
-                <Image src={profile.avatar_url} alt={profile.full_name} fill className="object-cover" />
+                <>
+                  <Image 
+                    src={profile.avatar_url} 
+                    alt="Profile" 
+                    width={112} 
+                    height={112} 
+                    className="object-cover w-full h-full"
+                  />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Maximize2 size={24} className="text-white" />
+                  </div>
+                </>
               ) : (
-                <User className="w-12 h-12 text-zinc-200" />
+                <User className="w-12 h-12 text-zinc-300 dark:text-zinc-700" />
               )}
             </div>
           </div>
           
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <h2 className="text-2xl font-black text-black leading-tight">{profile?.full_name}</h2>
-            <CheckCircle2 size={18} className="fill-black text-white shrink-0" />
+          <div className="flex items-center justify-center gap-1.5 mb-1 w-full max-w-[280px] mx-auto">
+            <h2 className="text-2xl font-black text-black dark:text-white leading-tight truncate">{profile?.full_name}</h2>
+            <CheckCircle2 size={18} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
           </div>
-          <p className="text-zinc-400 text-[14px] font-bold mb-8">{profile?.username}</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-[14px] font-medium mb-4">{profile?.username} • {profile?.level || "Undergraduate"}</p>
           
-          <div className="flex gap-4 w-full px-6 mb-8">
+          <div className="flex gap-4 w-full">
             <button 
               onClick={handleConnect}
               disabled={isActionLoading}
-              className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[24px] text-[15px] font-black transition-all active:scale-95 shadow-lg ${
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[15px] font-bold transition-all active:scale-95 shadow-[0_4px_10px_rgba(26,26,36,0.1)] ${
                 connectionStatus === 'connected' || connectionStatus === 'pending_sent'
-                ? "bg-zinc-100 text-zinc-500 shadow-zinc-100/50 hover:bg-zinc-200" 
+                ? "bg-zinc-100 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 shadow-none hover:bg-zinc-200 dark:hover:bg-zinc-800" 
                 : connectionStatus === 'pending_received'
-                ? "bg-[#E5FF66] text-black shadow-black/10 hover:brightness-95"
-                : "bg-[#1A1A24] text-white shadow-black/20 hover:bg-black"
+                ? "bg-[#E5FF66] text-black hover:brightness-95"
+                : "bg-[#1A1A24] dark:bg-zinc-800 text-white dark:text-white hover:bg-black dark:hover:bg-zinc-700"
               }`}
             >
               {isActionLoading ? (
@@ -335,133 +402,278 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
               <button 
                 onClick={handleMessageClick}
                 disabled={isActionLoading}
-                className="w-16 flex items-center justify-center rounded-[24px] bg-zinc-50 text-black hover:bg-zinc-100 transition active:scale-95 border border-zinc-100 shadow-sm disabled:opacity-50"
+                className="w-12 h-[48px] flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition active:scale-95 border border-zinc-100 dark:border-zinc-800 shadow-sm disabled:opacity-50"
               >
-                {isActionLoading ? <Loader2 size={22} className="animate-spin text-zinc-400" /> : <MessageSquare size={22} strokeWidth={2.5} />}
+                {isActionLoading ? <Loader2 size={20} className="animate-spin text-zinc-400" /> : <MessageSquare size={20} strokeWidth={2.5} />}
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="flex justify-between py-10 px-14 bg-zinc-50/50 rounded-[40px] mx-6 mb-8 border border-zinc-100/50">
-        <div className="flex flex-col items-center gap-1.5 w-1/2">
-          <span className="text-2xl font-black text-black">{posts.length}</span>
-          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Posts</span>
+      {/* Stats Section - Modern Look */}
+      <div className="flex justify-around py-8 px-10 bg-white dark:bg-black mx-0 border-b border-zinc-50 dark:border-zinc-800/50">
+        <div className="flex flex-col items-center gap-1 group cursor-pointer w-1/2">
+          <span className="text-2xl font-black text-black dark:text-white group-hover:scale-110 transition-transform">{posts.length}</span>
+          <span className="text-[10px] text-zinc-400 dark:text-zinc-600 font-black uppercase tracking-[0.2em]">Posts</span>
         </div>
-        <div className="h-10 w-[1px] bg-zinc-200/50 mt-2" />
-        <div className="flex flex-col items-center gap-1.5 w-1/2">
-          <span className="text-2xl font-black text-black">{connectionCount}</span>
-          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Connections</span>
+        <div className="w-[1px] h-10 bg-zinc-100 dark:bg-zinc-800/50" />
+        <div className="flex flex-col items-center gap-1 group cursor-pointer w-1/2">
+          <span className="text-2xl font-black text-black dark:text-white group-hover:scale-110 transition-transform">{connectionCount}</span>
+          <span className="text-[10px] text-zinc-400 dark:text-zinc-600 font-black uppercase tracking-[0.2em]">Connections</span>
         </div>
       </div>
 
-      <div className="px-8 flex flex-col gap-6 mb-10">
-        <div className="flex flex-col gap-2">
-          <h3 className="font-black text-[11px] text-zinc-400 uppercase tracking-widest">About</h3>
-          <p className="text-[15px] font-medium text-zinc-800 leading-relaxed italic">
-            "{profile?.bio || `A student at ${profile?.universities?.name}`}"
-          </p>
-        </div>
-        
-        <div className="flex flex-col gap-2">
-          <h3 className="font-black text-[11px] text-zinc-400 uppercase tracking-widest">University</h3>
-          <div className="bg-white p-5 rounded-[28px] border border-zinc-100 shadow-sm">
-            <p className="text-[14px] font-black text-black mb-1">{profile?.universities?.name}</p>
-            <p className="text-[13px] font-bold text-zinc-500">{profile?.departments?.name} • {profile?.level}</p>
+      {/* Bio / University Section */}
+      <div className="px-6 py-6 flex flex-col gap-4">
+        <div className="bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center mb-2">
+            <h3 className="font-bold text-sm text-black dark:text-white">University</h3>
           </div>
+          <p className="text-sm font-normal text-black dark:text-zinc-300">{profile?.universities?.name || "Select University"}</p>
+          <p className="text-sm text-black dark:text-zinc-300 font-normal mt-1">{profile?.departments?.name || "Select Department"}</p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h3 className="font-bold text-base text-black dark:text-white px-1">About Me</h3>
+          {profile?.bio ? (
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed px-1 font-normal">
+              {profile.bio}
+            </p>
+          ) : (
+            <p className="text-sm text-zinc-400 dark:text-zinc-600 italic px-1 font-normal">
+              This student hasn't added a bio yet.
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Tab Separator */}
-      <div className="px-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Grid size={18} className="text-black" />
-          <h3 className="font-black text-xs uppercase tracking-widest text-black">Insights & Shared Content</h3>
+      {/* Tabs - Sleek Apple-style */}
+      <div className="px-6 flex items-center mb-6 sticky top-[72px] bg-white/80 dark:bg-black/80 backdrop-blur-md z-10 py-2">
+        <div className="flex-1 flex bg-zinc-50 dark:bg-zinc-900/50 p-1 rounded-2xl relative">
+          <button 
+            onClick={() => setActiveTab("posts")}
+            className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "posts" ? "text-black dark:text-white font-black" : "text-zinc-400 font-bold hover:text-zinc-600 dark:hover:text-zinc-200"}`}
+          >
+            <Grid size={18} />
+            <span className="text-xs">Posts</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab("reposts")}
+            className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "reposts" ? "text-black dark:text-white font-black" : "text-zinc-400 font-bold hover:text-zinc-600 dark:hover:text-zinc-200"}`}
+          >
+            <Repeat2 size={18} />
+            <span className="text-xs">Reposts</span>
+          </button>
+          
+          {/* Active indicator pill */}
+          <motion.div 
+            layoutId="tab-pill-other-user"
+            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-700"
+            animate={{ x: activeTab === "posts" ? 0 : "100%" }}
+            transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+          />
         </div>
-        <div className="h-[2px] w-full bg-zinc-50 rounded-full" />
       </div>
 
-      {/* Posts Section */}
+      {/* Tab Content */}
       <div className="px-6 flex flex-col gap-4">
-        {posts.length > 0 ? (
-          posts.map((post) => (
-            <FeedCard 
-              key={post.id}
-              id={post.id}
-              authorName={profile?.full_name || "User"}
-              authorImage={profile?.avatar_url}
-              timePosted={new Date(post.created_at).toLocaleDateString()}
-              postImage={post.image_url}
-              likes={post.likes_count || 0}
-              comments={post.comments_count || 0}
-              description={post.content}
-              authorId={post.user_id}
-              currentUserId={currentUser?.id}
-              isLiked={currentUserLikes.has(post.id)}
-              isBookmarked={currentUserBookmarks.has(post.id)}
-              onLike={async (id: string) => {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
-                await supabase.rpc('toggle_post_like', { post_id_input: id, user_id_input: user.id });
-                
-                setCurrentUserLikes(prev => {
-                  const next = new Set(prev);
-                  if (next.has(id)) next.delete(id);
-                  else next.add(id);
-                  return next;
-                });
-              }}
-              onBookmark={async (id: string) => {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
-                
-                const isBookmarked = currentUserBookmarks.has(id);
-                if (isBookmarked) {
-                  await supabase.from('bookmarks').delete().match({ user_id: user.id, post_id: id });
-                  setCurrentUserBookmarks(prev => {
-                    const next = new Set(prev);
-                    next.delete(id);
-                    return next;
-                  });
-                  showToast("Bookmark removed");
-                } else {
-                  await supabase.from('bookmarks').insert({ user_id: user.id, post_id: id });
-                  setCurrentUserBookmarks(prev => {
-                    const next = new Set(prev);
-                    next.add(id);
-                    return next;
-                  });
-                  showToast("Post bookmarked!");
-                }
-              }}
-              onComment={(id: string) => {
-                const postData = {
-                  id,
-                  authorName: profile?.full_name || "User",
-                  authorImage: profile?.avatar_url,
-                  description: post.content
-                };
-                window.dispatchEvent(new CustomEvent('open-comment', { detail: postData }));
-              }}
-              onShare={(id: string) => {
-                const postData = {
-                  id,
-                  authorName: profile?.full_name || "User",
-                  authorImage: profile?.avatar_url,
-                  description: post.content
-                };
-                window.dispatchEvent(new CustomEvent('open-share', { detail: postData }));
-              }}
-            />
-          ))
-        ) : (
-          <div className="py-12 flex flex-col items-center text-center">
-            <p className="text-zinc-300 font-black text-xs uppercase tracking-widest">No shared content yet</p>
+        {activeTab === "posts" && (
+          <div className="flex flex-col gap-4">
+            {posts.length > 0 ? (
+              posts.map((post) => (
+                <FeedCard 
+                  key={post.id}
+                  id={post.id}
+                  authorName={profile?.full_name || "User"}
+                  authorImage={profile?.avatar_url}
+                  timePosted={new Date(post.created_at).toLocaleDateString()}
+                  postImage={post.image_url}
+                  likes={post.likes_count || 0}
+                  comments={post.comments_count || 0}
+                  description={post.content}
+                  authorId={post.user_id}
+                  currentUserId={currentUser?.id}
+                  isLiked={currentUserLikes.has(post.id)}
+                  isBookmarked={currentUserBookmarks.has(post.id)}
+                  isReposted={currentUserReposts.has(post.id)}
+                  onLike={async (id: string) => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    await supabase.rpc('toggle_post_like', { post_id_input: id, user_id_input: user.id });
+                    
+                    setCurrentUserLikes(prev => {
+                      const next = new Set(prev);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      return next;
+                    });
+                  }}
+                  onRepost={handleRepost}
+                  onBookmark={async (id: string) => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    
+                    const isBookmarked = currentUserBookmarks.has(id);
+                    if (isBookmarked) {
+                      await supabase.from('bookmarks').delete().match({ user_id: user.id, post_id: id });
+                      setCurrentUserBookmarks(prev => {
+                        const next = new Set(prev);
+                        next.delete(id);
+                        return next;
+                      });
+                      showToast("Bookmark removed");
+                    } else {
+                      await supabase.from('bookmarks').insert({ user_id: user.id, post_id: id });
+                      setCurrentUserBookmarks(prev => {
+                        const next = new Set(prev);
+                        next.add(id);
+                        return next;
+                      });
+                      showToast("Post bookmarked!");
+                    }
+                  }}
+                  onComment={(id: string) => {
+                    const postData = {
+                      id,
+                      authorName: profile?.full_name || "User",
+                      authorImage: profile?.avatar_url,
+                      description: post.content
+                    };
+                    window.dispatchEvent(new CustomEvent('open-comment', { detail: postData }));
+                  }}
+                  onShare={(id: string) => {
+                    const postData = {
+                      id,
+                      authorName: profile?.full_name || "User",
+                      authorImage: profile?.avatar_url,
+                      description: post.content
+                    };
+                    window.dispatchEvent(new CustomEvent('open-share', { detail: postData }));
+                  }}
+                />
+              ))
+            ) : (
+              <div className="py-16 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
+                  <Grid className="text-zinc-400 w-8 h-8" />
+                </div>
+                <p className="font-bold text-lg text-black mb-1">No Posts Yet</p>
+                <p className="text-zinc-500 text-sm">This student hasn't shared any posts yet.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "reposts" && (
+          <div className="flex flex-col gap-4">
+            {reposts.length > 0 ? (
+              reposts.map((repost) => (
+                <FeedCard 
+                  key={repost.id}
+                  id={repost.post_id}
+                  authorName={repost.posts.profiles?.full_name || "User"}
+                  authorImage={repost.posts.profiles?.avatar_url}
+                  timePosted={new Date(repost.posts.created_at).toLocaleDateString()}
+                  postImage={repost.posts.image_url}
+                  likes={repost.posts.likes_count || 0}
+                  comments={repost.posts.comments_count || 0}
+                  description={repost.posts.content}
+                  authorId={repost.posts.user_id}
+                  currentUserId={currentUser?.id}
+                  isLiked={currentUserLikes.has(repost.post_id)}
+                  isBookmarked={currentUserBookmarks.has(repost.post_id)}
+                  isReposted={currentUserReposts.has(repost.post_id)}
+                  onLike={async (id: string) => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    await supabase.rpc('toggle_post_like', { post_id_input: id, user_id_input: user.id });
+                    
+                    setCurrentUserLikes(prev => {
+                      const next = new Set(prev);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      return next;
+                    });
+                  }}
+                  onRepost={handleRepost}
+                  onBookmark={async (id: string) => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    
+                    const isBookmarked = currentUserBookmarks.has(id);
+                    if (isBookmarked) {
+                      await supabase.from('bookmarks').delete().match({ user_id: user.id, post_id: id });
+                      setCurrentUserBookmarks(prev => {
+                        const next = new Set(prev);
+                        next.delete(id);
+                        return next;
+                      });
+                      showToast("Bookmark removed");
+                    } else {
+                      await supabase.from('bookmarks').insert({ user_id: user.id, post_id: id });
+                      setCurrentUserBookmarks(prev => {
+                        const next = new Set(prev);
+                        next.add(id);
+                        return next;
+                      });
+                      showToast("Post bookmarked!");
+                    }
+                  }}
+                />
+              ))
+            ) : (
+              <div className="py-16 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
+                  <Repeat2 className="text-zinc-400 w-8 h-8" />
+                </div>
+                <p className="font-bold text-lg text-black mb-1">No Reposts</p>
+                <p className="text-zinc-500 text-sm">This student hasn't reposted any content yet.</p>
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Image Viewer Modal */}
+      <AnimatePresence>
+        {showImageViewer && profile?.avatar_url && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black flex flex-col"
+          >
+            <div className="p-6 flex items-center justify-between">
+              <button onClick={() => setShowImageViewer(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white transition-colors">
+                <ArrowLeft size={24} />
+              </button>
+            </div>
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="flex-1 relative flex items-center justify-center p-4"
+            >
+               <div className="w-full max-w-sm aspect-square relative rounded-[40px] overflow-hidden shadow-2xl">
+                 <Image 
+                   src={profile.avatar_url} 
+                   alt="Enlarged profile" 
+                   fill 
+                   className="object-cover"
+                   unoptimized
+                 />
+               </div>
+            </motion.div>
+            
+            <div className="p-10 flex justify-center">
+               <p className="text-zinc-500 text-sm font-medium">Profile Preview</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <BottomNavigation />
     </div>

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { ArrowLeft, Settings, Grid, Bookmark, Tag, ChevronRight, Edit3, Camera, CheckCircle2, Loader2, User, Trash2, X, Maximize2, ImagePlus } from "lucide-react";
+import { 
+  ArrowLeft, Grid, Bookmark, Tag, User, Camera, Edit3, CheckCircle2, 
+  Loader2, LogOut, Package, Shield, Settings, Settings2, Trash2, Maximize2, 
+  Repeat2, ChevronRight, X, ImagePlus, Check 
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -27,11 +31,13 @@ export default function ProfilePage() {
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [activeTab, setActiveTab] = useState("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "saved" | "reposts" | "tagged">("posts");
+  const [reposts, setReposts] = useState<any[]>([]);
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [connectionCount, setConnectionCount] = useState(0);
   const [currentUserLikes, setCurrentUserLikes] = useState<Set<string>>(new Set());
   const [currentUserBookmarks, setCurrentUserBookmarks] = useState<Set<string>>(new Set());
+  const [currentUserReposts, setCurrentUserReposts] = useState<Set<string>>(new Set());
   
   // Toast State
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
@@ -72,6 +78,29 @@ export default function ProfilePage() {
       const zoomFactor = dist / touchStartDist;
       setZoom(Math.min(Math.max(1, zoom * zoomFactor), 4));
       setTouchStartDist(dist);
+    }
+  };
+
+  const handleRepost = async (postId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    if (currentUserReposts.has(postId)) {
+      await supabase.from('reposts').delete().match({ user_id: user.id, post_id: postId });
+      setCurrentUserReposts(prev => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
+      showToast("Repost removed");
+    } else {
+      await supabase.from('reposts').insert({ user_id: user.id, post_id: postId });
+      setCurrentUserReposts(prev => {
+        const next = new Set(prev);
+        next.add(postId);
+        return next;
+      });
+      showToast("Post reposted!");
     }
   };
 
@@ -121,11 +150,15 @@ export default function ProfilePage() {
       
       // Fetch user's likes to show correct icons
       const { data: likesData } = await supabase.from('likes').select('post_id').eq('user_id', user.id);
-      if (likesData) setCurrentUserLikes(new Set(likesData.map(l => l.post_id)));
+      if (likesData) setCurrentUserLikes(new Set(likesData.map((l: any) => l.post_id)));
 
       // Fetch user's bookmarks
       const { data: bookmarksData } = await supabase.from('bookmarks').select('post_id').eq('user_id', user.id);
-      if (bookmarksData) setCurrentUserBookmarks(new Set(bookmarksData.map(b => b.post_id)));
+      if (bookmarksData) setCurrentUserBookmarks(new Set(bookmarksData.map((b: any) => b.post_id)));
+      
+      // Fetch user's reposts
+      const { data: repostsData } = await supabase.from('reposts').select('post_id').eq('user_id', user.id);
+      if (repostsData) setCurrentUserReposts(new Set(repostsData.map((r: any) => r.post_id)));
       
       // Fetch connections count
       const { count: connections } = await supabase
@@ -140,6 +173,31 @@ export default function ProfilePage() {
 
     fetchProfileData();
   }, [router, supabase]);
+
+  useEffect(() => {
+    async function fetchReposts() {
+      if (activeTab !== "reposts") return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('reposts')
+        .select(`
+          id,
+          post_id,
+          created_at,
+          posts (
+            *,
+            profiles:user_id (username, full_name, avatar_url)
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (data) setReposts(data);
+    }
+    fetchReposts();
+  }, [activeTab, supabase]);
 
   useEffect(() => {
     async function fetchSavedPosts() {
@@ -161,7 +219,7 @@ export default function ProfilePage() {
         .order('created_at', { ascending: false });
 
       if (data) {
-        setSavedPosts(data.map(b => b.posts).filter(Boolean));
+        setSavedPosts(data.map((b: any) => b.posts).filter(Boolean));
       }
     }
 
@@ -350,8 +408,8 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="w-8 h-8 animate-spin text-zinc-900" />
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black transition-colors">
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-900 dark:text-[#E5FF66]" />
       </div>
     );
   }
@@ -359,7 +417,7 @@ export default function ProfilePage() {
   const isProfileComplete = profile?.bio && profile?.full_name !== "New Student" && profile?.avatar_url;
 
   return (
-    <div className="min-h-screen bg-white pb-[100px] max-w-md mx-auto relative font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans overflow-x-hidden transition-colors">
       <Toast 
         message={toast.message} 
         type={toast.type} 
@@ -367,16 +425,16 @@ export default function ProfilePage() {
         onClose={() => setToast({ ...toast, isVisible: false })} 
       />
       {/* Header Bar */}
-      <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white z-10">
-        <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 transition">
-          <ArrowLeft size={20} className="text-black" />
+      <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-white/80 dark:bg-black/80 backdrop-blur-xl z-10 border-b border-zinc-100/50 dark:border-zinc-800/50">
+        <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 dark:bg-zinc-900 hover:bg-stone-200 dark:hover:bg-zinc-800 transition">
+          <ArrowLeft size={20} className="text-black dark:text-white" />
         </Link>
-        <span className="font-bold text-lg tracking-tight text-black">Profile</span>
+        <span className="font-bold text-lg tracking-tight text-black dark:text-white">Profile</span>
         <Link 
           href="/settings"
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 transition"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 dark:bg-zinc-900 hover:bg-stone-200 dark:hover:bg-zinc-800 transition"
         >
-          <Settings size={20} className="text-black" />
+          <Settings size={20} className="text-black dark:text-white" />
         </Link>
       </div>
 
@@ -387,11 +445,11 @@ export default function ProfilePage() {
           <div className="relative">
             <div 
               onClick={() => profile?.avatar_url && setShowImageViewer(true)}
-              className={`w-28 h-28 rounded-full ring-4 ${profile?.avatar_url ? "ring-[#E5FF66] cursor-pointer" : "ring-zinc-200"} ring-offset-4 overflow-hidden mb-4 shadow-lg transition-all flex items-center justify-center bg-zinc-50 relative group`}
+              className={`w-28 h-28 rounded-full ring-4 ${profile?.avatar_url ? "ring-[#E5FF66] cursor-pointer" : "ring-zinc-200 dark:ring-zinc-800"} ring-offset-4 ring-offset-white dark:ring-offset-black overflow-hidden mb-4 shadow-lg transition-all flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 relative group`}
             >
               {profile?.avatar_url ? (
                 <>
-                  <Image 
+                    <Image 
                     src={profile.avatar_url} 
                     alt="Profile" 
                     width={112} 
@@ -403,28 +461,28 @@ export default function ProfilePage() {
                   </div>
                 </>
               ) : (
-                <User className="w-12 h-12 text-zinc-300" />
+                <User className="w-12 h-12 text-zinc-300 dark:text-zinc-700" />
               )}
             </div>
             <button 
               onClick={handleUploadClick}
               disabled={isUpdating}
-              className="absolute bottom-4 right-0 w-8 h-8 bg-[#E5FF66] rounded-full flex items-center justify-center border-4 border-white text-black shadow-sm active:scale-90 transition-transform disabled:opacity-50"
+              className="absolute bottom-4 right-0 w-8 h-8 bg-[#E5FF66] rounded-full flex items-center justify-center border-4 border-white dark:border-black text-black shadow-sm active:scale-90 transition-transform disabled:opacity-50"
             >
               {isUpdating ? <Loader2 size={12} className="animate-spin" /> : <Camera size={14} strokeWidth={2.5} />}
             </button>
           </div>
           
           <div className="flex items-center justify-center gap-1.5 mb-1 w-full max-w-[280px] mx-auto">
-            <h2 className="text-2xl font-black text-black leading-tight truncate">{profile?.full_name || "New Student"}</h2>
-            {profile?.full_name !== "New Student" && <CheckCircle2 size={18} className="fill-black text-white shrink-0" />}
+            <h2 className="text-2xl font-black text-black dark:text-white leading-tight truncate">{profile?.full_name || "New Student"}</h2>
+            {profile?.full_name !== "New Student" && <CheckCircle2 size={18} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />}
           </div>
-          <p className="text-zinc-500 text-[14px] font-medium mb-4">{profile?.username} • {profile?.level || "Undergraduate"}</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-[14px] font-medium mb-4">{profile?.username} • {profile?.level || "Undergraduate"}</p>
           
           <div className="flex gap-4 w-full">
             <button 
               onClick={() => setIsEditing(true)}
-              className="w-full bg-[#1A1A24] text-white py-3 rounded-2xl text-[15px] font-bold shadow-[0_4px_10px_rgba(26,26,36,0.2)] active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full bg-[#1A1A24] dark:bg-zinc-900 text-white py-3 rounded-2xl text-[15px] font-bold shadow-[0_4px_10px_rgba(26,26,36,0.2)] dark:shadow-none active:scale-95 transition flex items-center justify-center gap-2 border border-transparent dark:border-zinc-800"
             >
               <Edit3 size={18} />
               Edit Profile
@@ -434,26 +492,26 @@ export default function ProfilePage() {
       </div>
 
       {/* Stats Section - Modern Look */}
-      <div className="flex justify-around py-8 px-10 bg-white mx-0 border-b border-zinc-50">
+      <div className="flex justify-around py-8 px-10 bg-white dark:bg-black mx-0 border-b border-zinc-50 dark:border-zinc-900 transition-colors">
         <div className="flex flex-col items-center gap-1 group cursor-pointer w-1/2">
-          <span className="text-2xl font-black text-black group-hover:scale-110 transition-transform">{posts.length}</span>
-          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Posts</span>
+          <span className="text-2xl font-black text-black dark:text-white group-hover:scale-110 transition-transform">{posts.length}</span>
+          <span className="text-[10px] text-zinc-400 dark:text-zinc-600 font-black uppercase tracking-[0.2em]">Posts</span>
         </div>
-        <div className="w-[1px] h-10 bg-zinc-100" />
+        <div className="w-[1px] h-10 bg-zinc-100 dark:bg-zinc-800" />
         <div className="flex flex-col items-center gap-1 group cursor-pointer w-1/2">
-          <span className="text-2xl font-black text-black group-hover:scale-110 transition-transform">{connectionCount}</span>
-          <span className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.2em]">Connections</span>
+          <span className="text-2xl font-black text-black dark:text-white group-hover:scale-110 transition-transform">{connectionCount}</span>
+          <span className="text-[10px] text-zinc-400 dark:text-zinc-600 font-black uppercase tracking-[0.2em]">Connections</span>
         </div>
       </div>
 
       {/* Bio / University Section */}
       <div className="px-6 py-6 flex flex-col gap-4">
-        <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+        <div className="bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center mb-2">
-            <h3 className="font-bold text-sm text-black">University</h3>
+            <h3 className="font-bold text-sm text-black dark:text-white">University</h3>
           </div>
-          <p className="text-sm font-normal text-black">{profile?.universities?.name || "Select University"}</p>
-          <p className="text-sm text-black font-normal mt-1">{profile?.departments?.name || "Select Department"}</p>
+          <p className="text-sm font-normal text-black dark:text-zinc-300">{profile?.universities?.name || "Select University"}</p>
+          <p className="text-sm text-black dark:text-zinc-300 font-normal mt-1">{profile?.departments?.name || "Select Department"}</p>
         </div>
 
         {/* Redesigned Profile Completion Progress */}
@@ -461,7 +519,7 @@ export default function ProfilePage() {
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 bg-[#1A1A24] rounded-[32px] p-6 shadow-2xl relative overflow-hidden group"
+            className="mb-4 bg-[#1A1A24] dark:bg-zinc-900 rounded-[32px] p-6 shadow-2xl relative overflow-hidden group border border-white/5 dark:border-zinc-800"
           >
             {/* Subtle light effect */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#E5FF66]/5 rounded-full blur-3xl -mr-10 -mt-10" />
@@ -470,7 +528,7 @@ export default function ProfilePage() {
               <div className="flex justify-between items-end mb-4">
                 <div>
                   <h3 className="text-white font-black text-xl mb-1 tracking-tight">Profile Strength</h3>
-                  <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Complete your identity</p>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-wider">Complete your identity</p>
                 </div>
                 <div className="text-right">
                   <span className="text-[#E5FF66] text-3xl font-black italic">
@@ -484,7 +542,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Modern Progress Bar */}
-              <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden mb-6">
+              <div className="h-2 w-full bg-white/10 dark:bg-white/5 rounded-full overflow-hidden mb-6">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ 
@@ -524,7 +582,7 @@ export default function ProfilePage() {
                     setIsEditing(true);
                   }
                 }}
-                className="w-full bg-white text-black py-4 rounded-2xl text-[14px] font-black tracking-tight hover:bg-[#E5FF66] transition-all active:scale-[0.98] shadow-lg shadow-black/20"
+                className="w-full bg-white dark:bg-[#E5FF66] text-black py-4 rounded-2xl text-[14px] font-black tracking-tight hover:bg-[#E5FF66] dark:hover:bg-white transition-all active:scale-[0.98] shadow-lg shadow-black/20"
               >
                 Continue Setup
               </button>
@@ -533,9 +591,9 @@ export default function ProfilePage() {
         )}
 
         <div className="flex flex-col gap-2">
-          <h3 className="font-bold text-base text-black px-1">About Me</h3>
+          <h3 className="font-bold text-base text-black dark:text-white px-1">About Me</h3>
           {profile?.bio ? (
-            <p className="text-sm text-zinc-600 leading-relaxed px-1 font-normal">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed px-1 font-normal">
               {profile.bio}
             </p>
           ) : (
@@ -563,28 +621,39 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs - Sleek Apple-style */}
-      <div className="px-6 flex items-center mb-6 sticky top-[72px] bg-white/80 backdrop-blur-md z-10 py-2">
-        <div className="flex-1 flex bg-zinc-50 p-1 rounded-2xl relative">
+      <div className="px-6 flex items-center mb-6 sticky top-[72px] bg-white/80 dark:bg-black/80 backdrop-blur-md z-10 py-2">
+        <div className="flex-1 flex bg-zinc-50 dark:bg-zinc-900 p-1 rounded-2xl relative">
           <button 
             onClick={() => setActiveTab("posts")}
-            className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "posts" ? "text-black font-black" : "text-zinc-400 font-bold hover:text-zinc-600"}`}
+            className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "posts" ? "text-black dark:text-white font-black" : "text-zinc-400 font-bold hover:text-zinc-600 dark:hover:text-zinc-300"}`}
           >
             <Grid size={18} />
             <span className="text-xs">Posts</span>
           </button>
           <button 
             onClick={() => setActiveTab("saved")}
-            className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "saved" ? "text-black font-black" : "text-zinc-400 font-bold hover:text-zinc-600"}`}
+            className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "saved" ? "text-black dark:text-white font-black" : "text-zinc-400 font-bold hover:text-zinc-600 dark:hover:text-zinc-300"}`}
           >
             <Bookmark size={18} />
             <span className="text-xs">Bookmarks</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab("reposts")}
+            className={`flex-1 py-3.5 flex items-center justify-center gap-2 rounded-xl transition-all relative z-10 ${activeTab === "reposts" ? "text-black dark:text-white font-black" : "text-zinc-400 font-bold hover:text-zinc-600 dark:hover:text-zinc-300"}`}
+          >
+            <Repeat2 size={18} />
+            <span className="text-xs">Reposts</span>
           </button>
           
           {/* Active indicator pill */}
           <motion.div 
             layoutId="tab-pill"
-            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm border border-zinc-100"
-            animate={{ x: activeTab === "posts" ? 0 : "100%" }}
+            className="absolute top-1 bottom-1 left-1 w-[calc(33.33%-4px)] bg-white dark:bg-zinc-800 rounded-xl shadow-sm border border-zinc-100 dark:border-zinc-700"
+            animate={{ 
+              x: activeTab === "posts" ? 0 : 
+                 activeTab === "saved" ? "100%" : 
+                 activeTab === "reposts" ? "200%" : 0 
+            }}
             transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
           />
         </div>
@@ -610,6 +679,7 @@ export default function ProfilePage() {
                   currentUserId={profile?.id}
                   isLiked={currentUserLikes.has(post.id)}
                   isBookmarked={currentUserBookmarks.has(post.id)}
+                  isReposted={currentUserReposts.has(post.id)}
                   onDelete={async (id: string) => {
                     const { error } = await supabase.from('posts').delete().eq('id', id);
                     if (!error) {
@@ -617,6 +687,7 @@ export default function ProfilePage() {
                       showToast("Post deleted");
                     }
                   }}
+                  onRepost={handleRepost}
                   onLike={async (id: string) => {
                     const { data: { user } } = await supabase.auth.getUser();
                     if (!user) return;
@@ -702,6 +773,21 @@ export default function ProfilePage() {
                   authorId={post.user_id}
                   currentUserId={profile?.id}
                   isBookmarked={true}
+                  isLiked={currentUserLikes.has(post.id)}
+                  isReposted={currentUserReposts.has(post.id)}
+                  onRepost={handleRepost}
+                  onLike={async (id: string) => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    await supabase.rpc('toggle_post_like', { post_id_input: id, user_id_input: user.id });
+                    
+                    setCurrentUserLikes(prev => {
+                      const next = new Set(prev);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      return next;
+                    });
+                  }}
                   onBookmark={async (id: string) => {
                     await supabase.from('bookmarks').delete().match({ user_id: profile.id, post_id: id });
                     setSavedPosts(savedPosts.filter(p => p.id !== id));
@@ -710,11 +796,80 @@ export default function ProfilePage() {
               ))
             ) : (
               <div className="py-16 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
-                  <Bookmark className="text-zinc-400 w-8 h-8" />
+                <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-4 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                  <Bookmark className="text-zinc-400 dark:text-zinc-600 w-8 h-8" />
                 </div>
-                <p className="font-bold text-lg text-black mb-1">No Bookmarks</p>
-                <p className="text-zinc-500 text-sm">Posts you bookmark will appear here for quick access.</p>
+                <p className="font-bold text-lg text-black dark:text-white mb-1">No Bookmarks</p>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm">Posts you bookmark will appear here for quick access.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "reposts" && (
+          <div className="flex flex-col gap-4">
+            {reposts.length > 0 ? (
+              reposts.map((repost) => (
+                <FeedCard 
+                  key={repost.id}
+                  id={repost.post_id}
+                  authorName={repost.posts.profiles?.full_name || "User"}
+                  authorImage={repost.posts.profiles?.avatar_url}
+                  timePosted={new Date(repost.posts.created_at).toLocaleDateString()}
+                  postImage={repost.posts.image_url}
+                  likes={repost.posts.likes_count || 0}
+                  comments={repost.posts.comments_count || 0}
+                  description={repost.posts.content}
+                  authorId={repost.posts.user_id}
+                  currentUserId={profile?.id}
+                  isLiked={currentUserLikes.has(repost.post_id)}
+                  isBookmarked={currentUserBookmarks.has(repost.post_id)}
+                  isReposted={true}
+                  onRepost={handleRepost}
+                  onLike={async (id: string) => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    await supabase.rpc('toggle_post_like', { post_id_input: id, user_id_input: user.id });
+                    
+                    setCurrentUserLikes(prev => {
+                      const next = new Set(prev);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      return next;
+                    });
+                  }}
+                  onBookmark={async (id: string) => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+                    
+                    const isBookmarked = currentUserBookmarks.has(id);
+                    if (isBookmarked) {
+                      await supabase.from('bookmarks').delete().match({ user_id: user.id, post_id: id });
+                      setCurrentUserBookmarks(prev => {
+                        const next = new Set(prev);
+                        next.delete(id);
+                        return next;
+                      });
+                      showToast("Bookmark removed");
+                    } else {
+                      await supabase.from('bookmarks').insert({ user_id: user.id, post_id: id });
+                      setCurrentUserBookmarks(prev => {
+                        const next = new Set(prev);
+                        next.add(id);
+                        return next;
+                      });
+                      showToast("Post bookmarked!");
+                    }
+                  }}
+                />
+              ))
+            ) : (
+              <div className="py-16 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-4 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                  <Repeat2 className="text-zinc-400 dark:text-zinc-600 w-8 h-8" />
+                </div>
+                <p className="font-bold text-lg text-black dark:text-white mb-1">No Reposts</p>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm">Posts you repost will appear here for your connections to see.</p>
               </div>
             )}
           </div>
@@ -722,83 +877,166 @@ export default function ProfilePage() {
 
         {activeTab === "tagged" && (
           <div className="py-16 flex flex-col items-center justify-center text-center animate-in fade-in">
-            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-4">
-              <Tag className="text-zinc-400 w-8 h-8" />
+            <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-4 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <Tag className="text-zinc-400 dark:text-zinc-600 w-8 h-8" />
             </div>
-            <p className="font-bold text-lg text-black mb-1">Feature Coming Soon</p>
-            <p className="text-zinc-500 text-sm">Tagged posts functionality is currently under development.</p>
+            <p className="font-bold text-lg text-black dark:text-white mb-1">Feature Coming Soon</p>
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm">Tagged posts functionality is currently under development.</p>
           </div>
         )}
       </div>
 
       {/* Edit Profile Slide-up Modal */}
-      {isEditing && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] transition-opacity"
-            onClick={() => setIsEditing(false)}
-          />
-          <div className="fixed bottom-0 left-0 right-0 z-[101] max-w-md mx-auto bg-white rounded-t-[40px] px-6 pt-8 pb-10 shadow-2xl animate-in slide-in-from-bottom duration-300">
-            <div className="w-12 h-1.5 bg-zinc-200 rounded-full mx-auto mb-8" onClick={() => setIsEditing(false)} />
-            
-            <h2 className="text-2xl font-black text-black mb-2 px-1">Edit Profile</h2>
-            <p className="text-zinc-500 text-sm mb-8 px-1">Update your identity on Campus</p>
-
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+      <AnimatePresence>
+        {isEditing && (
+          <div className="fixed inset-0 z-[100] flex items-end justify-center">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+              onClick={() => setIsEditing(false)}
+            />
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-t-[40px] px-6 pt-3 pb-12 shadow-2xl max-h-[90vh] overflow-y-auto border-t border-zinc-100 dark:border-zinc-800"
+            >
+              {/* Handle Bar */}
+              <div className="flex justify-center mb-6">
+                <div className="w-12 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full" onClick={() => setIsEditing(false)} />
+              </div>
+              
+              <div className="flex items-center justify-between mb-8 px-1">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">First Name</label>
-                  <input 
-                    type="text" 
-                    value={editFirstName}
-                    onChange={(e) => setEditFirstName(e.target.value)}
-                    placeholder="John"
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] font-bold text-black outline-none focus:ring-2 focus:ring-[#E5FF66] transition-all"
-                  />
+                  <h2 className="text-2xl font-black text-black dark:text-white">Edit Identity</h2>
+                  <p className="text-zinc-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-widest mt-0.5">Campus Profile Settings</p>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Last Name</label>
-                  <input 
-                    type="text" 
-                    value={editLastName}
-                    onChange={(e) => setEditLastName(e.target.value)}
-                    placeholder="Doe"
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] font-bold text-black outline-none focus:ring-2 focus:ring-[#E5FF66] transition-all"
-                  />
-                </div>
+                <button 
+                  onClick={() => setIsEditing(false)}
+                  className="w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">About Me (Bio)</label>
-                <textarea 
-                  rows={4}
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value)}
-                  placeholder="Tell us about yourself..."
-                  className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] font-medium text-black outline-none focus:ring-2 focus:ring-[#E5FF66] transition-all resize-none"
-                />
-              </div>
-            </div>
+              <div className="space-y-8">
+                {/* Names */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest px-1">First Name</label>
+                    <input 
+                      type="text" 
+                      value={editFirstName}
+                      onChange={(e) => setEditFirstName(e.target.value)}
+                      placeholder="First Name"
+                      className="w-full bg-zinc-50 dark:bg-zinc-950 rounded-2xl px-5 py-4 text-[15px] font-bold text-black dark:text-white outline-none border border-zinc-100 dark:border-zinc-800 focus:border-[#E5FF66] focus:bg-white dark:focus:bg-zinc-900 transition-all shadow-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest px-1">Last Name</label>
+                    <input 
+                      type="text" 
+                      value={editLastName}
+                      onChange={(e) => setEditLastName(e.target.value)}
+                      placeholder="Last Name"
+                      className="w-full bg-zinc-50 dark:bg-zinc-950 rounded-2xl px-5 py-4 text-[15px] font-bold text-black dark:text-white outline-none border border-zinc-100 dark:border-zinc-800 focus:border-[#E5FF66] focus:bg-white dark:focus:bg-zinc-900 transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
 
-            <div className="flex gap-4 mt-10">
-              <button 
-                onClick={() => setIsEditing(false)}
-                className="flex-1 bg-stone-100 text-black py-4 rounded-2xl font-bold text-sm hover:bg-stone-200 transition"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSaveProfile}
-                disabled={isUpdating}
-                className="flex-[2] bg-[#1A1A24] text-white py-4 rounded-2xl font-bold text-sm hover:bg-black transition flex items-center justify-center gap-2"
-              >
-                {isUpdating && <Loader2 size={16} className="animate-spin" />}
-                {isUpdating ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
+                {/* Bio with character counter */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">About Me</label>
+                    <span className={`text-[10px] font-black ${editBio.length > 150 ? "text-red-500" : "text-zinc-300 dark:text-zinc-700"}`}>
+                      {editBio.length}/160
+                    </span>
+                  </div>
+                  <textarea 
+                    rows={3}
+                    maxLength={160}
+                    value={editBio}
+                    onChange={(e) => setEditBio(e.target.value)}
+                    placeholder="Tell us about yourself..."
+                    className="w-full bg-zinc-50 dark:bg-zinc-950 rounded-3xl px-6 py-5 text-[15px] font-medium text-black dark:text-white outline-none border border-zinc-100 dark:border-zinc-800 focus:border-[#E5FF66] focus:bg-white dark:focus:bg-zinc-900 transition-all resize-none shadow-sm leading-relaxed"
+                  />
+                </div>
+
+                {/* Academic Identity */}
+                <div className="space-y-6 pt-2 border-t border-zinc-50 dark:border-zinc-800/50">
+                  <h3 className="text-[11px] font-black text-zinc-300 dark:text-zinc-700 uppercase tracking-[0.2em] px-1">Academic Status</h3>
+                  
+                  <div className="space-y-5">
+                    <div className="group">
+                      <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest px-1 block mb-2">School Level</label>
+                      <div className="relative">
+                        <select 
+                          value={profile?.level || ""}
+                          onChange={(e) => setProfile({...profile, level: e.target.value})}
+                          className="w-full bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-2xl px-5 py-4 text-[15px] font-bold text-black dark:text-white outline-none appearance-none group-focus-within:border-[#E5FF66] transition-all"
+                        >
+                          <option value="100 Level" className="dark:bg-zinc-950">100 Level</option>
+                          <option value="200 Level" className="dark:bg-zinc-950">200 Level</option>
+                          <option value="300 Level" className="dark:bg-zinc-950">300 Level</option>
+                          <option value="400 Level" className="dark:bg-zinc-950">400 Level</option>
+                          <option value="500 Level" className="dark:bg-zinc-950">500 Level</option>
+                          <option value="Graduate" className="dark:bg-zinc-950">Graduate</option>
+                        </select>
+                        <ChevronRight size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-700 rotate-90 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div className="bg-[#1A1A24] p-6 rounded-[32px] text-white/90 relative overflow-hidden group">
+                       <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 blur-2xl" />
+                       <div className="relative z-10 flex items-center justify-between">
+                         <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Current University</span>
+                            <span className="text-sm font-black whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+                              {profile?.universities?.name || "N/A"}
+                            </span>
+                         </div>
+                         <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                            <Package size={18} className="text-[#E5FF66]" />
+                         </div>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="pt-6">
+                  <button 
+                    onClick={handleSaveProfile}
+                    disabled={isUpdating}
+                    className="w-full bg-[#E5FF66] text-black py-5 rounded-[28px] font-black text-sm uppercase tracking-widest shadow-xl shadow-[#E5FF66]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                  >
+                    {isUpdating ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={18} strokeWidth={3} />
+                        Save Profile
+                      </>
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => setIsEditing(false)}
+                    className="w-full mt-4 py-3 text-zinc-400 dark:text-zinc-600 text-sm font-bold hover:text-black dark:hover:text-white transition-colors"
+                  >
+                    Discard Changes
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Image Viewer / Delete Modal */}
       <AnimatePresence>
@@ -867,35 +1105,35 @@ export default function ProfilePage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className="w-full max-w-[340px] bg-white rounded-[40px] px-6 pt-8 pb-10 shadow-2xl relative z-20"
+              className="w-full max-w-[340px] bg-white dark:bg-zinc-900 rounded-[40px] px-6 pt-8 pb-10 shadow-2xl relative z-20 border border-zinc-100 dark:border-zinc-800"
             >
-              <h2 className="text-xl font-black text-black mb-8 px-1 text-center">Profile Photo</h2>
+              <h2 className="text-xl font-black text-black dark:text-white mb-8 px-1 text-center font-sans tracking-tight">Profile Photo</h2>
 
               <div className="grid grid-cols-2 gap-4">
                 <button 
                   onClick={handleCameraClick}
-                  className="flex flex-col items-center justify-center gap-4 bg-zinc-50 hover:bg-zinc-100 p-6 rounded-[32px] transition-all active:scale-95 group border border-transparent hover:border-zinc-200"
+                  className="flex flex-col items-center justify-center gap-4 bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-900 p-6 rounded-[32px] transition-all active:scale-95 group border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
                 >
-                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
-                    <Camera size={28} className="text-black" />
+                  <div className="w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                    <Camera size={28} className="text-black dark:text-white" />
                   </div>
-                  <span className="font-bold text-[13px] text-black">Take Photo</span>
+                  <span className="font-bold text-[13px] text-black dark:text-zinc-300">Take Photo</span>
                 </button>
 
                 <button 
                   onClick={handleGalleryClick}
-                  className="flex flex-col items-center justify-center gap-4 bg-zinc-50 hover:bg-zinc-100 p-6 rounded-[32px] transition-all active:scale-95 group border border-transparent hover:border-zinc-200"
+                  className="flex flex-col items-center justify-center gap-4 bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-900 p-6 rounded-[32px] transition-all active:scale-95 group border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
                 >
-                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
-                    <ImagePlus size={28} className="text-black" />
+                  <div className="w-14 h-14 bg-white dark:bg-zinc-900 rounded-2xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                    <ImagePlus size={28} className="text-black dark:text-white" />
                   </div>
-                  <span className="font-bold text-[13px] text-black">Gallery</span>
+                  <span className="font-bold text-[13px] text-black dark:text-zinc-300">Gallery</span>
                 </button>
               </div>
 
               <button 
                 onClick={() => setShowPhotoOptions(false)}
-                className="mt-8 w-full py-4 bg-zinc-100 rounded-2xl text-sm font-bold text-zinc-500 hover:bg-zinc-200 hover:text-black transition active:scale-95"
+                className="mt-8 w-full py-4 bg-zinc-100 dark:bg-zinc-800 rounded-2xl text-sm font-bold text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-black dark:hover:text-white transition active:scale-95"
               >
                 Cancel
               </button>

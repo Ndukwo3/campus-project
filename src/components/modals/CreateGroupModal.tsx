@@ -78,47 +78,47 @@ export default function CreateGroupModal({ isOpen, onClose, onSuccess, universit
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+        className="bg-white dark:bg-zinc-950 w-full max-w-md rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] transition-colors"
       >
-        <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
-          <h2 className="text-xl font-bold text-zinc-900 tracking-tight">Create Group</h2>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 transition-colors">
-            <X size={20} className="text-zinc-500" />
+        <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50">
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-white tracking-tight">Create Group</h2>
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+            <X size={20} className="text-zinc-500 dark:text-zinc-400" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
           {/* Group Icon Placeholder */}
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-[32px] bg-zinc-100 flex items-center justify-center text-zinc-400 group relative cursor-pointer hover:bg-zinc-200 transition-colors">
+            <div className="w-24 h-24 rounded-[32px] bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 dark:text-zinc-600 group relative cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors border border-zinc-100 dark:border-zinc-800">
               <Users size={40} />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-[32px]">
                 <Camera size={24} className="text-white" />
               </div>
             </div>
-            <p className="text-[11px] font-bold text-zinc-400 mt-3 uppercase tracking-widest">Group Icon</p>
+            <p className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 mt-3 uppercase tracking-widest">Group Icon</p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Group Name</label>
+              <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 px-1">Group Name</label>
               <input 
                 type="text" 
                 placeholder="e.g. CSC Class of 2026"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E5FF66]/50 focus:border-white transition-all font-medium"
+                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E5FF66]/50 dark:focus:ring-[#E5FF66]/20 focus:border-white dark:focus:border-zinc-700 transition-all font-medium text-zinc-900 dark:text-white"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Description</label>
+              <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 px-1">Description</label>
               <textarea 
                 placeholder="What is this group about?"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E5FF66]/50 focus:border-white transition-all font-medium h-32 resize-none"
+                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E5FF66]/50 dark:focus:ring-[#E5FF66]/20 focus:border-white dark:focus:border-zinc-700 transition-all font-medium h-32 resize-none text-zinc-900 dark:text-white"
               />
             </div>
 
@@ -126,41 +126,41 @@ export default function CreateGroupModal({ isOpen, onClose, onSuccess, universit
               <button 
                 type="button"
                 onClick={() => setIsPrivate(false)}
-                className={`p-4 rounded-2xl border flex flex-col gap-2 transition-all ${!isPrivate ? "bg-white border-[#E5FF66] ring-2 ring-[#E5FF66]/20" : "bg-zinc-50 border-zinc-100"}`}
+                className={`p-4 rounded-2xl border flex flex-col gap-2 transition-all ${!isPrivate ? "bg-white dark:bg-[#E5FF66]/10 border-[#E5FF66] ring-2 ring-[#E5FF66]/20" : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800"}`}
               >
-                <Globe size={20} className={!isPrivate ? "text-zinc-900" : "text-zinc-400"} />
+                <Globe size={20} className={!isPrivate ? "text-zinc-900 dark:text-[#E5FF66]" : "text-zinc-400 dark:text-zinc-600"} />
                 <div className="text-left">
-                  <p className="text-sm font-bold text-zinc-900 leading-none">Public</p>
-                  <p className="text-[11px] text-zinc-500 font-medium">Anyone can join</p>
+                  <p className={`text-sm font-bold leading-none ${!isPrivate ? "text-zinc-900 dark:text-white" : "text-zinc-500"}`}>Public</p>
+                  <p className="text-[11px] text-zinc-500 font-medium mt-1">Anyone can join</p>
                 </div>
               </button>
 
               <button 
                 type="button"
                 onClick={() => setIsPrivate(true)}
-                className={`p-4 rounded-2xl border flex flex-col gap-2 transition-all ${isPrivate ? "bg-white border-[#E5FF66] ring-2 ring-[#E5FF66]/20" : "bg-zinc-50 border-zinc-100"}`}
+                className={`p-4 rounded-2xl border flex flex-col gap-2 transition-all ${isPrivate ? "bg-white dark:bg-[#E5FF66]/10 border-[#E5FF66] ring-2 ring-[#E5FF66]/20" : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800"}`}
               >
-                <Lock size={20} className={isPrivate ? "text-zinc-900" : "text-zinc-400"} />
+                <Lock size={20} className={isPrivate ? "text-zinc-900 dark:text-[#E5FF66]" : "text-zinc-400 dark:text-zinc-600"} />
                 <div className="text-left">
-                  <p className="text-sm font-bold text-zinc-900 leading-none">Private</p>
-                  <p className="text-[11px] text-zinc-500 font-medium">Approval needed</p>
+                  <p className={`text-sm font-bold leading-none ${isPrivate ? "text-zinc-900 dark:text-white" : "text-zinc-500"}`}>Private</p>
+                  <p className="text-[11px] text-zinc-500 font-medium mt-1">Approval needed</p>
                 </div>
               </button>
             </div>
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-[13px] font-medium border border-red-100">
+            <div className="p-4 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-2xl text-[13px] font-medium border border-red-100 dark:border-red-500/20">
               {error}
             </div>
           )}
         </form>
 
-        <div className="p-6 border-t border-zinc-100 bg-zinc-50/30">
+        <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-900/30">
           <button 
             onClick={handleSubmit}
             disabled={!name.trim() || isSubmitting}
-            className="w-full bg-[#1A1A24] text-white rounded-2xl py-4.5 font-bold text-[15px] hover:bg-black transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black rounded-2xl py-4.5 font-bold text-[15px] hover:bg-black dark:hover:bg-[#d4f54d] transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>

@@ -53,7 +53,7 @@ export default function OnboardingPage() {
       const { data, error } = await query.limit(10);
       
       if (!error && data) {
-        setUniversities(data.map(u => u.name));
+        setUniversities(data.map((u: any) => u.name));
       }
       setIsLoadingUnis(false);
     };
@@ -155,25 +155,25 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-zinc-900 font-sans relative overflow-hidden">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-black text-zinc-900 dark:text-white font-sans relative overflow-hidden transition-colors">
       <div className={`flex flex-col min-h-screen px-6 py-12 transition-all duration-700 ${isCompleting ? "blur-md scale-[0.98] pointer-events-none" : ""}`}>
         {/* App Bar */}
         <div className="flex items-center mb-8">
           {step === 1 ? (
             <Link
               href="/signup"
-              className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors"
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
               aria-label="Go back"
             >
-              <ArrowLeft className="w-5 h-5 text-zinc-800" />
+              <ArrowLeft className="w-5 h-5 text-zinc-800 dark:text-zinc-200" />
             </Link>
           ) : (
             <button
-              onClick={() => setStep(1)}
-              className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors"
+               onClick={() => setStep(1)}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
               aria-label="Go back to step 1"
             >
-              <ArrowLeft className="w-5 h-5 text-zinc-800" />
+              <ArrowLeft className="w-5 h-5 text-zinc-800 dark:text-zinc-200" />
             </button>
           )}
         </div>
@@ -181,13 +181,13 @@ export default function OnboardingPage() {
         <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
           {step === 1 ? (
             <>
-              <h1 className="text-3xl font-semibold text-center mb-2 tracking-tight">Complete Your Profile</h1>
-              <p className="text-zinc-500 text-center mb-10 text-sm">Let's set up your academic details</p>
+              <h1 className="text-3xl font-black text-center mb-2 tracking-tight text-zinc-900 dark:text-white">Complete Your Profile</h1>
+              <p className="text-zinc-400 dark:text-zinc-500 text-center mb-10 text-sm font-medium">Let's set up your academic details</p>
 
               {/* University Type Selector */}
               <div className="mb-8">
-                <label className="block text-sm font-medium text-zinc-500 mb-4 px-1 text-center">Select University Type</label>
-                <div className="flex p-1 bg-zinc-100 rounded-full relative">
+                <label className="block text-sm font-black text-zinc-400 dark:text-zinc-600 mb-4 px-1 text-center uppercase tracking-widest">Select University Type</label>
+                <div className="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-full relative">
                   {(["Federal", "State", "Private"] as UniversityType[]).map((type) => (
                     <button
                       key={type}
@@ -196,7 +196,7 @@ export default function OnboardingPage() {
                         setSelectedUni(""); // Reset uni when type changes
                         setUniSearch("");
                       }}
-                      className={`flex-1 py-3 text-sm font-medium rounded-full z-10 transition-all duration-300 ${uniType === type ? "bg-[#E2FF3D] text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                      className={`flex-1 py-3 text-sm font-black rounded-full z-10 transition-all duration-300 ${uniType === type ? "bg-[#E2FF3D] text-zinc-900 shadow-sm" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
                         }`}
                     >
                       {type}
@@ -207,7 +207,7 @@ export default function OnboardingPage() {
 
               {/* Dynamic Searchable University Dropdown */}
               <div className="mb-6 relative">
-                <label className="block text-sm text-zinc-500 mb-2 px-1">University</label>
+                <label className="block text-sm font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">University</label>
                 <div className="relative group">
                   <input
                     type="text"
@@ -225,15 +225,15 @@ export default function OnboardingPage() {
                       // Delay closing dropdown so click on option can register
                       setTimeout(() => setIsUniDropdownOpen(false), 200);
                     }}
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium pr-12 text-black"
+                    className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-bold pr-12 text-black dark:text-white border border-transparent dark:border-zinc-800"
                   />
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none group-hover:text-zinc-600 transition-colors" />
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 dark:text-zinc-600 pointer-events-none group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition-colors" />
                 </div>
 
                   {isUniDropdownOpen && (
-                  <ul className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-lg border border-zinc-100 max-h-60 overflow-y-auto">
+                  <ul className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800 max-h-60 overflow-y-auto overflow-x-hidden">
                     {isLoadingUnis ? (
-                      <li className="px-5 py-3 text-[15px] text-zinc-500 text-center flex items-center justify-center gap-2">
+                      <li className="px-5 py-4 text-[15px] text-zinc-400 dark:text-zinc-500 text-center flex items-center justify-center gap-2">
                          <Loader2 className="w-4 h-4 animate-spin" />
                          Searching...
                       </li>
@@ -245,13 +245,13 @@ export default function OnboardingPage() {
                             setSelectedUni(uni);
                             setUniSearch(uni);
                           }}
-                          className="px-5 py-3 text-[15px] hover:bg-zinc-50 cursor-pointer transition-colors"
+                          className="px-5 py-4 text-[15px] font-bold text-zinc-800 dark:text-zinc-200 hover:bg-[#E2FF3D] hover:text-black dark:hover:bg-[#E2FF3D] dark:hover:text-black cursor-pointer transition-colors"
                         >
                           {uni}
                         </li>
                       ))
                     ) : (
-                      <li className="px-5 py-3 text-[15px] text-zinc-500 text-center">No universities found</li>
+                      <li className="px-5 py-4 text-[15px] text-zinc-400 dark:text-zinc-500 text-center font-bold">No universities found</li>
                     )}
                   </ul>
                 )}
@@ -259,35 +259,35 @@ export default function OnboardingPage() {
 
               {/* Department Selection */}
               <div className="mb-6">
-                <label className="block text-sm text-zinc-500 mb-2 px-1">Department</label>
+                <label className="block text-sm font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Department</label>
                 <div className="relative group">
                   <input
                     type="text"
                     placeholder="Enter your department"
                     value={selectedDept}
                     onChange={(e) => setSelectedDept(e.target.value)}
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium text-black"
+                    className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-bold text-black dark:text-white border border-transparent dark:border-zinc-800"
                   />
                 </div>
               </div>
 
               {/* Level Selection */}
               <div className="mb-10">
-                <label className="block text-sm text-zinc-500 mb-2 px-1">Level</label>
+                <label className="block text-sm font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Level</label>
                 <div className="relative group">
                   <select
                     value={selectedLevel}
                     onChange={(e) => setSelectedLevel(e.target.value)}
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none appearance-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium pr-12 cursor-pointer text-black"
+                    className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] outline-none appearance-none focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-bold pr-12 cursor-pointer text-black dark:text-white border border-transparent dark:border-zinc-800"
                   >
-                    <option value="" disabled>Select your current level</option>
+                    <option value="" disabled className="dark:bg-zinc-900">Select your current level</option>
                     {LEVELS.map((level) => (
-                      <option key={level} value={level}>
+                      <option key={level} value={level} className="dark:bg-zinc-900">
                         {level}
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none group-hover:text-zinc-600 transition-colors" />
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 dark:text-zinc-600 pointer-events-none group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition-colors" />
                 </div>
               </div>
 
@@ -297,25 +297,25 @@ export default function OnboardingPage() {
               <button
                 onClick={() => setStep(2)}
                 disabled={!selectedUni || !selectedDept || !selectedLevel}
-                className="w-full bg-[#1A1A24] text-white rounded-2xl py-4.5 font-medium text-[15px] hover:bg-black transition-all mb-10 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+                className="w-full bg-[#1A1A24] dark:bg-zinc-800 text-white rounded-2xl py-5 font-black text-[15px] uppercase tracking-widest hover:bg-black dark:hover:bg-zinc-700 transition-all mb-10 shadow-lg dark:shadow-none disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98]"
               >
-                Next
+                Continue
               </button>
             </>
           ) : (
             <>
-              <h1 className="text-3xl font-semibold text-center mb-2 tracking-tight">Choose your username</h1>
-              <p className="text-zinc-500 text-center mb-10 text-sm">You can always change this later</p>
+              <h1 className="text-3xl font-black text-center mb-2 tracking-tight text-zinc-900 dark:text-white">Choose your username</h1>
+              <p className="text-zinc-400 dark:text-zinc-500 text-center mb-10 text-sm font-medium">You can always change this later</p>
 
               <div className="mb-10">
-                <label className="block text-sm text-zinc-500 mb-2 px-1">Username</label>
+                <label className="block text-sm font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Username</label>
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="@johndoe"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-zinc-100 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-900/50 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-medium text-black"
+                    className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-bold text-black dark:text-white border border-transparent dark:border-zinc-800"
                   />
                 </div>
               </div>
@@ -325,24 +325,24 @@ export default function OnboardingPage() {
               <button
                 onClick={handleComplete}
                 disabled={!username || isCompleting}
-                className="w-full bg-[#1A1A24] text-white rounded-2xl py-4.5 font-medium text-[15px] hover:bg-black transition-all mb-10 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2"
+                className="w-full bg-[#1A1A24] dark:bg-[#E2FF3D] text-white dark:text-black rounded-2xl py-5 font-black text-[15px] uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all mb-10 shadow-lg dark:shadow-none disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2"
               >
-                {isCompleting && <Loader2 className="w-4 h-4 animate-spin text-[#E2FF3D]" />}
+                {isCompleting && <Loader2 className="w-5 h-5 animate-spin text-[#E2FF3D] dark:text-zinc-900" />}
                 {isCompleting ? "Saving Details..." : "Complete Profile"}
               </button>
             </>
           )}
 
 
-          <p className="text-center text-[13px] text-zinc-400 mt-auto">
-            Need help? <a href="#" className="underline hover:text-zinc-600 transition-colors">Contact Support</a>
+          <p className="text-center text-[13px] text-zinc-400 dark:text-zinc-600 mt-auto font-bold uppercase tracking-widest">
+            Need help? <a href="#" className="underline hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">Contact Support</a>
           </p>
         </div>
       </div>
 
       {/* Success Animation Overlay */}
       {isCompleting && !error && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/10 backdrop-blur-sm animate-scale-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/10 dark:bg-black/10 backdrop-blur-md animate-scale-in">
           <div className="flex flex-col items-center gap-6">
             <div className="relative w-40 h-40">
               {/* Background Circle */}
@@ -375,7 +375,7 @@ export default function OnboardingPage() {
                 </svg>
               </div>
             </div>
-            <p className="text-2xl font-semibold tracking-tight text-zinc-900">Account Created!</p>
+            <p className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white uppercase">Account Created!</p>
           </div>
         </div>
       )}
