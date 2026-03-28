@@ -56,7 +56,7 @@ export default function ChannelsPage() {
 
       if (!userMemberships) return;
 
-      const groupIds = userMemberships.map(m => m.group_id);
+      const groupIds = userMemberships.map((m: any) => m.group_id);
       
       // 2. Fetch all channels for these groups
       const { data: channelData } = await supabase
@@ -66,13 +66,13 @@ export default function ChannelsPage() {
         .order('name', { ascending: true });
 
       // 3. Group channels by community
-      const grouped = userMemberships.map(membership => {
+      const grouped = userMemberships.map((membership: any) => {
         const group = membership.groups as any;
         return {
           ...group,
-          channels: (channelData || []).filter(c => c.group_id === group.id)
+          channels: (channelData || []).filter((c: any) => c.group_id === group.id)
         };
-      }).filter(g => g.channels.length > 0);
+      }).filter((g: any) => g.channels.length > 0);
 
       setCommunities(grouped);
     } catch (err) {
