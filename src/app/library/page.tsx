@@ -608,8 +608,8 @@ function ResourceHub({
           .from('academic_resources')
           .select('*')
           .eq('status', 'approved')
-          .eq('university_id', uni.id)
-          .eq('department_id', dept.id)
+          .eq('university_name', uni.name)
+          .eq('department_name', dept.name)
           .eq('level', level)
           .eq('semester', semester);
         

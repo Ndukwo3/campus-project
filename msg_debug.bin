@@ -1,0 +1,120 @@
+"use client";
+
+import { ChevronLeft, MoreVertical, Send, Mic, Smile, Plus, Loader2, User, Edit, ChevronDown, Trash2, Globe, Eye, Check } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { memo, useState, useEffect, useRef, use, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
+
+// Separate memoized component for each message to prevent unnecessary re-renders
+const MessageItem = memo(({ 
+  msg, 
+  user, 
+  partner, 
+  isMe, 
+  isImage, 
+  isVoiceNote, 
+  isViewOnce, 
+  hasBeenViewed,
+  showMenu, 
+  contextMenuMsgId,
+  setContextMenuMsgId, 
+  setShowDeleteConfirm, 
+  setMenuDirection,
+  longPressTimeoutRef,
+  setSelectedImage,
+  handleViewOnceMessage,
+  handleDeleteMessage,
+  handleEditMessage,
+  showDeleteConfirm,
+  menuDirection
+}: any) => {
+  return (
+    <div 
+      className={`flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2 relative group ${showMenu ? "z-[50]" : "z-10"}`}
+    >
+      {!isMe && (
+        <div className={`w-8 h-8 rounded-full overflow-hidden shrink-0 mb-1 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center transition-opacity duration-300 ${showMenu ? "opacity-40" : "opacity-100"}`}>
+          {partner?.avatar_url ? (
+            <Image 
+              src={partner.avatar_url} 
+              alt="Avatar" 
+              width={32} 
+              height={32} 
+              className="object-cover w-full h-full" 
+            />
+          ) : (
+            <User className="w-5 h-5 text-zinc-400 dark:text-zinc-600" />
+          )}
+        </div>
+      )}
+      
+      <motion.div 
+        animate={showMenu ? { 
+          scale: 1.04,
+          y: -8,
+          zIndex: 100,
+        } : { 
+          scale: 1,
+          y: 0,
+          zIndex: 10
+        }}
+        transition={{ type: "spring", damping: 25, stiffness: 400 }}
+        className={`max-w-[82%] rounded-[22px] relative touch-none select-none will-change-transform ${
+          isImage && !isViewOnce ? "shadow-md active:scale-[0.98] cursor-pointer" : "shadow-sm px-4 py-3"
+        } ${
+          isMe 
+            ? isImage && !isViewOnce ? "" : "bg-zinc-900 dark:bg-zinc-800 text-white rounded-br-none" 
+            : isImage && !isViewOnce ? "" : "bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-bl-none border border-zinc-100/50 dark:border-zinc-800"
+        } ${showMenu ? "shadow-2xl" : ""}`}
+        onPointerDown={(e) => {
+          const clientY = e.clientY;
+          longPressTimeoutRef.current = setTimeout(() => {
+            setMenuDirection(clientY > window.innerHeight * 0.6 ? 'top' : 'bottom');
+            setContextMenuMsgId(msg.id);
+            setShowDeleteConfirm(null);
+            if (window.navigator.vibrate) window.navigator.vibrate(10);
+          }, 500);
+        }}
+        onPointerUp={() => {
+          if (longPressTimeoutRef.current) clearTimeout(longPressTimeoutRef.current);
+        }}
+        onPointerLeave={() => {
+          if (longPressTimeoutRef.current) clearTimeout(longPressTimeoutRef.current);
+        }}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        {/* Tiny Arrow Dropdown Toggle */}
+        <div className="absolute top-0 right-0 p-1">
+          <button 
+            type="button"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              const clientY = e.clientY;
+              if (contextMenuMsgId !== msg.id) {
+                setMenuDirection(clientY > window.innerHeight * 0.6 ? 'top' : 'bottom');
+                setShowDeleteConfirm(null);
+                setContextMenuMsgId(msg.id);
+              } else {
+                setContextMenuMsgId(null);
+              }
+            }}
+            className={`msg-menu-toggle h-6 w-6 flex items-center justify-center rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 backdrop-blur-md shadow-lg border border-white/20 active:scale-90 ${isMe && !isImage ? "bg-[#E5FF66] text-black" : "bg-black/20 text-white"}`}
+          >
+            <ChevronDown size={12} className={isMe && !isImage ? "text-white dark:text-black" : "text-white"} />
+          </button>
+        </div>
+
+        {/* Multi-view Dropdown Menu (Simplified version for mobile performance) */}
+        <AnimatePresence>
+          {showMenu && isMe && (
+            <motion.div 
+              key="dropdown"
+              initial={{ opacity: 0, scale: 0.9, y: menuDirection === 'bottom' ? 5 : -5 }}
+              animate={{ opacity: 1, scale: 1, y: menuDirection === 'bottom' ? 20 : -20 }}
+              exit={{ opacity: 0, scale: 0.9, y: menuDirection === 'bottom' ? 5 : -5 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`msg-menu-container absolute right-0 w-[130px] bg-white dark:bg-zinc-950 rounded-[18px] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] bord

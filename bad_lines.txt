@@ -1,0 +1,301 @@
+﻿                setContextMenuMsgId(null);
+              }
+            }}
+            className={`msg-menu-toggle h-6 w-6 flex items-center justify-center rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 backdrop-blur-md shadow-lg border border-white/20 active:scale-90 ${isMe && !isImage ? "bg-[#E5FF66] text-black" : "bg-black/20 text-white"}`}
+          >
+            <ChevronDown size={12} className={isMe && !isImage ? "text-white dark:text-black" : "text-white"} />
+          </button>
+        </div>
+
+        {/* Multi-view Dropdown Menu (Simplified version for mobile performance) */}
+        <AnimatePresence>
+          {showMenu && isMe && (
+            <motion.div 
+              key="dropdown"
+              initial={{ opacity: 0, scale: 0.9, y: menuDirection === 'bottom' ? 5 : -5 }}
+              animate={{ opacity: 1, scale: 1, y: menuDirection === 'bottom' ? 20 : -20 }}
+              exit={{ opacity: 0, scale: 0.9, y: menuDirection === 'bottom' ? 5 : -5 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`msg-menu-container absolute right-0 w-[130px] bg-white dark:bg-zinc-950 rounded-[18px] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border border-black/5 dark:border-white/10 p-1 z-50 overflow-hidden ring-1 ring-black/5 dark:ring-white/5 will-change-transform ${
+                 menuDirection === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1'
+              }`}
+            >
+              <AnimatePresence mode="wait">
+                {showDeleteConfirm === msg.id ? (
+                  <motion.div 
+                    key="delete-confirm"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="flex flex-col gap-0.5"
+                  >
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg.id, 'me'); }}
+                      className="w-full flex items-center justify-center py-2 text-[12px] font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                        <span>For Me</span>
+                    </button>
+
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg.id, 'everyone'); }}
+                      className="w-full flex items-center justify-center py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                        <span>For Everyone</span>
+                    </button>
+
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(null); }}
+                      className="w-full py-1 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors text-center"
+                    >
+                       Back
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    key="main-menu"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="flex flex-col gap-0.5"
+                  >
+                    {!isImage && !isVoiceNote && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleEditMessage(msg); }}
+                        className="w-full flex items-center justify-between px-3 py-2 text-[13px] font-bold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl transition-all active:scale-[0.98]"
+                      >
+                         <span>Edit</span>
+                         <Edit size={14} className="text-zinc-400" />
+                      </button>
+                    )}
+                    
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(msg.id); }}
+                      className="w-full flex items-center justify-between px-3 py-2 text-[13px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                        <span>Delete</span>
+                        <Trash2 size={14} className="text-red-400" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {isVoiceNote ? (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 mb-1">
+              <Mic size={14} className={isMe ? (isMe ? "text-[#E5FF66] dark:text-blue-500" : "text-[#E5FF66]") : "text-zinc-500"} />
+              <span className="font-semibold text-xs tracking-wide">Voice Note</span>
+            </div>
+            <audio 
+              src={(msg.content || "").replace('[VOICE_NOTE]', '')} 
+              controls 
+              controlsList="nodownload"
+              onContextMenu={(e) => e.preventDefault()}
+              className={`h-8 w-48 custom-audio ${isMe ? 'invert dark:invert-0' : 'dark:invert'}`}
+            />
+          </div>
+        ) : isImage ? (
+           isViewOnce ? (
+             <div 
+                onClick={(e) => { e.stopPropagation(); !isMe && !msg.has_been_viewed && handleViewOnceMessage(msg); }}
+                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full transition-all ${
+                  msg.has_been_viewed 
+                    ? 'opacity-40 cursor-default bg-zinc-100 dark:bg-zinc-800 text-zinc-500' 
+                    : isMe 
+                      ? 'bg-zinc-800 text-[#E5FF66] cursor-default' 
+                      : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                }`}
+             >
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${msg.has_been_viewed ? 'bg-zinc-200 dark:bg-zinc-700' : 'bg-[#E5FF66]/10 text-[#E5FF66]'}`}>
+                  {msg.has_been_viewed ? <Check size={14} className="text-zinc-400" /> : <Eye size={14} />}
+                </div>
+                <span className="text-[13px] font-bold tracking-tight">
+                   {msg.has_been_viewed ? 'Opened' : 'Photo'}
+                </span>
+             </div>
+           ) : (
+            <div 
+              onClick={(e) => { e.stopPropagation(); !showMenu && setSelectedImage((msg.content || "").replace('[IMAGE]', '')); }}
+              className="relative bg-zinc-100 dark:bg-zinc-900 flex flex-col items-stretch justify-center rounded-[18px] overflow-hidden"
+            >
+               <img 
+                 src={(msg.content || "").replace('[IMAGE]', '').split('\n\n')[0]} 
+                 alt="Shared image" 
+                 className="w-full h-auto max-h-[220px] object-cover" 
+               />
+               {(msg.content || "").split('\n\n')[1] && (
+                 <div className={`w-full p-4 text-[14px] leading-relaxed ${isMe ? 'bg-zinc-900 dark:bg-zinc-800 text-white' : 'bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border-t border-zinc-100 dark:border-zinc-800'}`}>
+                    {(msg.content || "").split('\n\n')[1]}
+                 </div>
+               )}
+               <div className="absolute bottom-2 right-3">
+                  <span className="text-[9px] font-bold text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+               </div>
+            </div>
+           )
+        ) : (
+          <>
+            <p className="text-[14.5px] leading-relaxed font-medium pr-4">{msg.content}</p>
+            <div className="flex items-center justify-between gap-2 mt-1.5">
+              {msg.is_edited && <span className="text-[9px] font-bold italic text-white/40 dark:text-black/40">(edited)</span>}
+              <div className="flex items-center gap-1.5 ml-auto">
+                <span className={`block text-[9px] font-black uppercase tracking-widest ${isMe ? "text-white/40 dark:text-black/40" : "text-zinc-400 dark:text-zinc-600"}`}>
+                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                {isMe && (
+                  <div className="flex items-center">
+                    {msg.is_read ? (
+                      <div className="flex -space-x-1.5">
+                        <Check size={10} className="text-[#E5FF66]" strokeWidth={4} />
+                        <Check size={10} className="text-[#E5FF66]" strokeWidth={4} />
+                      </div>
+                    ) : (
+                      <Check size={10} className="text-white/30 dark:text-black/20" strokeWidth={4} />
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </motion.div>
+    </div>
+  );
+});
+
+export default function ChatDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: conversationId } = use(params);
+  const router = useRouter();
+  const supabase = createClient();
+  
+  const [messages, setMessages] = useState<any[]>([]);
+  const [inputText, setInputText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [partnerIsTyping, setPartnerIsTyping] = useState(false);
+  const channelRef = useRef<any>(null);
+
+  // Voice recording & Emojis
+  const [showEmojis, setShowEmojis] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const commonEmojis = ['ðŸ˜‚', 'â¤ï¸', 'ðŸ”¥', 'ðŸ‘', 'ðŸ˜Š', 'ðŸ˜', 'ðŸ˜­', 'ðŸ¥º', 'ðŸ™', 'âœ¨', 'ðŸ’¯', 'ðŸ‘', 'ðŸ‘€', 'ðŸ™Œ', 'ðŸŽ‰'];
+  const [partner, setPartner] = useState<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [pendingImage, setPendingImage] = useState<{ file: File, preview: string } | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [contextMenuMsgId, setContextMenuMsgId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null); 
+  const [menuDirection, setMenuDirection] = useState<'top' | 'bottom'>('bottom');
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isLongPressActive, setIsLongPressActive] = useState(false);
+  const [isViewOnceEnabled, setIsViewOnceEnabled] = useState(false);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    async function initChat() {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) {
+          router.push("/login");
+          return;
+        }
+        setUser(authUser);
+
+        if (conversationId) {
+          // Fetch partner profile from conversation_participants
+          const { data: participantData } = await supabase
+            .from('conversation_participants')
+            .select('profiles (id, username, full_name, avatar_url)')
+            .eq('conversation_id', conversationId)
+            .neq('user_id', authUser.id)
+            .single();
+          
+          if (participantData && participantData.profiles) {
+            const profile = Array.isArray(participantData.profiles) ? participantData.profiles[0] : participantData.profiles;
+            setPartner(profile);
+          }
+
+          // Fetch message history
+          const { data: history } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', conversationId)
+            .order('created_at', { ascending: true });
+
+          if (history) {
+             const visibleHistory = history.filter((m: any) => {
+               const deletedBy = m.deleted_by || [];
+               return !deletedBy.includes(authUser.id);
+             });
+             setMessages(visibleHistory);
+             
+             // Mark unread messages from partner as read
+             const unreadIds = history.filter((m: any) => !m.is_read && m.sender_id !== authUser.id).map((m: any) => m.id);
+             if (unreadIds.length > 0) {
+                await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
+             }
+          }
+        }
+        setIsLoading(false);
+        setTimeout(scrollToBottom, 100);
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && !err.message?.includes('Lock broken')) {
+          console.error("Init chat error:", err);
+        }
+      }
+    }
+
+    initChat();
+  }, [conversationId, supabase, router]);
+
+  // Click outside to close message menu
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Close if clicking outside both the toggle and the menu container
+      if (!target.closest('.msg-menu-container') && !target.closest('.msg-menu-toggle')) {
+        setContextMenuMsgId(null);
+        setShowDeleteConfirm(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [contextMenuMsgId]);
+
+  useEffect(() => {
+    if (!user || !conversationId) return;
+
+    // Real-time subscription for messages and presence
+    const channel = supabase.channel(`chat_${conversationId}`, {
+      config: {
+        presence: {
+          key: user.id,
+        },
+      },
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const otherTyping = Object.values(state).some((presences: any) => 
+          presences.some((p: any) => p.isTyping && p.user_id !== user.id)
+        );

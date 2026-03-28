@@ -4,11 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Loader2, Image as ImageIcon, Link2, AtSign } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 
 export default function CreatePostPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const groupId = searchParams.get('group_id');
   const supabase = createClient();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,8 +71,12 @@ export default function CreatePostPage() {
     // 2. Set temporary state for the home page to show the "Posting..." UI
     sessionStorage.setItem('isPosting', 'true');
     
-    // 3. Navigate home immediately!
-    router.push("/");
+    // 3. Navigate back to where we came from (either home or specific group)
+    if (groupId) {
+      router.push(`/groups/${groupId}`);
+    } else {
+      router.push("/");
+    }
 
     // 4. Do the heavy lifting in the background (fire and forget)
     const uploadAndInsert = async () => {
@@ -104,6 +110,7 @@ export default function CreatePostPage() {
           .insert({
             user_id: user.id,
             university_id: userProfile.university_id,
+            group_id: groupId || null,
             content: content.trim(),
             image_url: imageUrl
           });

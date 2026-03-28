@@ -7,23 +7,12 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function FloatingCreateButton() {
   const pathname = usePathname();
-  const hideOnPaths = [
-    "/login", 
-    "/signup", 
-    "/welcome", 
-    "/create", 
-    "/onboarding",
-    "/settings",
-    "/messages",
-    "/library",
-    "/campus",
-    "/admin"
-  ];
-  const shouldHide = hideOnPaths.some(path => pathname.startsWith(path));
+  const showOnPaths = ["/", "/profile"];
+  const shouldShow = showOnPaths.includes(pathname);
 
   return (
     <AnimatePresence>
-      {!shouldHide && (
+      {shouldShow && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md pointer-events-none z-[60] px-5 flex justify-end">
           <motion.div
             initial={{ scale: 0, opacity: 0, y: 20 }}

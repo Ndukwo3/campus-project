@@ -5,14 +5,8 @@ import {
   ArrowLeft, 
   Upload, 
   FileText, 
-  Check, 
   Loader2, 
-  GraduationCap, 
-  BookOpen, 
   Info,
-  ChevronDown,
-  X,
-  FileCheck,
   Zap
 } from "lucide-react";
 import Link from "next/link";
@@ -85,7 +79,7 @@ export default function AdminDirectUploadPage() {
     setSelectedUni("");
     setSelectedAcademicUnit("");
     setSelectedDept("");
-  }, [uniType]);
+  }, [uniType, supabase]);
 
   // Fetch Academic Units (Faculties/Colleges)
   useEffect(() => {
@@ -122,7 +116,7 @@ export default function AdminDirectUploadPage() {
     setSelectedAcademicUnitId("");
     setSelectedDept("");
     setSelectedDeptId("");
-  }, [selectedUniId]);
+  }, [selectedUniId, selectedUni, supabase]);
 
   // Fetch Departments
   useEffect(() => {
@@ -149,7 +143,7 @@ export default function AdminDirectUploadPage() {
     fetchDepts();
     setSelectedDept("");
     setSelectedDeptId("");
-  }, [selectedAcademicUnitId]);
+  }, [selectedAcademicUnitId, selectedAcademicUnit, academicUnitsList, supabase]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -202,11 +196,8 @@ export default function AdminDirectUploadPage() {
           owner_id: user.id,
           title,
           file_url: publicUrl,
-          university_id: selectedUniId,
           university_name: selectedUni,
-          college_id: selectedAcademicUnitId || null,
           college_name: selectedAcademicUnit || null,
-          department_id: selectedDeptId,
           department_name: selectedDept,
           level: selectedLevel,
           semester: selectedSemester,

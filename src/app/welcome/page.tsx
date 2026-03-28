@@ -30,12 +30,7 @@ export default function WelcomePage() {
             <span className="text-white font-black text-5xl italic tracking-tighter mix-blend-difference z-10">-v</span>
           </motion.div>
 
-          <div className="w-24 h-24 bg-[#1A1A24] dark:bg-zinc-900 rounded-3xl flex items-center justify-center mb-8 shadow-xl shadow-zinc-200/50 dark:shadow-none transform -rotate-3 border border-transparent dark:border-zinc-800">
-            <span className="text-[#E5FF66] font-bold text-4xl italic">U</span>
-            <span className="text-white font-bold text-4xl italic">-v</span>
-          </div>
-
-          <h1 className="text-[42px] font-black text-center leading-[0.95] tracking-tighter mb-5 uppercase">
+          <h1 className="text-[42px] font-black text-center leading-[1.1] tracking-tighter mb-8 uppercase mt-6">
             Welcome to <br />
             <motion.span 
               initial={{ opacity: 0, scale: 0.9 }}
@@ -63,7 +58,7 @@ export default function WelcomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="text-center text-zinc-500 dark:text-zinc-400 font-bold text-[12px] uppercase tracking-[0.15em] leading-[1.8] max-w-[280px]"
+            className="text-center text-zinc-500 dark:text-zinc-400 font-bold text-[12.5px] uppercase tracking-[0.16em] leading-[1.9] max-w-[290px] mt-4"
           >
             The largest student network in Nigeria. Connect, collaborate, and grow with your peers.
           </motion.p>

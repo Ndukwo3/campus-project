@@ -13,14 +13,37 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Campus - Uni-verse",
+  title: {
+    template: "%s | Campus",
+    default: "Campus - Uni-verse",
+  },
   description: "The ultimate social and academic network for Nigerian university students.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Campus",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
+
+import type { Viewport } from 'next'
+
+export const viewport: Viewport = {
+  themeColor: '#0A0A0A',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
 
 import { GlobalModals } from "@/components/GlobalModals";
 import GlobalStateLoader from "@/components/GlobalStateLoader";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import FloatingCreateButton from "@/components/FloatingCreateButton";
+import { PWARegistrar } from "@/components/PWARegistrar";
 
 export default function RootLayout({
   children,
@@ -40,6 +63,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <GlobalStateLoader />
+          <PWARegistrar />
           {children}
           <FloatingCreateButton />
           <GlobalModals />

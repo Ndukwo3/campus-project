@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChevronLeft, MoreVertical, Send, Mic, Smile, Plus, Loader2, User, Edit, ChevronDown, Trash2, Globe, Eye, Check } from "lucide-react";
 import Image from "next/image";
@@ -61,7 +61,7 @@ const MessageItem = memo(({
           y: 0,
           zIndex: 10
         }}
-        transition={{ type: "spring", damping: 20, stiffness: 350, mass: 0.5 }}
+        transition={{ type: "spring", damping: 25, stiffness: 400 }}
         className={`max-w-[82%] rounded-[22px] relative touch-none select-none will-change-transform ${
           isImage && !isViewOnce ? "shadow-md active:scale-[0.98] cursor-pointer" : "shadow-sm px-4 py-3"
         } ${
@@ -109,15 +109,15 @@ const MessageItem = memo(({
 
         {/* Multi-view Dropdown Menu (Simplified version for mobile performance) */}
         <AnimatePresence>
-          {showMenu && (
+          {showMenu && isMe && (
             <motion.div 
               key="dropdown"
               initial={{ opacity: 0, scale: 0.9, y: menuDirection === 'bottom' ? 5 : -5 }}
               animate={{ opacity: 1, scale: 1, y: menuDirection === 'bottom' ? 20 : -20 }}
               exit={{ opacity: 0, scale: 0.9, y: menuDirection === 'bottom' ? 5 : -5 }}
-              transition={{ type: "spring", damping: 20, stiffness: 350, mass: 0.5 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
               onClick={(e) => e.stopPropagation()}
-              className={`msg-menu-container absolute ${isMe ? 'right-0' : 'left-0'} w-[130px] bg-white dark:bg-zinc-950 rounded-[18px] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border border-black/5 dark:border-white/10 p-1 z-50 overflow-hidden ring-1 ring-black/5 dark:ring-white/5 will-change-transform ${
+              className={`msg-menu-container absolute right-0 w-[130px] bg-white dark:bg-zinc-950 rounded-[18px] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border border-black/5 dark:border-white/10 p-1 z-50 overflow-hidden ring-1 ring-black/5 dark:ring-white/5 will-change-transform ${
                  menuDirection === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1'
               }`}
             >
@@ -137,14 +137,12 @@ const MessageItem = memo(({
                         <span>For Me</span>
                     </button>
 
-                    {isMe && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg.id, 'everyone'); }}
-                        className="w-full flex items-center justify-center py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all active:scale-[0.98]"
-                      >
-                          <span>For Everyone</span>
-                      </button>
-                    )}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg.id, 'everyone'); }}
+                      className="w-full flex items-center justify-center py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                        <span>For Everyone</span>
+                    </button>
 
                     <button 
                       onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(null); }}
@@ -161,7 +159,7 @@ const MessageItem = memo(({
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="flex flex-col gap-0.5"
                   >
-                    {isMe && !isImage && !isVoiceNote && (
+                    {!isImage && !isVoiceNote && (
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleEditMessage(msg); }}
                         className="w-full flex items-center justify-between px-3 py-2 text-[13px] font-bold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl transition-all active:scale-[0.98]"
@@ -821,9 +819,9 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, ease: "linear" }}
+            transition={{ duration: 0.2 }}
             onClick={() => { setContextMenuMsgId(null); setShowDeleteConfirm(null); }}
-            className="fixed inset-0 bg-black/60 z-[45] cursor-pointer will-change-opacity"
+            className="fixed inset-0 bg-black/30 backdrop-blur-md z-[45] cursor-pointer will-change-[opacity,backdrop-filter]"
           />
         )}
       </AnimatePresence>
@@ -857,7 +855,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             lastDate = msgDate;
 
             return (
-              <div key={msg.id} className={`relative ${contextMenuMsgId === msg.id ? "z-50" : "z-10"}`}>
+              <div key={msg.id} className="relative z-10">
                 {showDate && (
                   <div className="flex justify-center my-6 first:mt-0">
                     <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 bg-zinc-100/50 dark:bg-zinc-900/40 px-3 py-1.5 rounded-xl border border-black/[0.03] dark:border-white/[0.03] backdrop-blur-[2px]">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { X, Users, Lock, Globe, Loader2, Camera } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase";
@@ -20,6 +20,17 @@ export default function CreateGroupModal({ isOpen, onClose, onSuccess, universit
   const [isPrivate, setIsPrivate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +40,27 @@ export default function CreateGroupModal({ isOpen, onClose, onSuccess, universit
     setError(null);
 
     try {
+      let imageUrl = null;
+
+      // Handle Image Upload
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${userId}-${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('posts')
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('posts')
+          .getPublicUrl(filePath);
+        
+        imageUrl = publicUrl;
+      }
+
       const { data, error: groupError } = await supabase
         .from('groups')
         .insert({
@@ -36,7 +68,8 @@ export default function CreateGroupModal({ isOpen, onClose, onSuccess, universit
           description: description.trim(),
           university_id: universityId,
           created_by: userId,
-          is_private: isPrivate
+          is_private: isPrivate,
+          image_url: imageUrl
         })
         .select('id')
         .single();
@@ -60,6 +93,8 @@ export default function CreateGroupModal({ isOpen, onClose, onSuccess, universit
       setName("");
       setDescription("");
       setIsPrivate(false);
+      setImageFile(null);
+      setImagePreview(null);
     } catch (err: any) {
       console.error("Error creating group:", err);
       setError(err.message || "Failed to create group. Please try again.");
@@ -88,15 +123,29 @@ export default function CreateGroupModal({ isOpen, onClose, onSuccess, universit
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
-          {/* Group Icon Placeholder */}
+          {/* Group Icon Picker */}
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-[32px] bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 dark:text-zinc-600 group relative cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors border border-zinc-100 dark:border-zinc-800">
-              <Users size={40} />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-[32px]">
-                <Camera size={24} className="text-white" />
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="w-24 h-24 rounded-[32px] bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 dark:text-zinc-600 group relative cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors border-2 border-dashed border-zinc-200 dark:border-zinc-800 overflow-hidden"
+            >
+              {imagePreview ? (
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              ) : (
+                <Users size={40} />
+              )}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 backdrop-blur-[2px]">
+                <Camera size={24} className="text-white drop-shadow-md" />
               </div>
             </div>
-            <p className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 mt-3 uppercase tracking-widest">Group Icon</p>
+            <p className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 mt-3 uppercase tracking-[0.2em]">Add Community Cover</p>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              hidden 
+              accept="image/*" 
+              onChange={handleImageSelect} 
+            />
           </div>
 
           <div className="space-y-4">

@@ -30,6 +30,19 @@ export default function PremiumPdfViewer({ url, onClose, title }: PremiumPdfView
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(400);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setContainerWidth(Math.min(window.innerWidth - 32, 416));
+      
+      const handleResize = () => {
+         setContainerWidth(Math.min(window.innerWidth - 32, 416));
+      };
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -47,44 +60,36 @@ export default function PremiumPdfViewer({ url, onClose, title }: PremiumPdfView
   const handleResetZoom = () => setScale(1.0);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col overflow-hidden text-white safe-area-inset">
-      {/* Premium Header */}
-      <div className="p-4 flex items-center justify-between border-b border-white/10 bg-zinc-950/50 backdrop-blur-md">
-        <div className="flex items-center gap-4">
+    <div className="fixed inset-y-0 left-1/2 -translate-x-1/2 w-full max-w-md z-[100] bg-black/95 backdrop-blur-xl flex flex-col overflow-hidden text-white safe-area-inset border-x border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+      <div className="p-3 sm:p-4 flex items-center gap-2 border-b border-white/10 bg-zinc-950/50 backdrop-blur-md">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <button 
             onClick={onClose}
-            className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all"
+            className="w-10 h-10 shrink-0 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all"
           >
             <ChevronLeft size={20} />
           </button>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-1">
             <h3 className="text-sm font-black uppercase italic tracking-tight truncate leading-none">
               {title || "Academic Resource"}
             </h3>
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">
-              {pageNumber} of {numPages || "--"} Pages · {Math.round(scale * 100)}% Zoom
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5 truncate">
+              {pageNumber} of {numPages || "--"} Pages
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/5">
-          <button onClick={handleZoomOut} className="w-10 h-10 rounded-xl hover:bg-white/10 flex items-center justify-center active:scale-90 transition-all text-zinc-400 hover:text-white">
-            <ZoomOut size={18} />
+        <div className="flex items-center shrink-0 bg-white/5 p-1 rounded-2xl border border-white/5">
+          <button onClick={handleZoomOut} className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center active:scale-90 transition-all text-zinc-400 hover:text-white">
+            <ZoomOut size={16} />
           </button>
-          <button onClick={handleResetZoom} className="w-10 h-10 rounded-xl hover:bg-white/10 flex items-center justify-center active:scale-90 transition-all text-zinc-500 hover:text-white">
-            <RotateCcw size={16} />
+          <button onClick={handleResetZoom} className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center active:scale-90 transition-all text-zinc-500 hover:text-white">
+            <RotateCcw size={14} />
           </button>
-          <button onClick={handleZoomIn} className="w-10 h-10 rounded-xl hover:bg-white/10 flex items-center justify-center active:scale-90 transition-all text-[#E5FF66]">
-            <ZoomIn size={18} />
+          <button onClick={handleZoomIn} className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center active:scale-90 transition-all text-[#E5FF66]">
+            <ZoomIn size={16} />
           </button>
         </div>
-
-        <button 
-          onClick={onClose}
-          className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20 active:scale-90 transition-all ml-2"
-        >
-          <X size={20} />
-        </button>
       </div>
 
       {/* Main Content Area */}
@@ -128,6 +133,7 @@ export default function PremiumPdfViewer({ url, onClose, title }: PremiumPdfView
             <Page 
               pageNumber={pageNumber} 
               scale={scale} 
+              width={containerWidth}
               renderAnnotationLayer={true}
               renderTextLayer={true}
               className="rounded-lg overflow-hidden border border-white/5"

@@ -19,7 +19,7 @@ const MessageItem = memo(({
   isViewOnce, 
   hasBeenViewed,
   showMenu, 
-  contextMenuMsgId,
+  contextMenuMsgId, 
   setContextMenuMsgId, 
   setShowDeleteConfirm, 
   setMenuDirection,
@@ -37,7 +37,7 @@ const MessageItem = memo(({
     >
       {!isMe && (
         <div className={`w-8 h-8 rounded-full overflow-hidden shrink-0 mb-1 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center transition-opacity duration-300 ${showMenu ? "opacity-40" : "opacity-100"}`}>
-          {partner?.avatar_url ? (
+          {false ? (
             <Image 
               src={partner.avatar_url} 
               alt="Avatar" 
@@ -61,7 +61,7 @@ const MessageItem = memo(({
           y: 0,
           zIndex: 10
         }}
-        transition={{ type: "spring", damping: 20, stiffness: 350, mass: 0.5 }}
+        transition={{ type: "spring", damping: 25, stiffness: 400 }}
         className={`max-w-[82%] rounded-[22px] relative touch-none select-none will-change-transform ${
           isImage && !isViewOnce ? "shadow-md active:scale-[0.98] cursor-pointer" : "shadow-sm px-4 py-3"
         } ${
@@ -109,15 +109,15 @@ const MessageItem = memo(({
 
         {/* Multi-view Dropdown Menu (Simplified version for mobile performance) */}
         <AnimatePresence>
-          {showMenu && (
+          {showMenu && isMe && (
             <motion.div 
               key="dropdown"
               initial={{ opacity: 0, scale: 0.9, y: menuDirection === 'bottom' ? 5 : -5 }}
               animate={{ opacity: 1, scale: 1, y: menuDirection === 'bottom' ? 20 : -20 }}
               exit={{ opacity: 0, scale: 0.9, y: menuDirection === 'bottom' ? 5 : -5 }}
-              transition={{ type: "spring", damping: 20, stiffness: 350, mass: 0.5 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
               onClick={(e) => e.stopPropagation()}
-              className={`msg-menu-container absolute ${isMe ? 'right-0' : 'left-0'} w-[130px] bg-white dark:bg-zinc-950 rounded-[18px] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border border-black/5 dark:border-white/10 p-1 z-50 overflow-hidden ring-1 ring-black/5 dark:ring-white/5 will-change-transform ${
+              className={`msg-menu-container absolute right-0 w-[130px] bg-white dark:bg-zinc-950 rounded-[18px] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] border border-black/5 dark:border-white/10 p-1 z-50 overflow-hidden ring-1 ring-black/5 dark:ring-white/5 will-change-transform ${
                  menuDirection === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1'
               }`}
             >
@@ -137,14 +137,12 @@ const MessageItem = memo(({
                         <span>For Me</span>
                     </button>
 
-                    {isMe && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg.id, 'everyone'); }}
-                        className="w-full flex items-center justify-center py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all active:scale-[0.98]"
-                      >
-                          <span>For Everyone</span>
-                      </button>
-                    )}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg.id, 'everyone'); }}
+                      className="w-full flex items-center justify-center py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                        <span>For Everyone</span>
+                    </button>
 
                     <button 
                       onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(null); }}
@@ -161,7 +159,7 @@ const MessageItem = memo(({
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="flex flex-col gap-0.5"
                   >
-                    {isMe && !isImage && !isVoiceNote && (
+                    {!isImage && !isVoiceNote && (
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleEditMessage(msg); }}
                         className="w-full flex items-center justify-between px-3 py-2 text-[13px] font-bold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl transition-all active:scale-[0.98]"
@@ -270,8 +268,8 @@ const MessageItem = memo(({
   );
 });
 
-export default function ChatDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: conversationId } = use(params);
+export default function ChannelChatPage({ params }: { params: Promise<{ id: string, channelId: string }> }) {
+  const { id: groupId, channelId } = use(params);
   const router = useRouter();
   const supabase = createClient();
   
@@ -292,7 +290,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const commonEmojis = ['ðŸ˜‚', 'â¤ï¸', 'ðŸ”¥', 'ðŸ‘', 'ðŸ˜Š', 'ðŸ˜', 'ðŸ˜­', 'ðŸ¥º', 'ðŸ™', 'âœ¨', 'ðŸ’¯', 'ðŸ‘', 'ðŸ‘€', 'ðŸ™Œ', 'ðŸŽ‰'];
+  const commonEmojis = ['😂', '❤️', '🔥', '👍', '😊', '😍', '😭', '🥺', '🙏', '✨', '💯', '👏', '👀', '🙌', '🎉'];
   const [partner, setPartner] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -322,25 +320,23 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
         }
         setUser(authUser);
 
-        if (conversationId) {
-          // Fetch partner profile from conversation_participants
-          const { data: participantData } = await supabase
-            .from('conversation_participants')
-            .select('profiles (id, username, full_name, avatar_url)')
-            .eq('conversation_id', conversationId)
-            .neq('user_id', authUser.id)
+        if (channelId) {
+          // Fetch channel info
+          const { data: channelData } = await supabase
+            .from('channels')
+            .select('*')
+            .eq('id', channelId)
             .single();
           
-          if (participantData && participantData.profiles) {
-            const profile = Array.isArray(participantData.profiles) ? participantData.profiles[0] : participantData.profiles;
-            setPartner(profile);
+          if (channelData) {
+            setPartner(channelData); // Reusing partner state for channel data
           }
 
           // Fetch message history
           const { data: history } = await supabase
-            .from('messages')
-            .select('*')
-            .eq('conversation_id', conversationId)
+            .from('group_messages')
+            .select('*, profiles:sender_id (id, username, full_name, avatar_url)')
+            .eq('channel_id', channelId)
             .order('created_at', { ascending: true });
 
           if (history) {
@@ -350,11 +346,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
              });
              setMessages(visibleHistory);
              
-             // Mark unread messages from partner as read
-             const unreadIds = history.filter((m: any) => !m.is_read && m.sender_id !== authUser.id).map((m: any) => m.id);
-             if (unreadIds.length > 0) {
-                await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
-             }
+
           }
         }
         setIsLoading(false);
@@ -367,7 +359,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
     }
 
     initChat();
-  }, [conversationId, supabase, router]);
+  }, [channelId, supabase, router]);
 
   // Click outside to close message menu
   useEffect(() => {
@@ -384,10 +376,10 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
   }, [contextMenuMsgId]);
 
   useEffect(() => {
-    if (!user || !conversationId) return;
+    if (!user || !channelId) return;
 
     // Real-time subscription for messages and presence
-    const channel = supabase.channel(`chat_${conversationId}`, {
+    const channel = supabase.channel(`channel_${channelId}`, {
       config: {
         presence: {
           key: user.id,
@@ -408,18 +400,18 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
         {
           event: '*',
           schema: 'public',
-          table: 'messages',
+          table: 'group_messages',
         },
         async (payload: any) => {
           // Robust real-time syncing for all message actions
           if (payload.eventType === 'DELETE') {
-            // For DELETE events, conversation_id is usually null in the payload.
+            // For DELETE events, channel_id is usually null in the payload.
             // We find the message by ID in our local list and remove it.
             setMessages((prev) => prev.filter(m => m.id !== payload.old.id));
             return;
           }
 
-          if (payload.new?.conversation_id === conversationId || payload.old?.conversation_id === conversationId) {
+          if (payload.new?.channel_id === channelId || payload.old?.channel_id === channelId) {
             if (payload.eventType === 'INSERT') {
               // Only add messages not sent by current user and not deleted for current user
               if (payload.new.sender_id !== user.id) {
@@ -431,7 +423,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
                   });
                   setTimeout(scrollToBottom, 100);
                   // Ensure the mark-as-read update is awaited for consistency
-                  await supabase.from('messages').update({ is_read: true }).eq('id', payload.new.id);
+                  await supabase.from('group_messages').update({ is_read: true }).eq('id', payload.new.id);
                 }
               }
             } else if (payload.eventType === 'UPDATE') {
@@ -456,7 +448,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, conversationId, supabase]);
+  }, [user, channelId, supabase]);
 
   // Track local typing status
   useEffect(() => {
@@ -558,10 +550,10 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const sendAudioMessage = async (base64Audio: string) => {
-    if (!user || !conversationId) return;
+    if (!user || !channelId) return;
     
     const newMessage = {
-      conversation_id: conversationId,
+      channel_id: channelId,
       sender_id: user.id,
       content: `[VOICE_NOTE]${base64Audio}`,
     };
@@ -570,7 +562,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
     const optimisticMsg = { ...newMessage, id: tempId, created_at: new Date().toISOString() };
     setMessages((prev) => [...prev, optimisticMsg]);
 
-    const { data, error } = await supabase.from('messages').insert(newMessage).select().single();
+    const { data, error } = await supabase.from('group_messages').insert(newMessage).select('*, profiles:sender_id (id, username, full_name, avatar_url)').single();
     if (error) setMessages((prev) => prev.filter(m => m.id !== tempId));
     else if (data) setMessages((prev) => prev.map(m => m.id === tempId ? data : m));
   };
@@ -579,7 +571,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
     try {
       if (strategy === 'everyone') {
          const { error } = await supabase
-           .from('messages')
+           .from('group_messages')
            .delete()
            .eq('id', messageId);
 
@@ -588,7 +580,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
       } else {
          // Delete for ME
          const { data: currentMsg } = await supabase
-           .from('messages')
+           .from('group_messages')
            .select('deleted_by')
            .eq('id', messageId)
            .single();
@@ -596,7 +588,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
          const deletedBy = currentMsg?.deleted_by || [];
          if (!deletedBy.includes(user.id)) {
             const { error } = await supabase
-              .from('messages')
+              .from('group_messages')
               .update({ deleted_by: [...deletedBy, user.id] })
               .eq('id', messageId);
             
@@ -631,14 +623,14 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const uploadPendingImage = async (captionText?: string) => {
-    if (!pendingImage || !user || !conversationId) return;
+    if (!pendingImage || !user || !channelId) return;
 
     setIsUploading(true);
     try {
       const file = pendingImage.file;
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `chat-${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `${conversationId}/${fileName}`;
+      const filePath = `${channelId}/${fileName}`;
 
       // 1. Try storage upload
       const { error: uploadError } = await supabase.storage
@@ -679,10 +671,10 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const sendImageMessage = async (imageUrl: string, caption?: string) => {
-    if (!user || !conversationId) return;
+    if (!user || !channelId) return;
     
     const newMessage = {
-      conversation_id: conversationId,
+      channel_id: channelId,
       sender_id: user.id,
       content: `[IMAGE]${imageUrl}${caption ? `\n\n${caption}` : ""}`,
       is_view_once: isViewOnceEnabled
@@ -693,7 +685,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
     setMessages((prev) => [...prev, optimisticMsg]);
     setIsViewOnceEnabled(false);
 
-    const { data, error } = await supabase.from('messages').insert(newMessage).select().single();
+    const { data, error } = await supabase.from('group_messages').insert(newMessage).select('*, profiles:sender_id (id, username, full_name, avatar_url)').single();
     if (error) setMessages((prev) => prev.filter(m => m.id !== tempId));
     else if (data) setMessages((prev) => prev.map(m => m.id === tempId ? data : m));
   };
@@ -707,13 +699,13 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
     // Mark as viewed in DB immediately
     if (msg.sender_id !== user.id) {
       setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, has_been_viewed: true } : m));
-      await supabase.from('messages').update({ has_been_viewed: true }).eq('id', msg.id);
+      await supabase.from('group_messages').update({ has_been_viewed: true }).eq('id', msg.id);
     }
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputText.trim() || !user || !conversationId) return;
+    if (!inputText.trim() || !user || !channelId) return;
 
     if (editingMessageId) {
       const msgId = editingMessageId;
@@ -722,12 +714,12 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
       setInputText("");
       setEditingMessageId(null);
 
-      await supabase.from('messages').update({ content: newContent, is_edited: true }).eq('id', msgId);
+      await supabase.from('group_messages').update({ content: newContent, is_edited: true }).eq('id', msgId);
       return;
     }
 
     const newMessage = {
-      conversation_id: conversationId,
+      channel_id: channelId,
       sender_id: user.id,
       content: inputText.trim(),
     };
@@ -739,7 +731,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
     setInputText("");
 
     const { data, error } = await supabase
-      .from('messages')
+      .from('group_messages')
       .insert(newMessage)
       .select()
       .single();
@@ -767,13 +759,13 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
       {/* Premium Chat Header */}
       <div className="sticky top-0 flex-none bg-white/90 dark:bg-black/90 backdrop-blur-xl border-b border-zinc-100/80 dark:border-zinc-800/50 px-4 py-4 flex items-center justify-between shadow-sm z-30">
         <div className="flex items-center gap-3">
-          <Link href="/messages" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+          <Link href={`/groups/${groupId}`} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
             <ChevronLeft size={24} className="text-zinc-800 dark:text-zinc-200" />
           </Link>
           <div className="flex items-center gap-3">
-            <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="relative cursor-pointer transition active:scale-95 block">
+            <Link href="#" className="relative cursor-pointer transition active:scale-95 block">
               <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#E5FF66] bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-                {partner?.avatar_url ? (
+                {false ? (
                   <Image 
                     src={partner.avatar_url} 
                     alt={partner.full_name || "User"} 
@@ -782,17 +774,17 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
                     className="object-cover w-full h-full" 
                   />
                 ) : (
-                  <User className="w-6 h-6 text-zinc-400 dark:text-zinc-600" />
+                  <span className="font-black text-xl text-zinc-400 dark:text-zinc-600">#</span>
                 )}
               </div>
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#4ADE80] rounded-full border-2 border-white dark:border-black"></div>
             </Link>
             <div>
-              <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 leading-tight hover:underline cursor-pointer block">
-                {partner?.full_name || partner?.username || "Loading..."}
+              <Link href="#" className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 leading-tight hover:underline cursor-pointer block">
+                {partner?.name || "Loading..."}
               </Link>
               <p className={`text-[11px] font-medium transition-colors ${partnerIsTyping ? "text-primary" : "text-[#4ADE80]"}`}>
-                {partnerIsTyping ? "Typing..." : "Online"}
+                {partnerIsTyping ? "Someone is typing..." : (partner?.description || "Channel Chat")}
               </p>
             </div>
           </div>
@@ -806,7 +798,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
           
           {showDropdown && (
             <div className="absolute top-8 right-0 w-48 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-800 py-2 z-50 overflow-hidden">
-              <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">View Profile</Link>
+              <Link href="#" className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">View Profile</Link>
               <button className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">Mute Notifications</button>
               <button className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 block font-bold border-t border-zinc-50 dark:border-zinc-800">Block User</button>
             </div>
@@ -821,9 +813,9 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, ease: "linear" }}
+            transition={{ duration: 0.2 }}
             onClick={() => { setContextMenuMsgId(null); setShowDeleteConfirm(null); }}
-            className="fixed inset-0 bg-black/60 z-[45] cursor-pointer will-change-opacity"
+            className="fixed inset-0 bg-black/30 backdrop-blur-md z-[45] cursor-pointer will-change-[opacity,backdrop-filter]"
           />
         )}
       </AnimatePresence>
@@ -857,7 +849,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             lastDate = msgDate;
 
             return (
-              <div key={msg.id} className={`relative ${contextMenuMsgId === msg.id ? "z-50" : "z-10"}`}>
+              <div key={msg.id} className="relative z-10">
                 {showDate && (
                   <div className="flex justify-center my-6 first:mt-0">
                     <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 bg-zinc-100/50 dark:bg-zinc-900/40 px-3 py-1.5 rounded-xl border border-black/[0.03] dark:border-white/[0.03] backdrop-blur-[2px]">
