@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Search, Users, ChevronRight, ArrowLeft, 
-  Sparkles, LayoutGrid, Globe, Shield, UserPlus 
+  Sparkles, LayoutGrid, Globe, Shield, UserPlus, User
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
