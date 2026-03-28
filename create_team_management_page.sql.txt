@@ -1,0 +1,27 @@
+﻿-- This allows Super Admins to view all profiles so they can see the members
+CREATE POLICY "Super Admins can view all profiles for management"
+ON public.profiles
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles p 
+    WHERE p.id = auth.uid() AND p.role = 'super_admin'
+  )
+);
+
+-- This allows Super Admins to update user roles
+CREATE POLICY "Super Admins can update roles"
+ON public.profiles
+FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles p 
+    WHERE p.id = auth.uid() AND p.role = 'super_admin'
+  )
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.profiles p 
+    WHERE p.id = auth.uid() AND p.role = 'super_admin'
+  )
+);

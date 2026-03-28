@@ -5,12 +5,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Search, Check, ChevronRight, BookOpen, 
   GraduationCap, School, Book, FileText, Sparkles, 
-  LayoutGrid, Library as LibraryIcon, X
+  LayoutGrid, Library as LibraryIcon, X, Upload,
+  ZoomIn, ZoomOut, RotateCcw, Loader2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import BottomNavigation from "@/components/BottomNavigation";
 import Toast from "@/components/Toast";
+import dynamic from "next/dynamic";
+
+const PdfViewer = dynamic(() => import("@/components/PdfViewer"), { 
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+      <Loader2 className="animate-spin text-[#E5FF66]" size={40} />
+    </div>
+  )
+});
 
 // --- Types ---
 type Step = "welcome" | "category" | "university" | "college" | "department" | "level" | "results";
@@ -30,6 +41,7 @@ interface College {
 interface Department {
   id: string;
   name: string;
+  duration_years?: number;
 }
 
 interface Course {
@@ -39,7 +51,7 @@ interface Course {
 }
 
 // --- Mock Data (To be replaced by DB fetch if available) ---
-const LEVELS = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level"];
+const LEVELS = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level", "600 Level"];
 
 const MOCK_COURSES: Course[] = [
   { id: "c1", code: "CSC 101", name: "Introduction to Computer Science" },
@@ -49,12 +61,12 @@ const MOCK_COURSES: Course[] = [
 ];
 
 const priorityUnis = [
-  'Michael Okpara',
-  'University of Port Harcourt',
-  'Nnamdi Azikiwe',
-  'Abia State',
-  'Federal University of Technology',
-  'University of Calabar'
+  "Nnamdi Azikiwe", 
+  "University of Port Harcourt", 
+  "Abia State", 
+  "Federal University of Technology", 
+  "Michael Okpara",
+  "University of Calabar"
 ];
 
 export default function LibraryPage() {
@@ -65,6 +77,7 @@ export default function LibraryPage() {
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [selectedSemester, setSelectedSemester] = useState<"First Semester" | "Second Semester">("First Semester");
   const [selectedCategory, setSelectedCategory] = useState<University["category"] | null>(null);
   const [universities, setUniversities] = useState<University[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
@@ -128,7 +141,7 @@ export default function LibraryPage() {
     try {
       let query = supabase
         .from('departments')
-        .select('id, name')
+        .select('id, name, duration_years')
         .eq('university_id', uniId);
       
       if (collegeId) {
@@ -158,19 +171,40 @@ export default function LibraryPage() {
     else if (currentStep === "category") setCurrentStep("welcome");
   };
 
+  const STEPS: Step[] = ["category", "university", "college", "department", "level", "results"];
+  const currentStepIndex = STEPS.indexOf(currentStep);
+
   return (
     <div className="min-h-screen bg-white dark:bg-black max-w-md mx-auto relative font-sans transition-colors overflow-hidden">
       {/* Header (Context-aware) */}
-      <div className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-xl px-6 pt-10 pb-5 flex items-center gap-4 border-b border-zinc-100/50 dark:border-zinc-800/50">
-        {currentStep !== "welcome" && (
-          <button onClick={handleBack} className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center text-zinc-900 dark:text-white border border-zinc-100 dark:border-zinc-800 active:scale-90 transition-transform">
-            <ArrowLeft size={20} />
-          </button>
-        )}
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-black text-zinc-900 dark:text-white uppercase italic leading-none">Library</h1>
-          <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-0.5">Academic Resources</p>
+      <div className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50">
+        <div className="px-6 pt-10 pb-5 flex items-center gap-4">
+          {currentStep !== "welcome" && (
+            <button onClick={handleBack} className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center text-zinc-900 dark:text-white border border-zinc-100 dark:border-zinc-800 active:scale-90 transition-transform">
+              <ArrowLeft size={20} />
+            </button>
+          )}
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-black text-zinc-900 dark:text-white uppercase italic leading-none">Library</h1>
+            <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-0.5">
+              {currentStep === "results" ? selectedDept?.name : "Academic Resources"}
+            </p>
+          </div>
         </div>
+
+        {/* Segmented Progress Bar */}
+        {currentStepIndex >= 0 && (
+          <div className="px-6 pb-4 flex gap-1.5">
+            {STEPS.map((step, idx) => (
+              <div 
+                key={step} 
+                className={`h-1 flex-1 rounded-full transition-all duration-500 ${
+                  idx <= currentStepIndex ? "bg-[#E5FF66]" : "bg-zinc-100 dark:bg-zinc-800"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <main className="px-6 py-8 pb-32">
@@ -179,12 +213,16 @@ export default function LibraryPage() {
             <LibraryWelcome onStart={() => setCurrentStep("category")} />
           )}
           {currentStep === "category" && (
-            <CategorySelection onSelect={(cat) => { setSelectedCategory(cat); handleNext("university"); }} />
+            <CategorySelection 
+              selectedId={selectedCategory || ""}
+              onSelect={(cat) => { setSelectedCategory(cat); handleNext("university"); }} 
+            />
           )}
           {currentStep === "university" && (
             <UniversitySelection 
               universities={universities} 
               isLoading={isLoading}
+              selectedId={selectedUni?.id}
               onSelect={(uni) => { 
                 setSelectedUni(uni); 
                 handleNext("college");
@@ -195,20 +233,23 @@ export default function LibraryPage() {
             <CollegeSelection 
               colleges={colleges} 
               isLoading={isLoading}
+              selectedId={selectedCollege?.id}
               onSelect={(college) => { setSelectedCollege(college); handleNext("department"); }} 
-              onBack={() => handleBack("university")}
+              onBack={handleBack}
             />
           )}
           {currentStep === "department" && (
             <DepartmentSelection 
               departments={departments} 
               isLoading={isLoading}
+              selectedId={selectedDept?.id}
               onSelect={(dept) => { setSelectedDept(dept); handleNext("level"); }} 
             />
           )}
           {currentStep === "level" && (
             <LevelSelection 
-              levels={LEVELS} 
+              levels={selectedDept?.duration_years ? LEVELS.slice(0, selectedDept.duration_years) : LEVELS} 
+              selectedLevel={selectedLevel || ""}
               onSelect={(lvl) => { setSelectedLevel(lvl); handleNext("results"); }} 
             />
           )}
@@ -217,7 +258,8 @@ export default function LibraryPage() {
               uni={selectedUni!} 
               dept={selectedDept!} 
               level={selectedLevel!} 
-              courses={MOCK_COURSES} 
+              semester={selectedSemester}
+              onSemesterChange={setSelectedSemester}
             />
           )}
         </AnimatePresence>
@@ -230,7 +272,7 @@ export default function LibraryPage() {
 
 // --- Step Components ---
 
-function CategorySelection({ onSelect }: { onSelect: (cat: University["category"]) => void }) {
+function CategorySelection({ selectedId, onSelect }: { selectedId: string, onSelect: (cat: University["category"]) => void }) {
   const CATEGORIES = [
     { id: "federal", name: "Federal", icon: <School size={32} />, color: "from-blue-500/10 to-indigo-500/10", textColor: "text-blue-600 dark:text-blue-400" },
     { id: "state", name: "State", icon: <LayoutGrid size={32} />, color: "from-[#E5FF66]/10 to-emerald-500/10", textColor: "text-zinc-900 dark:text-[#E2FF3D]" },
@@ -254,7 +296,9 @@ function CategorySelection({ onSelect }: { onSelect: (cat: University["category"
           <button 
             key={cat.id}
             onClick={() => onSelect(cat.id)}
-            className={`w-full p-8 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-[44px] text-left transition-all active:scale-[0.98] flex items-center justify-between group hover:bg-white dark:hover:bg-zinc-900 shadow-sm hover:shadow-2xl hover:shadow-black/5`}
+            className={`w-full p-8 bg-zinc-50 dark:bg-zinc-900/50 border rounded-[44px] text-left transition-all active:scale-[0.98] flex items-center justify-between group hover:bg-white dark:hover:bg-zinc-900 shadow-sm hover:shadow-2xl hover:shadow-black/5 ${
+              selectedId === cat.id ? "border-[#E5FF66] ring-4 ring-[#E5FF66]/10 bg-white dark:bg-zinc-900" : "border-zinc-100 dark:border-zinc-800"
+            }`}
           >
             <div className="flex items-center gap-6">
               <div className={`w-16 h-16 rounded-[24px] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center ${cat.textColor} shadow-inner transition-transform group-hover:rotate-12`}>
@@ -296,7 +340,7 @@ function LibraryWelcome({ onStart }: { onStart: () => void }) {
   );
 }
 
-function UniversitySelection({ universities, isLoading, onSelect }: { universities: University[], isLoading: boolean, onSelect: (uni: University) => void }) {
+function UniversitySelection({ universities, isLoading, selectedId, onSelect }: { universities: University[], isLoading: boolean, selectedId?: string, onSelect: (uni: University) => void }) {
   const [search, setSearch] = useState("");
   const sortedUniversities = [...universities].sort((a, b) => {
     const aPriority = priorityUnis.some(p => a.name.includes(p));
@@ -336,6 +380,14 @@ function UniversitySelection({ universities, isLoading, onSelect }: { universiti
           className="w-full py-5 px-14 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[28px] text-sm font-bold focus:outline-none focus:ring-4 ring-[#E5FF66]/20 transition-all text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-700 shadow-inner-sm"
         />
         <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
+        {search && (
+          <button 
+            onClick={() => setSearch("")}
+            className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -347,7 +399,9 @@ function UniversitySelection({ universities, isLoading, onSelect }: { universiti
           <button 
             key={uni.id}
             onClick={() => onSelect(uni)}
-            className="w-full p-6 flex items-center justify-between bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900/50 rounded-[32px] text-left hover:border-[#E5FF66] transition-all group active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-black/5"
+            className={`w-full p-6 flex items-center justify-between bg-white dark:bg-zinc-950 border rounded-[32px] text-left hover:border-[#E5FF66] transition-all group active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-black/5 ${
+              selectedId === uni.id ? "border-[#E5FF66] ring-4 ring-[#E5FF66]/10" : "border-zinc-100 dark:border-zinc-900/50"
+            }`}
           >
             <div className="flex items-center gap-4">
                <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-zinc-300 dark:text-zinc-700 group-hover:text-[#E5FF66] transition-colors">
@@ -379,11 +433,12 @@ function UniversitySelection({ universities, isLoading, onSelect }: { universiti
 interface CollegeSelectionProps {
   colleges: College[];
   isLoading: boolean;
+  selectedId?: string;
   onSelect: (college: College) => void;
   onBack: () => void;
 }
 
-const CollegeSelection: React.FC<CollegeSelectionProps> = ({ colleges, isLoading, onSelect, onBack }) => {
+const CollegeSelection: React.FC<CollegeSelectionProps> = ({ colleges, isLoading, selectedId, onSelect, onBack }) => {
   return (
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
@@ -405,7 +460,9 @@ const CollegeSelection: React.FC<CollegeSelectionProps> = ({ colleges, isLoading
           <button 
             key={col.id}
             onClick={() => onSelect(col)}
-            className="w-full p-6 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[40px] text-left hover:bg-zinc-900 dark:hover:bg-[#E5FF66] transition-all transition-transform active:scale-[0.98] shadow-sm flex items-center justify-between group hover:shadow-2xl hover:shadow-[#E5FF66]/10"
+            className={`w-full p-6 bg-zinc-50 dark:bg-zinc-900 border rounded-[40px] text-left hover:bg-zinc-900 dark:hover:bg-[#E5FF66] transition-all transition-transform active:scale-[0.98] shadow-sm flex items-center justify-between group hover:shadow-2xl hover:shadow-[#E5FF66]/10 ${
+              selectedId === col.id ? "border-[#E5FF66] ring-4 ring-[#E5FF66]/10" : "border-zinc-100 dark:border-zinc-800"
+            }`}
           >
             <div className="flex items-center gap-5">
               <div className="w-20 h-14 rounded-2xl bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-zinc-900 dark:text-[#E2FF3D] font-black italic text-[11px] transition-transform group-hover:rotate-6 shrink-0">
@@ -444,7 +501,7 @@ const CollegeSelection: React.FC<CollegeSelectionProps> = ({ colleges, isLoading
   );
 }
 
-function DepartmentSelection({ departments, isLoading, onSelect }: { departments: Department[], isLoading: boolean, onSelect: (dept: Department) => void }) {
+function DepartmentSelection({ departments, isLoading, selectedId, onSelect }: { departments: Department[], isLoading: boolean, selectedId?: string, onSelect: (dept: Department) => void }) {
   return (
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
@@ -466,7 +523,9 @@ function DepartmentSelection({ departments, isLoading, onSelect }: { departments
           <button 
             key={dept.id}
             onClick={() => onSelect(dept)}
-            className="w-full p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[32px] flex items-center justify-between group transition-all active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-black/5 hover:border-[#E5FF66]"
+            className={`w-full p-5 bg-zinc-50 dark:bg-zinc-900 border rounded-[32px] flex items-center justify-between group transition-all active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-black/5 hover:border-[#E5FF66] ${
+              selectedId === dept.id ? "border-[#E5FF66] ring-4 ring-[#E5FF66]/10" : "border-zinc-100 dark:border-zinc-800"
+            }`}
           >
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-white dark:bg-black border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-[#E2FF3D] transition-colors shrink-0">
@@ -488,7 +547,7 @@ function DepartmentSelection({ departments, isLoading, onSelect }: { departments
   );
 }
 
-function LevelSelection({ levels, onSelect }: { levels: string[], onSelect: (lvl: string) => void }) {
+function LevelSelection({ levels, selectedLevel, onSelect }: { levels: string[], selectedLevel: string, onSelect: (lvl: string) => void }) {
   return (
     <motion.div 
       initial={{ opacity: 0, x: 20 }}
@@ -506,7 +565,11 @@ function LevelSelection({ levels, onSelect }: { levels: string[], onSelect: (lvl
           <button 
             key={lvl}
             onClick={() => onSelect(lvl)}
-            className="w-full p-6 text-center bg-zinc-900 dark:bg-zinc-900 border border-zinc-800 rounded-[32px] text-zinc-500 font-black uppercase tracking-widest hover:bg-[#E5FF66] hover:text-black transition-all active:scale-95"
+            className={`w-full p-6 text-center border rounded-[32px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+              selectedLevel === lvl 
+                ? "bg-[#E5FF66] text-black border-[#E5FF66] shadow-[0_0_20px_rgba(229,255,102,0.3)]" 
+                : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:bg-[#E5FF66]/10 hover:text-white"
+            }`}
           >
             {lvl}
           </button>
@@ -516,17 +579,62 @@ function LevelSelection({ levels, onSelect }: { levels: string[], onSelect: (lvl
   );
 }
 
-function ResourceHub({ uni, dept, level, courses }: { uni: University, dept: Department, level: string, courses: Course[] }) {
+function ResourceHub({ 
+  uni, 
+  dept, 
+  level, 
+  semester, 
+  onSemesterChange 
+}: { 
+  uni: University, 
+  dept: Department, 
+  level: string, 
+  semester: string,
+  onSemesterChange: (s: "First Semester" | "Second Semester") => void
+}) {
+  const [resources, setResources] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [viewingPdf, setViewingPdf] = useState<{url: string, title: string} | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const supabase = createClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    async function fetchResources() {
+      if (!uni || !dept) return;
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('academic_resources')
+          .select('*')
+          .eq('status', 'approved')
+          .eq('university_id', uni.id)
+          .eq('department_id', dept.id)
+          .eq('level', level)
+          .eq('semester', semester);
+        
+        if (error) throw error;
+        setResources(data || []);
+      } catch (err) {
+        console.error("Library fetch error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchResources();
+  }, [uni.id, dept.id, level, semester]);
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       className="space-y-10"
     >
+      {/* Header Info */}
       <div className="bg-zinc-900 dark:bg-white p-8 rounded-[48px] shadow-2xl relative overflow-hidden">
         <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#E5FF66]/10 dark:bg-zinc-100 rounded-full blur-3xl opacity-50" />
         <div className="space-y-2 relative z-10">
-          <p className="text-[10px] font-black text-[#E5FF66] dark:text-zinc-400 uppercase tracking-[0.2em]">{uni.name}</p>
+          <p className="text-[10px] font-black text-[#E5FF66] dark:text-zinc-400 uppercase tracking-[0.2em] truncate">{uni.name}</p>
           <h2 className="text-3xl font-black text-white dark:text-black uppercase italic leading-[0.85] tracking-tighter">{dept.name}</h2>
           <div className="flex gap-2 pt-2">
             <span className="px-3 py-1 bg-[#E5FF66] dark:bg-zinc-900 text-black dark:text-[#E2FF3D] rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md">{level}</span>
@@ -534,46 +642,116 @@ function ResourceHub({ uni, dept, level, courses }: { uni: University, dept: Dep
         </div>
       </div>
 
+      {/* Resource Search & Filter */}
+      <div className="relative">
+        <input 
+          type="text" 
+          placeholder="Filter resources (e.g. CSC 101)..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full py-4 px-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl text-[12px] font-bold focus:outline-none focus:ring-4 ring-[#E5FF66]/10 transition-all text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-700 shadow-inner-sm"
+        />
+        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+        {searchTerm && (
+          <button onClick={() => setSearchTerm("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
+      {/* Semester Switcher */}
+      <div className="flex items-center gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-900/50 rounded-[28px] border border-zinc-200/5 dark:border-zinc-800/50 shadow-inner">
+        {(["First Semester", "Second Semester"] as const).map(s => (
+          <button
+            key={s}
+            onClick={() => onSemesterChange(s)}
+            className={`flex-1 py-4 rounded-[22px] text-[11px] font-black uppercase tracking-widest transition-all ${semester === s ? "bg-white dark:bg-black text-zinc-900 dark:text-[#E2FF3D] shadow-xl scale-105" : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"}`}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
       <section className="space-y-6">
         <div className="flex items-center justify-between px-1">
-           <h3 className="text-[14px] font-black italic uppercase tracking-widest text-zinc-900 dark:text-white">Active Courses</h3>
+           <h3 className="text-[14px] font-black italic uppercase tracking-widest text-zinc-900 dark:text-white">{semester} Resources</h3>
            <LayoutGrid className="text-zinc-300" size={16} />
         </div>
 
         <div className="space-y-4">
-          {courses.map(course => (
-            <div 
-              key={course.id}
-              className="p-6 bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 rounded-[38px] flex items-center justify-between shadow-sm group hover:shadow-xl hover:shadow-black/5 transition-all"
-            >
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-600 group-hover:text-[#E2FF3D] transition-colors relative shadow-inner overflow-hidden">
-                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-zinc-200/50 dark:to-[#E5FF66]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                   <Book size={24} />
+          {isLoading ? (
+            [1,2,3].map(i => (
+              <div key={i} className="h-24 bg-zinc-50 dark:bg-zinc-900/50 rounded-[38px] animate-pulse border border-zinc-100 dark:border-zinc-800" />
+            ))
+          ) : resources.length > 0 ? (
+            resources
+              .filter(r => 
+                r.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                r.course_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                r.resource_type?.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map(resource => (
+              <div 
+                key={resource.id}
+                className="p-6 bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 rounded-[38px] flex items-center justify-between shadow-sm group hover:shadow-xl hover:shadow-black/5 transition-all"
+              >
+                <div className="flex items-center gap-5 flex-1 min-w-0">
+                  <div className="w-14 h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-600 group-hover:text-[#E2FF3D] transition-colors relative shadow-inner overflow-hidden shrink-0">
+                     <FileText size={24} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-black text-zinc-900 dark:text-white text-[11px] uppercase tracking-widest mb-1 truncate">{resource.course_code || resource.resource_type}</h4>
+                    <p className="font-black text-zinc-500 dark:text-zinc-400 text-[14px] uppercase italic tracking-tighter leading-tight truncate">{resource.title}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-black text-zinc-900 dark:text-white text-[11px] uppercase tracking-widest mb-1">{course.code}</h4>
-                  <p className="font-black text-zinc-500 dark:text-zinc-400 text-[14px] uppercase italic tracking-tighter leading-none">{course.name}</p>
-                </div>
+                <button 
+                  onClick={() => setViewingPdf({ url: resource.file_url, title: resource.title })}
+                  className="px-6 py-3 bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-90 transition-all hover:rotate-1"
+                >
+                  View PDF
+                </button>
               </div>
-              <button className="px-5 py-2.5 bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-90 transition-all hover:rotate-1">
-                Past Qs
-              </button>
+            ))
+          ) : (
+            <div className="py-16 px-6 bg-zinc-50 dark:bg-zinc-900/50 rounded-[48px] border-2 border-dashed border-zinc-100 dark:border-zinc-800 flex flex-col items-center text-center gap-6">
+               <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-900 rounded-2xl flex items-center justify-center opacity-40">
+                  <BookOpen size={32} className="text-zinc-400" />
+               </div>
+               <div className="space-y-1">
+                 <h4 className="font-black text-zinc-900 dark:text-white uppercase italic">Shelf Empty</h4>
+                 <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest max-w-[180px] leading-relaxed mx-auto">First to upload win! No materials found for {semester}.</p>
+               </div>
             </div>
-          ))}
+          )}
         </div>
       </section>
+
+    {/* PDF Viewer Portal */}
+    <AnimatePresence>
+      {viewingPdf && (
+        <PdfViewer 
+          url={viewingPdf.url} 
+          title={viewingPdf.title} 
+          onClose={() => setViewingPdf(null)} 
+        />
+      )}
+    </AnimatePresence>
 
       <section className="pt-8">
         <div className="p-8 bg-zinc-50 dark:bg-zinc-900/50 rounded-[48px] border-2 border-dashed border-zinc-100 dark:border-zinc-800 flex flex-col items-center text-center gap-6 group">
           <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 rounded-[32px] flex items-center justify-center text-zinc-200 dark:text-zinc-800 group-hover:scale-110 transition-transform">
-             <FileText size={40} />
+             <Upload size={40} />
           </div>
           <div className="space-y-2">
-            <h4 className="font-black text-zinc-900 dark:text-white uppercase italic">Missing Something?</h4>
-            <p className="text-[11px] font-bold text-zinc-400 dark:text-zinc-600 px-6 uppercase tracking-widest">Contribute by uploading missing resources for your department</p>
+            <h4 className="font-black text-zinc-900 dark:text-white uppercase italic">Be a Hero?</h4>
+            <p className="text-[11px] font-bold text-zinc-400 dark:text-zinc-600 px-6 uppercase tracking-widest">Share past questions or notes and help your peers.</p>
           </div>
-          <button className="bg-zinc-900 dark:bg-zinc-100 text-[#E5FF66] dark:text-zinc-900 px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl">Contribute Hub</button>
+          <button 
+            onClick={() => router.push("/settings/contribute")}
+            className="bg-zinc-900 dark:bg-zinc-100 text-[#E5FF66] dark:text-zinc-900 px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all"
+          >
+            Contribute Now
+          </button>
         </div>
       </section>
     </motion.div>

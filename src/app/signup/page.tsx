@@ -190,7 +190,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#1A1A24] dark:bg-[#E2FF3D] text-white dark:text-black rounded-2xl py-5 font-black text-[15px] hover:bg-black dark:hover:bg-white transition-all mb-10 shadow-lg dark:shadow-none flex items-center justify-center gap-2 uppercase tracking-widest"
+            className="w-full bg-[#1A1A24] dark:bg-[#E2FF3D] text-white dark:text-black rounded-2xl py-5 font-black text-[15px] hover:bg-black dark:hover:bg-white transition-all shadow-lg dark:shadow-none flex items-center justify-center gap-2 uppercase tracking-widest"
           >
             {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
             {isLoading ? "Creating Account..." : "Create Account"}
@@ -198,7 +198,7 @@ export default function SignupPage() {
         </form>
 
         {/* Divider */}
-        <div className="relative flex items-center justify-center mb-8">
+        <div className="relative flex items-center justify-center mt-6 mb-8">
           <div className="absolute inset-0 flex items-center px-4">
             <div className="w-full border-t border-zinc-100 dark:border-zinc-800"></div>
           </div>

@@ -134,26 +134,36 @@ export default function Home() {
 
   useEffect(() => {
     async function checkUserAndInit() {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
-      if (!authUser) {
-        router.push("/welcome");
-        return;
-      }
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) {
+          router.push("/welcome");
+          return;
+        }
+        setUser(authUser);
 
-      setUser(authUser);
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('university_id')
-        .eq('id', authUser.id)
-        .single();
-      
-      const uniId = profile?.university_id;
-      setUserUniId(uniId);
-      uniIdRef.current = uniId;
-      await fetchPosts(authUser.id, uniId);
-      setIsLoading(false);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('university_id')
+          .eq('id', authUser.id)
+          .single();
+        
+        if (!profile || !profile.university_id) {
+          router.push("/welcome");
+          return;
+        }
+
+        const uniId = profile.university_id;
+        setUserUniId(uniId);
+        uniIdRef.current = uniId;
+        await fetchPosts(authUser.id, uniId);
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && !err.message?.includes('Lock broken')) {
+          console.error("Initialization error:", err);
+        }
+      } finally {
+        setIsLoading(false);
+      }
 
       // Check for optimistic posting state
       const checkPostingState = () => {
@@ -163,32 +173,35 @@ export default function Home() {
         }
       };
       checkPostingState();
-
-      // 2. Subscribe to REALTIME post changes
-      const postsSubscription = supabase
-        .channel('public:posts')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload: any) => {
-          if (payload.new) {
-             sessionStorage.removeItem('isPosting');
-             setIsPostingOptimistic(false);
-          }
-          await fetchPosts(authUser.id, uniIdRef.current);
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload: any) => {
-          setPosts(prev => prev.map((p: any) => p.id === payload.new.id ? { ...p, ...payload.new } : p));
-        })
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload: any) => {
-          setPosts(prev => prev.filter((p: any) => p.id !== payload.old.id));
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(postsSubscription);
-      };
     }
 
     checkUserAndInit();
-  }, [router, supabase]);
+
+    // 2. Subscribe to REALTIME post changes outside the async function so we can clean it up
+    const postsSubscription = supabase
+      .channel('public:posts')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload: any) => {
+        if (payload.new) {
+           sessionStorage.removeItem('isPosting');
+           setIsPostingOptimistic(false);
+        }
+        if (user && uniIdRef.current) {
+          await fetchPosts(user.id, uniIdRef.current);
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload: any) => {
+        setPosts(prev => prev.map((p: any) => p.id === payload.new.id ? { ...p, ...payload.new } : p));
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload: any) => {
+        setPosts(prev => prev.filter((p: any) => p.id !== payload.old.id));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(postsSubscription);
+    };
+  }, [router, supabase, user]);
+
 
   const handleLike = async (postId: string) => {
     if (!user) return;

@@ -15,7 +15,8 @@ import {
   LogOut, 
   ChevronRight,
   ExternalLink,
-  ChevronLeft
+  ChevronLeft,
+  Upload
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -67,9 +68,9 @@ export default function SettingsPage() {
       ]
     },
     {
-      title: "Campus",
+      title: "Campus Community",
       items: [
-        { icon: GraduationCap, label: "University Tools", href: "/settings/campus", subtitle: "Departments, Levels, and Resources" },
+        { icon: Upload, label: "Contribute", href: "/settings/contribute", subtitle: "Share Past Papers & Resources" },
         { icon: Activity, label: "Your Activity", href: "/settings/activity", subtitle: "Timeline and interaction history" },
       ]
     },

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import BottomNavigation from "@/components/BottomNavigation";
 import ChatListSkeleton from "@/components/skeletons/ChatListSkeleton";
 import { createClient } from "@/lib/supabase";
@@ -18,123 +19,151 @@ export default function MessagesPage() {
   const [activeUsers, setActiveUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isStartingChat, setIsStartingChat] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+    let lastId = "";
+    const fetchInProgress = { current: false };
 
     async function fetchMessages() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !isMounted) {
-        if (isMounted) setIsLoading(false);
-        return;
-      }
+      if (fetchInProgress.current) return;
+      fetchInProgress.current = true;
 
-      // 1. Get user's conversation lists sorted by updated_at (newest first)
-      const { data: myConversations, error: convError } = await supabase
-        .from('conversation_participants')
-        .select(`
-          conversation_id,
-          conversations (updated_at)
-        `)
-        .eq('user_id', user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        if (!user || !isMounted) {
+          if (isMounted) setIsLoading(false);
+          return;
+        }
 
-      // Separate logic for chats and active users to ensure bar is populated even if inbox is empty
-      if (myConversations && myConversations.length > 0 && !convError) {
-        // Sort conversations manually since they are nested
-        const sortedConvos = [...myConversations].sort((a: any, b: any) => 
-          new Date(b.conversations?.updated_at || 0).getTime() - new Date(a.conversations?.updated_at || 0).getTime()
-        );
+        // Avoid re-fetching the same data if session hasn't changed unless force
+        if (user.id === lastId && !isLoading) {
+           // Skip if we already have it, unless it's the very first load
+        }
+        lastId = user.id;
 
-        const conversationIds = sortedConvos.map((c: any) => c.conversation_id);
-
-        // Fetch partners
-        const { data: partnersData } = await supabase
+        // 1. Get user's conversation list - just IDs to keep it tiny
+        const { data: myConversations, error: convError } = await supabase
           .from('conversation_participants')
-          .select(`
-            conversation_id,
-            profiles (id, username, full_name, avatar_url)
-          `)
-          .in('conversation_id', conversationIds)
-          .neq('user_id', user.id);
+          .select('conversation_id')
+          .eq('user_id', user.id);
 
-        // Fetch latest message for each
-        const { data: latestMessages } = await supabase
-          .from('messages')
-          .select('*')
-          .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: false });
+        if (convError) throw convError;
 
-        const builtChats = [];
-        const usedIds = new Set();
-        
-        for (const msg of latestMessages || []) {
-          if (!usedIds.has(msg.conversation_id)) {
-            usedIds.add(msg.conversation_id);
-            const partnerRecord = partnersData?.find(p => p.conversation_id === msg.conversation_id);
-            const partnerMetaRaw = partnerRecord ? partnerRecord.profiles : null;
-            const partnerMeta = Array.isArray(partnerMetaRaw) ? partnerMetaRaw[0] : partnerMetaRaw;
-            
-            builtChats.push({
-              id: msg.conversation_id,
-              partner_id: partnerMeta?.id,
-              name: partnerMeta?.full_name || partnerMeta?.username || "Unknown",
-              avatar: partnerMeta?.avatar_url,
-              lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
-                           : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
-                           : msg.content,
-              time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              unread: (msg.is_read || msg.sender_id === user.id) ? 0 : 1,
-              online: true, // Show all as online for UX
-            });
+        if (!myConversations || myConversations.length === 0) {
+          if (isMounted) {
+            setChats([]);
+            // Don't return here, still need to fetch friends
+          }
+        } else {
+          const conversationIds = myConversations.map((c: any) => c.conversation_id);
+
+          // 2. Fetch partners and latest messages in PARALLEL
+          const [partnersResult, latestMsgsResult] = await Promise.all([
+            supabase
+              .from('conversation_participants')
+              .select('conversation_id, profiles(id, username, full_name, avatar_url)')
+              .in('conversation_id', conversationIds)
+              .neq('user_id', user.id),
+            supabase
+              .from('messages')
+              .select('id, conversation_id, content, sender_id, is_read, created_at')
+              .in('conversation_id', conversationIds)
+              .order('created_at', { ascending: false })
+          ]);
+
+          if (partnersResult.data && latestMsgsResult.data) {
+             // First, calculate unread counts for each conversation
+             const unreadCounts: Record<string, number> = {};
+             for (const msg of latestMsgsResult.data) {
+               if (!msg.is_read && msg.sender_id !== user.id) {
+                 unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
+               }
+             }
+
+             const builtChats = [];
+             const processedIds = new Set();
+             
+             // Now build the chat items using the latest message for each convo
+             for (const msg of latestMsgsResult.data) {
+               if (!processedIds.has(msg.conversation_id)) {
+                 processedIds.add(msg.conversation_id);
+                 const partner = partnersResult.data.find((p: any) => p.conversation_id === msg.conversation_id)?.profiles;
+                 const partnerData = Array.isArray(partner) ? partner[0] : partner;
+                 
+                 builtChats.push({
+                   id: msg.conversation_id,
+                   partner_id: partnerData?.id,
+                   name: partnerData?.full_name || partnerData?.username || "Unknown Student",
+                   avatar: partnerData?.avatar_url,
+                   lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
+                                : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
+                                : msg.content,
+                   time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                   unread: unreadCounts[msg.conversation_id] || 0,
+                   online: true, 
+                 });
+               }
+             }
+
+             if (isMounted) setChats(builtChats);
           }
         }
-        if (isMounted) setChats(builtChats);
-      }
 
-      // 4. Fetch ONLY Active Friends (making it exclusive as requested)
-      const { data: friends } = await supabase
-        .from('friends')
-        .select('*')
-        .or(`user_id1.eq.${user.id},user_id2.eq.${user.id}`);
-        
-      if (friends && friends.length > 0) {
-        const friendIds = friends.map((f: any) => f.user_id1 === user.id ? f.user_id2 : f.user_id1);
-        const { data: friendProfiles } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, avatar_url, last_seen')
-          .in('id', friendIds);
+        // 3. Fetch Active Friends
+        const { data: friends, error: friendError } = await supabase
+          .from('friends')
+          .select('user_id1, user_id2')
+          .or(`user_id1.eq.${user.id},user_id2.eq.${user.id}`);
           
-        if (friendProfiles && isMounted) {
-          const processedActives = friendProfiles.map((p: any) => {
-            const isRecentlyActive = p.last_seen ? (new Date().getTime() - new Date(p.last_seen).getTime() < 5 * 60 * 1000) : false;
-            return {
+        if (!friendError && friends && friends.length > 0) {
+          const friendIds = friends.map((f: any) => f.user_id1 === user.id ? f.user_id2 : f.user_id1);
+          const { data: friendProfiles } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, avatar_url, last_seen')
+            .in('id', friendIds);
+            
+          if (friendProfiles && isMounted) {
+            const processedActives = friendProfiles.map((p: any) => ({
               id: p.id,
               name: p.full_name || p.username,
               avatar: p.avatar_url,
-              online: isRecentlyActive
-            };
-          });
-          setActiveUsers(processedActives);
+              online: p.last_seen ? (new Date().getTime() - new Date(p.last_seen).getTime() < 5 * 60 * 1000) : false
+            }));
+            setActiveUsers(processedActives);
+          }
+        } else if (isMounted) {
+          setActiveUsers([]);
         }
-      } else if (isMounted) {
-        setActiveUsers([]);
-      }
 
-      if (isMounted) setIsLoading(false);
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && !err.message?.includes('Lock broken')) {
+          console.error("Messages Engine Error:", err);
+        }
+      } finally {
+        fetchInProgress.current = false;
+        if (isMounted) setIsLoading(false);
+      }
     }
     
     fetchMessages();
     
-    // Subscribe to changes in messages table
+    // Subscribe to all changes in messages table to keep unread counts in sync
     const msgChannel = supabase.channel('inbox-updates')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
          fetchMessages();
       })
       .subscribe();
 
     // Listen for auth changes to re-fetch
-    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(() => {
-      fetchMessages();
+    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((event: string) => {
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+            fetchMessages();
+        }
     });
       
     return () => {
@@ -143,6 +172,11 @@ export default function MessagesPage() {
       authListener.unsubscribe();
     };
   }, [supabase]);
+
+  const filteredChats = chats.filter(c => 
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleStartChat = async (partnerId: string) => {
     setIsStartingChat(true);
@@ -157,7 +191,7 @@ export default function MessagesPage() {
         .eq('user_id', user.id);
         
       if (myConvos && myConvos.length > 0) {
-        const convoIds = myConvos.map(c => c.conversation_id);
+        const convoIds = myConvos.map((c: any) => c.conversation_id);
         const { data: sharedConvo } = await supabase
           .from('conversation_participants')
           .select('conversation_id')
@@ -181,7 +215,7 @@ export default function MessagesPage() {
         ]);
         router.push(`/messages/${newConvo.id}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     } finally {
       setIsStartingChat(false);
@@ -191,16 +225,83 @@ export default function MessagesPage() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] dark:bg-black pb-[110px] max-w-md mx-auto relative font-sans transition-colors">
       {/* Premium Header with Backdrop Blur */}
-      <div className="sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50">
-        <div className="px-6 pt-10 pb-5 flex items-center justify-between">
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">Messages</h1>
-          <div className="flex gap-3">
-            <button className="w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 active:scale-95 transition-all">
+      <div className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50">
+        <div className="px-6 pt-10 pb-5 flex items-center justify-between gap-4">
+          <AnimatePresence mode="wait">
+            {!isSearching ? (
+              <motion.h1 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100"
+              >
+                Messages
+              </motion.h1>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className="flex-1 relative"
+              >
+                <input 
+                  autoFocus
+                  type="text"
+                  placeholder="Search messages..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-zinc-100 dark:bg-zinc-900 border-none rounded-2xl px-4 py-2.5 text-[15px] font-medium outline-none text-zinc-900 dark:text-white"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex gap-2 relative">
+            <button 
+              onClick={() => {
+                setIsSearching(!isSearching);
+                if (isSearching) setSearchQuery("");
+              }}
+              className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all active:scale-95 ${isSearching ? 'bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black' : 'bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200'}`}
+            >
               <Search size={20} />
             </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 active:scale-95 transition-all">
-              <MoreVertical size={20} />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className={`w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 active:scale-95 transition-all ${showMoreMenu ? 'ring-2 ring-[#E5FF66]' : ''}`}
+              >
+                <MoreVertical size={20} />
+              </button>
+
+              {/* More Menu Dropdown */}
+              <AnimatePresence>
+                {showMoreMenu && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-[-1]" 
+                      onClick={() => setShowMoreMenu(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 rounded-[24px] shadow-2xl border border-zinc-100 dark:border-zinc-800 overflow-hidden py-2"
+                    >
+                      <button className="w-full px-5 py-3 text-left text-xs font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                        Mark All Read
+                      </button>
+                      <button className="w-full px-5 py-3 text-left text-xs font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                        Archive All
+                      </button>
+                      <button className="w-full px-5 py-3 text-left text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                        Delete All
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
@@ -265,7 +366,8 @@ export default function MessagesPage() {
         <div className="flex flex-col gap-1">
           {isLoading ? (
             <ChatListSkeleton />
-          ) : chats.length > 0 ? chats.map((chat) => (
+          ) : filteredChats.length > 0 ? (
+            filteredChats.map((chat) => (
             <Link 
               key={chat.id} 
               href={`/messages/${chat.id}`}
@@ -311,7 +413,8 @@ export default function MessagesPage() {
                 </div>
               </div>
             </Link>
-          )) : (
+           ))
+          ) : (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
                <div className="w-16 h-16 bg-zinc-50 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-4">
                  <MessageSquare className="w-8 h-8 text-zinc-300 dark:text-zinc-700" />
