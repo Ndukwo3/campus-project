@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import BottomNavigation from "@/components/BottomNavigation";
 import Toast from "@/components/Toast";
 import dynamic from "next/dynamic";
 
+const BottomNavigation = dynamic(() => import("@/components/BottomNavigation"), { ssr: false });
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), { 
   ssr: false,
   loading: () => (
@@ -469,12 +469,12 @@ const CollegeSelection: React.FC<CollegeSelectionProps> = ({ colleges, isLoading
                 {col.abbreviation || <School size={20} />}
               </div>
               <div className="flex-1">
-                <h4 className="font-black text-zinc-900 dark:text-white group-hover:text-black uppercase italic text-sm leading-tight tracking-tight whitespace-normal">
+                <h4 className="font-black text-zinc-900 dark:text-white group-hover:text-white dark:group-hover:text-black uppercase italic text-sm leading-tight tracking-tight whitespace-normal">
                   {col.name}
                 </h4>
               </div>
             </div>
-            <ChevronRight size={20} className="text-zinc-300 group-hover:text-black group-hover:translate-x-1 transition-transform ml-2" />
+            <ChevronRight size={20} className="text-zinc-300 group-hover:text-white dark:group-hover:text-black group-hover:translate-x-1 transition-transform ml-2" />
           </button>
         )) : (
           <div className="py-16 px-6 bg-zinc-50 dark:bg-zinc-900/50 rounded-[48px] border-2 border-dashed border-zinc-100 dark:border-zinc-800 flex flex-col items-center text-center gap-8 group">
@@ -568,7 +568,7 @@ function LevelSelection({ levels, selectedLevel, onSelect }: { levels: string[],
             className={`w-full p-6 text-center border rounded-[32px] font-black uppercase tracking-widest transition-all active:scale-95 ${
               selectedLevel === lvl 
                 ? "bg-[#E5FF66] text-black border-[#E5FF66] shadow-[0_0_20px_rgba(229,255,102,0.3)]" 
-                : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:bg-[#E5FF66]/10 hover:text-white"
+                : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-500 dark:text-zinc-500 hover:bg-[#E5FF66]/10 dark:hover:bg-[#E5FF66]/10 hover:text-zinc-900 dark:hover:text-white"
             }`}
           >
             {lvl}
@@ -606,7 +606,7 @@ function ResourceHub({
       try {
         const { data, error } = await supabase
           .from('academic_resources')
-          .select('*')
+          .select('id, title, course_code, resource_type, file_url, university_name, department_name, level, semester')
           .eq('status', 'approved')
           .eq('university_name', uni.name)
           .eq('department_name', dept.name)

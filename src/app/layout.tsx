@@ -5,11 +5,13 @@ import "./globals.css";
 const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -42,11 +44,13 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-import { GlobalModals } from "@/components/GlobalModals";
 import GlobalStateLoader from "@/components/GlobalStateLoader";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import FloatingCreateButton from "@/components/FloatingCreateButton";
 import Script from "next/script";
+import dynamic from "next/dynamic";
+
+const GlobalModals = dynamic(() => import("@/components/GlobalModals").then(mod => mod.GlobalModals), { ssr: false });
+const FloatingCreateButton = dynamic(() => import("@/components/FloatingCreateButton"), { ssr: false });
 
 export default function RootLayout({
   children,
@@ -56,6 +60,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="notranslate" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://*.supabase.co" />
+        <link rel="dns-prefetch" href="https://*.supabase.co" />
         <Script
           id="sw-register"
           strategy="afterInteractive"

@@ -9,8 +9,10 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import BottomNavigation from "@/components/BottomNavigation";
 import Toast from "@/components/Toast";
+import dynamic from "next/dynamic";
+
+const BottomNavigation = dynamic(() => import("@/components/BottomNavigation"), { ssr: false });
 
 export default function ChannelsPage() {
   const router = useRouter();
@@ -49,7 +51,7 @@ export default function ChannelsPage() {
     try {
       const { data: userMemberships } = await supabase
         .from('group_members')
-        .select('group_id, groups (*)')
+        .select('group_id, groups (id, name, image_url)')
         .eq('user_id', userId);
 
       if (!userMemberships) return;
@@ -57,7 +59,7 @@ export default function ChannelsPage() {
       
       const { data: channelData } = await supabase
         .from('channels')
-        .select('*')
+        .select('id, name, group_id, description')
         .in('group_id', groupIds)
         .order('name', { ascending: true });
 
