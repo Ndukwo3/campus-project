@@ -1,4 +1,5 @@
 {
+  "id": "com.campus.universe",
   "name": "Campus - Uni-verse",
   "short_name": "Campus",
   "description": "The ultimate social and academic network for Nigerian university students.",
@@ -19,6 +20,15 @@
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon-512x512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Campus - Uni-verse Home Feed"
     }
   ],
   "categories": ["social", "education"],
