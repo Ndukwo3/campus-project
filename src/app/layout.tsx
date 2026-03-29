@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  other: {
+    google: "notranslate",
+  },
 };
 
 import type { Viewport } from 'next'
@@ -51,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="notranslate" suppressHydrationWarning>
       <head>
         <Script
           id="sw-register"
