@@ -170,9 +170,20 @@ export default function Home() {
         const isPosting = sessionStorage.getItem('isPosting');
         if (isPosting === 'true') {
           setIsPostingOptimistic(true);
+          // Fallback: if realtime doesn't fire within 8s (e.g. in WebView APK), clear it manually
+          setTimeout(async () => {
+            sessionStorage.removeItem('isPosting');
+            setIsPostingOptimistic(false);
+            // Also refresh the feed to show the new post
+            const { data: { user: u } } = await supabase.auth.getUser();
+            if (u && uniIdRef.current) {
+              await fetchPosts(u.id, uniIdRef.current);
+            }
+          }, 8000);
         }
       };
       checkPostingState();
+
     }
 
     checkUserAndInit();
