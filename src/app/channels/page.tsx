@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Hash, Search, Plus, ArrowLeft, ChevronRight, 
-  MessageSquare, Bell, Filter, MoreVertical, 
-  Lock, Settings, Users, Activity
+  Hash, Search, Plus, ArrowLeft,
+  Filter, Activity
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,24 +47,20 @@ export default function ChannelsPage() {
   const fetchChannels = async (userId: string) => {
     setIsLoading(true);
     try {
-      // 1. Get communities user has joined
       const { data: userMemberships } = await supabase
         .from('group_members')
         .select('group_id, groups (*)')
         .eq('user_id', userId);
 
       if (!userMemberships) return;
-
       const groupIds = userMemberships.map((m: any) => m.group_id);
       
-      // 2. Fetch all channels for these groups
       const { data: channelData } = await supabase
         .from('channels')
         .select('*')
         .in('group_id', groupIds)
         .order('name', { ascending: true });
 
-      // 3. Group channels by community
       const grouped = userMemberships.map((membership: any) => {
         const group = membership.groups as any;
         return {
@@ -90,8 +85,43 @@ export default function ChannelsPage() {
     )
   })).filter(comm => comm.channels.length > 0);
 
+  // Animation Variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
+  const ChannelSkeleton = () => (
+    <div className="space-y-4 animate-pulse">
+      <div className="flex items-center gap-3 px-2">
+        <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900" />
+        <div className="h-3 w-24 bg-zinc-100 dark:bg-zinc-900 rounded-full" />
+        <div className="w-5 h-px bg-zinc-100 dark:bg-zinc-900 flex-1" />
+      </div>
+      {[1, 2, 3].map(i => (
+        <div key={i} className="flex items-center gap-4 p-4 rounded-[24px] bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/50">
+          <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-900" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3 w-2/3 bg-zinc-100 dark:bg-zinc-900 rounded-full" />
+            <div className="h-2 w-1/2 bg-zinc-50 dark:bg-zinc-900/50 rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-black max-w-md mx-auto relative font-sans transition-colors">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-black max-w-md mx-auto relative font-sans transition-colors notranslate">
       <Toast 
         message={toast.message} 
         type={toast.type} 
@@ -102,21 +132,25 @@ export default function ChannelsPage() {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-xl px-6 pt-10 pb-5 flex items-center justify-between border-b border-zinc-100/50 dark:border-zinc-800/50">
         <div className="flex items-center gap-4">
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
             onClick={() => router.back()}
             className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-900 dark:text-white border border-zinc-100 dark:border-zinc-800"
           >
             <ArrowLeft size={20} />
-          </button>
+          </motion.button>
           <div className="flex flex-col">
             <h1 className="text-[24px] font-black tracking-tight text-zinc-900 dark:text-white uppercase italic leading-none">Channels</h1>
             <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-1">Cross-Server Feed</p>
           </div>
         </div>
         <div className="flex gap-2">
-           <button className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 border border-zinc-100 dark:border-zinc-800">
+           <motion.button 
+            whileTap={{ scale: 0.9 }}
+            className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 border border-zinc-100 dark:border-zinc-800"
+           >
             <Filter size={18} />
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -141,7 +175,7 @@ export default function ChannelsPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
                   activeTab === tab 
-                  ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm"
+                  ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm scale-100"
                   : "text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400"
                 }`}
                >
@@ -154,63 +188,84 @@ export default function ChannelsPage() {
         {/* Channels List */}
         <div className="space-y-10">
           {isLoading ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-4 text-zinc-300">
-               <div className="w-8 h-8 rounded-full border-4 border-zinc-100 dark:border-zinc-800 border-t-emerald-500 animate-spin" />
-               <p className="text-[10px] font-black uppercase tracking-[0.2em]">Syncing Feed...</p>
+            <div className="space-y-12">
+              <ChannelSkeleton />
+              <ChannelSkeleton />
             </div>
           ) : filteredCommunities.length > 0 ? (
-            filteredCommunities.map((community) => (
-              <div key={community.id} className="space-y-4">
-                <div className="flex items-center gap-3 px-2">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 overflow-hidden border border-zinc-100 dark:border-zinc-800">
-                    {community.image_url && (
-                       <img src={community.image_url} alt="" className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <h2 className="text-[12px] font-black text-zinc-900 dark:text-white uppercase tracking-widest truncate flex-1 italic">
-                    {community.name}
-                  </h2>
-                  <div className="w-5 h-px bg-zinc-100 dark:border-zinc-800 flex-1" />
-                </div>
-
-                <div className="grid grid-cols-1 gap-2">
-                  {community.channels.map((channel: any) => (
-                    <Link
-                      key={channel.id}
-                      href={`/groups/${community.id}/channels/${channel.id}`}
-                      className="group flex items-center gap-4 p-4 rounded-[24px] bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-all active:scale-[0.98] shadow-sm hover:shadow-md"
-                    >
-                      <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                        <Hash size={18} strokeWidth={2.5} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-black text-[14px] text-zinc-900 dark:text-white uppercase italic tracking-tight truncate group-hover:text-emerald-500 transition-colors">
-                          {channel.name}
-                        </h3>
-                        {channel.description && (
-                          <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate mt-0.5">
-                            {channel.description}
-                          </p>
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="space-y-10"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredCommunities.map((community) => (
+                  <motion.div 
+                    variants={itemVariants}
+                    layout
+                    key={community.id} 
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center gap-3 px-2">
+                      <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 overflow-hidden border border-zinc-100 dark:border-zinc-800">
+                        {community.image_url && (
+                          <img src={community.image_url} alt="" className="w-full h-full object-cover" />
                         )}
                       </div>
-                      <div className="flex flex-col items-end gap-1.5 px-1 opacity-40">
-                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                         <span className="text-[8px] font-black uppercase text-zinc-400">Hub</span>
-                      </div>
-                    </Link>
-                  ))}
-                  
-                  {/* Inline Create Channel Trigger */}
-                  <button 
-                    onClick={() => router.push(`/groups/${community.id}`)}
-                    className="flex items-center gap-3 p-3 rounded-2xl border-2 border-dashed border-zinc-50 dark:border-zinc-900/50 text-zinc-400 hover:text-emerald-500 hover:border-emerald-500/30 transition-all text-[10px] font-black uppercase tracking-widest justify-center mt-2 group"
-                  >
-                    <Plus size={14} className="group-hover:rotate-90 transition-transform" />
-                    Manage {community.name}
-                  </button>
-                </div>
-              </div>
-            ))
+                      <h2 className="text-[12px] font-black text-zinc-900 dark:text-white uppercase tracking-widest truncate flex-1 italic">
+                        {community.name}
+                      </h2>
+                      <div className="w-5 h-px bg-zinc-100 dark:border-zinc-800 flex-1" />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                      {community.channels.map((channel: any) => (
+                        <motion.div
+                          key={channel.id}
+                          whileHover={{ x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full"
+                        >
+                          <Link
+                            href={`/groups/${community.id}/channels/${channel.id}`}
+                            className="group flex items-center gap-4 p-4 rounded-[24px] bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-all shadow-sm hover:shadow-md"
+                          >
+                            <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                              <Hash size={18} strokeWidth={2.5} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-black text-[14px] text-zinc-900 dark:text-white uppercase italic tracking-tight truncate group-hover:text-emerald-500 transition-colors">
+                                {channel.name}
+                              </h3>
+                              {channel.description && (
+                                <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate mt-0.5">
+                                  {channel.description}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-1.5 px-1 opacity-40">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span className="text-[8px] font-black uppercase text-zinc-400">Hub</span>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      ))}
+                      
+                      {/* Inline Create Channel Trigger */}
+                      <motion.button 
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => router.push(`/groups/${community.id}`)}
+                        className="flex items-center gap-3 p-3 rounded-2xl border-2 border-dashed border-zinc-50 dark:border-zinc-900/50 text-zinc-400 hover:text-emerald-500 hover:border-emerald-500/30 transition-all text-[10px] font-black uppercase tracking-widest justify-center mt-2 group"
+                      >
+                        <Plus size={14} className="group-hover:rotate-90 transition-transform" />
+                        Manage {community.name}
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
           ) : (
             <div className="py-24 text-center space-y-6">
               <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-900/50 rounded-[40px] flex items-center justify-center mx-auto border-2 border-dashed border-zinc-100 dark:border-zinc-800">
@@ -222,12 +277,13 @@ export default function ChannelsPage() {
                   You haven't joined any servers<br/>with active channels yet.
                 </p>
               </div>
-              <button 
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
                 onClick={() => router.push('/communities')}
-                className="px-8 py-4 bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+                className="px-8 py-4 bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all"
               >
                 Find a Community
-              </button>
+              </motion.button>
             </div>
           )}
         </div>
