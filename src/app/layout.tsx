@@ -43,7 +43,7 @@ import { GlobalModals } from "@/components/GlobalModals";
 import GlobalStateLoader from "@/components/GlobalStateLoader";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import FloatingCreateButton from "@/components/FloatingCreateButton";
-import { PWARegistrar } from "@/components/PWARegistrar";
+import Script from "next/script";
 
 export default function RootLayout({
   children,
@@ -52,6 +52,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script
+          id="sw-register"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body
         suppressHydrationWarning
         className={`${montserrat.variable} ${geistMono.variable} font-sans antialiased bg-white dark:bg-[#0A0A0A] text-zinc-900 dark:text-zinc-100 transition-colors duration-300`}
@@ -63,7 +78,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <GlobalStateLoader />
-          <PWARegistrar />
           {children}
           <FloatingCreateButton />
           <GlobalModals />
