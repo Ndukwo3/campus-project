@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase";
 import Toast from "@/components/Toast";
 import dynamic from "next/dynamic";
 
-const BottomNavigation = dynamic(() => import("@/components/BottomNavigation"), { ssr: false });
+const BottomNavigation = dynamic(() => import("../../components/BottomNavigation"), { ssr: false });
 
 export default function ChannelsPage() {
   const router = useRouter();

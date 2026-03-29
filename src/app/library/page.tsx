@@ -13,8 +13,8 @@ import { createClient } from "@/lib/supabase";
 import Toast from "@/components/Toast";
 import dynamic from "next/dynamic";
 
-const BottomNavigation = dynamic(() => import("@/components/BottomNavigation"), { ssr: false });
-const PdfViewer = dynamic(() => import("@/components/PdfViewer"), { 
+const BottomNavigation = dynamic(() => import("../../components/BottomNavigation"), { ssr: false });
+const PdfViewer = dynamic(() => import("../../components/PdfViewer"), { 
   ssr: false,
   loading: () => (
     <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">

@@ -49,8 +49,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Script from "next/script";
 import dynamic from "next/dynamic";
 
-const GlobalModals = dynamic(() => import("@/components/GlobalModals").then(mod => mod.GlobalModals), { ssr: false });
-const FloatingCreateButton = dynamic(() => import("@/components/FloatingCreateButton"), { ssr: false });
+const GlobalModals = dynamic(() => import("../components/GlobalModals").then((mod) => mod.GlobalModals), { ssr: false });
+const FloatingCreateButton = dynamic(() => import("../components/FloatingCreateButton"), { ssr: false });
 
 export default function RootLayout({
   children,
