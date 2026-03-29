@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
-import CommentModal from "@/components/CommentModal";
-import ShareModal from "@/components/modals/ShareModal";
 import Toast from "@/components/Toast";
+import dynamic from "next/dynamic";
+
+const CommentModal = dynamic(() => import("@/components/CommentModal"), { ssr: false });
+const ShareModal = dynamic(() => import("@/components/modals/ShareModal"), { ssr: false });
 
 export function GlobalModals() {
   const supabase = createClient();

@@ -46,11 +46,11 @@ export const viewport: Viewport = {
 
 import GlobalStateLoader from "@/components/GlobalStateLoader";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { GlobalModals } from "@/components/GlobalModals";
+import FloatingCreateButton from "@/components/FloatingCreateButton";
 import Script from "next/script";
-import dynamic from "next/dynamic";
 
-const GlobalModals = dynamic(() => import("../components/GlobalModals").then((mod) => mod.GlobalModals), { ssr: false });
-const FloatingCreateButton = dynamic(() => import("../components/FloatingCreateButton"), { ssr: false });
+
 
 export default function RootLayout({
   children,
