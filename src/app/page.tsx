@@ -188,6 +188,17 @@ export default function Home() {
 
     checkUserAndInit();
 
+    // Auto-refresh when app comes back into focus (critical for WebView APKs)
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        const { data: { user: u } } = await supabase.auth.getUser();
+        if (u && uniIdRef.current) {
+          await fetchPosts(u.id, uniIdRef.current);
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     // 2. Subscribe to REALTIME post changes outside the async function so we can clean it up
     const postsSubscription = supabase
       .channel('public:posts')
@@ -210,7 +221,9 @@ export default function Home() {
 
     return () => {
       supabase.removeChannel(postsSubscription);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+
   }, [router, supabase, user]);
 
 
