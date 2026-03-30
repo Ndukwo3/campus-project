@@ -15,7 +15,7 @@ export default function StoriesBar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [campusStudents, setCampusStudents] = useState<any[]>([]);
+  const [univasUsers, setUnivasUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Real stories state
@@ -41,7 +41,7 @@ export default function StoriesBar() {
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
-    async function fetchCampusData() {
+    async function fetchUnivasData() {
       // 1. Get current user session
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) {
@@ -108,7 +108,7 @@ export default function StoriesBar() {
           hasStory: true 
         }));
 
-        setCampusStudents(combined);
+        setUnivasUsers(combined);
 
         // Auto-refresh when the next story expires
         if (storiesData && storiesData.length > 0) {
@@ -122,13 +122,13 @@ export default function StoriesBar() {
       setLoading(false);
     }
 
-    fetchCampusData();
+    fetchUnivasData();
 
     // 5. Realtime subscription for stories and profiles
     const channel = supabase
       .channel('stories-activity')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'stories' }, () => fetchCampusData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchCampusData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stories' }, () => fetchUnivasData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchUnivasData())
       .subscribe();
 
     return () => {
@@ -243,7 +243,7 @@ export default function StoriesBar() {
   }
 
   // Find current user's story if it exists
-  const currentUserEntry = campusStudents.find(s => s.id === currentUser?.id);
+  const currentUserEntry = univasUsers.find(s => s.id === currentUser?.id);
   const myStories = currentUserEntry?.stories || [];
 
   return (
@@ -291,7 +291,6 @@ export default function StoriesBar() {
                 >
                   <Plus size={16} strokeWidth={3} />
                 </button>
-
               </div>
 
               <input 
@@ -305,8 +304,8 @@ export default function StoriesBar() {
             <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 mt-1">You</span>
           </motion.div>
 
-          {/* Campus Student Circles */}
-          {campusStudents.filter(s => s.id !== currentUser?.id).map((student) => (
+          {/* Univas User Circles */}
+          {univasUsers.filter((s: any) => s.id !== currentUser?.id).map((student: any) => (
             <motion.div
               layout
               initial={{ opacity: 0, x: 20 }}

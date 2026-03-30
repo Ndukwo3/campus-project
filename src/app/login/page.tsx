@@ -69,7 +69,7 @@ export default function LoginPage() {
 
       <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
         <h1 className="text-3xl font-black text-center mb-2 tracking-tight uppercase">Login</h1>
-        <p className="text-zinc-500 dark:text-zinc-400 text-center mb-8 font-bold text-[13px] uppercase tracking-widest">Welcome back to <span className="text-zinc-900 dark:text-[#E2FF3D] font-black italic underline decoration-[#E5FF66] decoration-4 underline-offset-4">Uni-verse</span></p>
+        <p className="text-zinc-500 dark:text-zinc-400 text-center mb-8 font-bold text-[13px] uppercase tracking-widest">Welcome back to <span className="text-zinc-900 dark:text-[#E2FF3D] font-black italic underline decoration-[#E5FF66] decoration-4 underline-offset-4">Univas</span></p>
 
         <form onSubmit={handleLogin}>
           {/* Form Group - Email */}

@@ -34,8 +34,8 @@ function BlockedUsersModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function PrivacySettingsPage() {
-  const [postVisibility, setPostVisibility] = useState("My Campus Only");
-  const [profileVisibility, setProfileVisibility] = useState("Campus Only");
+  const [postVisibility, setPostVisibility] = useState("My Univas Only");
+  const [profileVisibility, setProfileVisibility] = useState("Univas Only");
   const [followerVisibility, setFollowerVisibility] = useState("Everyone");
   const [canMessage, setCanMessage] = useState("Everyone");
   const [canTag, setCanTag] = useState("Everyone");
@@ -84,7 +84,7 @@ export default function PrivacySettingsPage() {
                 className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 px-4 text-[14px] font-bold text-black dark:text-white outline-none ml-7 max-w-[calc(100%-28px)] appearance-none"
               >
                 <option>Everyone</option>
-                <option>My Campus Only</option>
+                <option>My Univas Only</option>
                 <option>Connections Only</option>
               </select>
             </div>
@@ -100,7 +100,7 @@ export default function PrivacySettingsPage() {
                 className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 px-4 text-[14px] font-bold text-black dark:text-white outline-none ml-7 max-w-[calc(100%-28px)] appearance-none"
               >
                 <option>Public (Visible in search)</option>
-                <option>Campus Only</option>
+                <option>Univas Only</option>
                 <option>Hidden</option>
               </select>
             </div>

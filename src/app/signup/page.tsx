@@ -27,7 +27,7 @@ export default function SignupPage() {
 
     try {
       const { data, error: signupError } = await supabase.auth.signUp({
-        email: authMethod === "email" ? email : `${phone}@campus.com`, // Fallback for phone-like signup in MVP
+        email: authMethod === "email" ? email : `${phone}@univas.app`, // Fallback for phone-like signup in MVP
         password,
         options: {
           data: {
@@ -82,7 +82,7 @@ export default function SignupPage() {
 
       <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
         <h1 className="text-3xl font-black text-center mb-2 tracking-tight uppercase">Create Account</h1>
-        <p className="text-zinc-500 dark:text-zinc-400 text-center mb-8 font-bold text-[13px] uppercase tracking-widest">Join the <span className="text-zinc-900 dark:text-[#E2FF3D] font-black italic underline decoration-[#E5FF66] decoration-4 underline-offset-4">Uni-verse</span></p>
+        <p className="text-zinc-500 dark:text-zinc-400 text-center mb-8 font-bold text-[13px] uppercase tracking-widest">Join <span className="text-zinc-900 dark:text-[#E2FF3D] font-black italic underline decoration-[#E5FF66] decoration-4 underline-offset-4">Univas</span></p>
 
         {/* Toggle Pill */}
         <div className="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-full mb-8 relative">
@@ -235,7 +235,7 @@ export default function SignupPage() {
         <div className="mt-auto flex flex-col items-center gap-8">
           {/* Terms text */}
           <p className="text-center text-[12px] text-zinc-400 dark:text-zinc-600 max-w-xs leading-relaxed font-bold uppercase tracking-widest">
-            By continuing you agree to Uni-verse's <a href="#" className="underline hover:text-zinc-600 dark:hover:text-zinc-400">Terms of Service</a> and <a href="#" className="underline hover:text-zinc-600 dark:hover:text-zinc-400">Privacy Policy</a>
+            By continuing you agree to Univas's <a href="#" className="underline hover:text-zinc-600 dark:hover:text-zinc-400">Terms of Service</a> and <a href="#" className="underline hover:text-zinc-600 dark:hover:text-zinc-400">Privacy Policy</a>
           </p>
 
           {/* Login switch */}

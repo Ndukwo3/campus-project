@@ -1,7 +1,7 @@
 {
-  "id": "com.campus.universe",
-  "name": "Campus - Uni-verse",
-  "short_name": "Campus",
+  "id": "com.univas.app",
+  "name": "Univas",
+  "short_name": "Univas",
   "description": "The ultimate social and academic network for Nigerian university students.",
   "start_url": "/",
   "display": "standalone",
@@ -28,7 +28,7 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Campus - Uni-verse Home Feed"
+      "label": "Univas Home Feed"
     }
   ],
   "categories": ["social", "education"],
@@ -36,7 +36,7 @@
     {
       "name": "Explore",
       "url": "/explore",
-      "description": "Explore campus life"
+      "description": "Explore Univas life"
     },
     {
       "name": "Messages",

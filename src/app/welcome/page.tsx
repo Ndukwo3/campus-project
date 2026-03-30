@@ -38,7 +38,7 @@ export default function WelcomePage() {
               transition={{ delay: 0.5, duration: 0.6 }}
               className="text-zinc-900 dark:text-[#E2FF3D] italic relative inline-block mt-2"
             >
-              Uni-verse
+              Univas
               <svg className="absolute w-full h-3 -bottom-1 top-auto left-0 text-[#E5FF66] -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
                 <motion.path 
                   initial={{ pathLength: 0 }}
@@ -88,7 +88,7 @@ export default function WelcomePage() {
           </Link>
           
           <p className="text-center text-[10px] text-zinc-400 dark:text-zinc-500 mt-6 mx-auto font-black uppercase tracking-[0.15em] max-w-[260px] leading-wider">
-            By continuing, you agree to Uni-verse's <br/>
+            By continuing, you agree to Univas's <br/>
             <a href="#" className="underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-4 hover:text-zinc-900 dark:hover:text-white transition-colors">Terms</a> and <a href="#" className="underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-4 hover:text-zinc-900 dark:hover:text-white transition-colors">Privacy</a>
           </p>
         </motion.div>

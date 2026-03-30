@@ -138,7 +138,7 @@ export default function OnboardingPage() {
       const { error: notificationError } = await supabase.from('notifications').insert({
         user_id: user.id,
         type: 'welcome',
-        content: "Welcome to Campus! Explore the feed, connect with students in your university, and share your first story! 🎉",
+        content: "Welcome to Univas! Explore the feed, connect with students in your university, and share your first story! 🎉",
         is_read: false
       });
       if (notificationError) console.error("Could not send welcome notification (table might not exist yet):", notificationError);

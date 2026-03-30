@@ -402,7 +402,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                  <div>
                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.15em] mb-2">The Purpose</p>
                    <p className="text-[15px] font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed italic">
-                     "{group.description || "Building a stronger campus together."}"
+                     "{group.description || "Building a stronger Univas together."}"
                    </p>
                  </div>
                  <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-3">

@@ -393,7 +393,7 @@ export default function SearchPage() {
               <section>
                 <div className="flex items-center justify-between mb-4 px-1">
                   <h2 className="text-[17px] font-black tracking-tight text-zinc-900 dark:text-zinc-100">
-                    {searchQuery ? "Campus Results" : "People you may know"}
+                    {searchQuery ? "Univas Results" : "People you may know"}
                   </h2>
                   <link href="#" className="flex items-center gap-1 text-[11px] font-black text-zinc-400 dark:text-zinc-600 hover:text-black dark:hover:text-white transition-colors" />
                     REFRESH <Users size={12} />
@@ -474,7 +474,7 @@ export default function SearchPage() {
               </section>
             )}
 
-            {/* Campus Groups */}
+            {/* Univas Groups */}
             {(activeFilter === "All" || activeFilter === "Groups") && (
               <section>
                 <div className="flex items-center justify-between mb-5 px-1">

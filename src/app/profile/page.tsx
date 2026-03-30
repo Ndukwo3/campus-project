@@ -603,7 +603,7 @@ export default function ProfilePage() {
             </p>
           ) : (
             <p className="text-sm text-zinc-400 italic px-1 font-normal">
-              Tell your university community something about yourself...
+              Tell your Univas community something about yourself...
             </p>
           )}
         </div>
@@ -917,7 +917,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between mb-8 px-1">
                 <div>
                   <h2 className="text-2xl font-black text-black dark:text-white">Edit Identity</h2>
-                  <p className="text-zinc-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-widest mt-0.5">Campus Profile Settings</p>
+                  <p className="text-zinc-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-widest mt-0.5">Univas Profile Settings</p>
                 </div>
                 <button 
                   onClick={() => setIsEditing(false)}

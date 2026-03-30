@@ -69,7 +69,7 @@ export default function AppearancePage() {
         >
           <div className="space-y-2">
             <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">Display Themes</h2>
-            <p className="text-zinc-400 dark:text-zinc-500 text-sm font-medium">Personalize your campus experience with a theme that fits your vibe.</p>
+            <p className="text-zinc-400 dark:text-zinc-500 text-sm font-medium">Personalize your Univas experience with a theme that fits your vibe.</p>
           </div>
 
           <div className="space-y-3">

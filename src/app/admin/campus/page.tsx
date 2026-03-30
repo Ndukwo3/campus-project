@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function CampusModeratorPage() {
+export default function UnivasModeratorPage() {
   const [stats, setStats] = useState<any>({
     total: 0,
     pending: 0,
@@ -109,7 +109,7 @@ export default function CampusModeratorPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h2 className="text-3xl font-black italic uppercase tracking-tight text-zinc-900 dark:text-white leading-none">
-            {selectedUni ? `${selectedUni} Insights` : "Campus Insights"}
+            {selectedUni ? `${selectedUni} Insights` : "Univas Insights"}
           </h2>
           <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 mt-2 uppercase tracking-widest text-[11px]">
             {selectedUni ? `Detailed analytics for your assigned institution.` : "System-wide overview of academic content and hierarchy health."}

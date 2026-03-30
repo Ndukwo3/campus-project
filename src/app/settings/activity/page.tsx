@@ -7,11 +7,11 @@ import { useState } from "react";
 const SAVED_POSTS = [
   { id: 1, title: "Tips for JAMB 2026 preparation", author: "@chukwuemeka_cs" },
   { id: 2, title: "How I got an internship at a Big 4 firm", author: "@adaobi_mgt" },
-  { id: 3, title: "Best cafeteria spots on campus ranked", author: "@futo.foodie" },
+  { id: 3, title: "Best cafeteria spots on Univas ranked", author: "@futo.foodie" },
 ];
 const LIKED_POSTS = [
   { id: 1, title: "Lecture slides for CSC 403", author: "@prof_okafor" },
-  { id: 2, title: "Campus hackathon results!", author: "@techclub_futo" },
+  { id: 2, title: "Univas hackathon results!", author: "@techclub_futo" },
 ];
 
 function PostListModal({

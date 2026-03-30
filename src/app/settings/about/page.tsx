@@ -30,11 +30,11 @@ export default function AboutSettingsPage() {
 
       {modal === "terms" && (
         <DocModal title="Terms of Service" onClose={() => setModal(null)}>
-          <p>By accessing the Campus app, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
-          <p><strong className="text-zinc-900 dark:text-zinc-100">Eligibility:</strong> You must be a currently enrolled student at a verified university to use Campus.</p>
+          <p>By accessing the Univas app, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
+          <p><strong className="text-zinc-900 dark:text-zinc-100">Eligibility:</strong> You must be a currently enrolled student at a verified university to use Univas.</p>
           <p><strong className="text-zinc-900 dark:text-zinc-100">Account Responsibility:</strong> You are responsible for maintaining the confidentiality of your account and password and for restricting access to your device.</p>
-          <p><strong className="text-zinc-900 dark:text-zinc-100">Content:</strong> You retain ownership of content you post. By posting, you grant Campus a non-exclusive license to display your content to other users.</p>
-          <p><strong className="text-zinc-900 dark:text-zinc-100">Prohibited Activities:</strong> You may not use Campus for illegal activities, harassment, spam, or any activity that violates our Community Guidelines.</p>
+          <p><strong className="text-zinc-900 dark:text-zinc-100">Content:</strong> You retain ownership of content you post. By posting, you grant Univas a non-exclusive license to display your content to other users.</p>
+          <p><strong className="text-zinc-900 dark:text-zinc-100">Prohibited Activities:</strong> You may not use Univas for illegal activities, harassment, spam, or any activity that violates our Community Guidelines.</p>
           <p><strong className="text-zinc-900 dark:text-zinc-100">Termination:</strong> We reserve the right to terminate or suspend access to our service without prior notice for conduct that we believe violates these Terms.</p>
           <p className="text-zinc-400 dark:text-zinc-500 text-[12px]">Last updated: March 2026</p>
         </DocModal>
@@ -42,7 +42,7 @@ export default function AboutSettingsPage() {
 
       {modal === "privacy" && (
         <DocModal title="Privacy Policy" onClose={() => setModal(null)}>
-          <p>Campus is committed to protecting your privacy. This policy explains what data we collect and how we use it.</p>
+          <p>Univas is committed to protecting your privacy. This policy explains what data we collect and how we use it.</p>
           <p><strong className="text-zinc-900 dark:text-zinc-100">Data We Collect:</strong> We collect information you provide (name, email, university), as well as usage data (posts, interactions, device info).</p>
           <p><strong className="text-zinc-900 dark:text-zinc-100">How We Use It:</strong> Your data is used to provide and improve our services, personalize your feed, and keep the platform safe.</p>
           <p><strong className="text-zinc-900 dark:text-zinc-100">Data Sharing:</strong> We do not sell your personal data. We may share data with trusted partners to operate our services, subject to confidentiality agreements.</p>
@@ -88,7 +88,7 @@ export default function AboutSettingsPage() {
           <div className="w-20 h-20 bg-black rounded-[24px] flex items-center justify-center shadow-lg mb-4">
             <span className="text-white font-black text-2xl tracking-tighter">O</span>
           </div>
-          <h2 className="text-2xl font-black text-black">Campus</h2>
+          <h2 className="text-2xl font-black text-black">Univas</h2>
           <p className="text-sm font-bold text-zinc-400 mt-1">Version 1.0.0 (Build 42)</p>
         </section>
 
@@ -134,7 +134,7 @@ export default function AboutSettingsPage() {
             Made with <Heart size={14} className="text-red-500 fill-red-500" /> by your peers
           </p>
           <p className="text-[11px] text-zinc-400 mt-1">
-            © 2026 Campus App Inc. All rights reserved.
+            © 2026 Univas App Inc. All rights reserved.
           </p>
         </section>
 

@@ -15,7 +15,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import CreateGroupModal from "@/components/modals/CreateGroupModal";
 import Toast from "@/components/Toast";
 
-export default function CampusPage() {
+export default function UnivasPage() {
   const router = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState<any>(null);
@@ -120,7 +120,7 @@ export default function CampusPage() {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-xl px-6 pt-10 pb-5 flex items-center justify-between border-b border-zinc-100/50 dark:border-zinc-800/50">
         <div className="flex flex-col">
-          <h1 className="text-[34px] font-black tracking-tight text-zinc-900 dark:text-white uppercase italic">Campus</h1>
+          <h1 className="text-[34px] font-black tracking-tight text-zinc-900 dark:text-white uppercase italic">Univas</h1>
           <p className="text-[11px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-0.5">University Operations Hub</p>
         </div>
         <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-zinc-400">

@@ -97,10 +97,10 @@ export default function NotificationsSettingsPage() {
           </div>
         </section>
 
-        {/* Campus Alerts */}
+        {/* Univas Alerts */}
         <section>
           <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-4 shadow-none">
-            Campus & Groups
+            Univas & Groups
           </h3>
           <div className="bg-white rounded-[24px] shadow-sm border border-zinc-100/50 overflow-hidden">
             <ToggleSetting 
@@ -110,7 +110,7 @@ export default function NotificationsSettingsPage() {
             />
             <ToggleSetting 
               icon={Megaphone} 
-              title="Campus Announcements" 
+              title="Univas Announcements" 
               description="Official news and alerts from your university."
             />
             <ToggleSetting 

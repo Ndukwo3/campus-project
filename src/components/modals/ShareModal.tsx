@@ -37,7 +37,7 @@ export default function ShareModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Check out this post on Campus",
+          title: "Check out this post on Univas",
           text: postContent,
           url: shareUrl,
         });

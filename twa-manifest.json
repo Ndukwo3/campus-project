@@ -1,8 +1,8 @@
 {
-  "packageId": "app.vercel.uni_city.twa",
+  "packageId": "app.univas.twa",
   "host": "uni-city.vercel.app",
-  "name": "Campus - Uni-verse",
-  "launcherName": "Campus",
+  "name": "Univas",
+  "launcherName": "Univas",
   "display": "standalone",
   "themeColor": "#3B82F6",
   "themeColorDark": "#000000",

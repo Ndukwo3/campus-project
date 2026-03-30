@@ -62,13 +62,13 @@ export default function SettingsPage() {
     {
       title: "Preferences",
       items: [
-        { icon: Bell, label: "Notifications", href: "/settings/notifications", subtitle: "Customize your campus alerts" },
+        { icon: Bell, label: "Notifications", href: "/settings/notifications", subtitle: "Customize your Univas alerts" },
         { icon: MessageSquare, label: "Direct Messages", href: "/settings/messaging", subtitle: "Chat and community settings" },
         { icon: Palette, label: "Interface & Appearance", href: "/settings/appearance", subtitle: "Dark mode and visual themes" },
       ]
     },
     {
-      title: "Campus Community",
+      title: "Univas Community",
       items: [
         { icon: Upload, label: "Contribute", href: "/settings/contribute", subtitle: "Share Past Papers & Resources" },
         { icon: Activity, label: "Your Activity", href: "/settings/activity", subtitle: "Timeline and interaction history" },
@@ -78,7 +78,7 @@ export default function SettingsPage() {
       title: "Resources & Support",
       items: [
         { icon: HelpCircle, label: "Help Center", href: "/settings/support", subtitle: "FAQs and contact support" },
-        { icon: Info, label: "About Campus", href: "/settings/about", subtitle: "Terms, Privacy, and Version" },
+        { icon: Info, label: "About Univas", href: "/settings/about", subtitle: "Terms, Privacy, and Version" },
       ]
     }
   ];
@@ -215,7 +215,7 @@ export default function SettingsPage() {
 
         <div className="py-12 flex flex-col items-center justify-center opacity-20">
           <GraduationCap size={40} className="text-zinc-900 dark:text-white mb-4" />
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-900 dark:text-white text-center">Campus v1.0.4</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-900 dark:text-white text-center">Univas v1.0.4</p>
         </div>
       </main>
     </div>

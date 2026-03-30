@@ -209,7 +209,7 @@ export default function NotificationsPage() {
 
 function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept: (id: string) => void, onDecline: (id: string) => void }) {
   const { type, sender, content, created_at, is_read, _handled } = notif;
-  const username = type === 'welcome' ? 'Campus Team' : (sender?.username || 'Someone');
+  const username = type === 'welcome' ? 'Univas Team' : (sender?.username || 'Someone');
   const avatar = type === 'welcome' ? '/logo.png' : sender?.avatar_url;
   const time = formatDistanceToNow(new Date(created_at), { addSuffix: true });
   const isUnread = !is_read;

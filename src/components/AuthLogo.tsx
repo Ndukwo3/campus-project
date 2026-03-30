@@ -8,7 +8,7 @@ export default function AuthLogo() {
       </div>
       <div className="flex flex-col">
         <span className="text-[20px] font-black tracking-tighter text-zinc-900 dark:text-zinc-100 leading-none">
-          Uni-verse
+          Univas
         </span>
         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E5FF66] dark:text-black bg-zinc-900 dark:bg-[#E5FF66] px-1 inline-block mt-0.5 rounded-[2px] w-fit">
           Beta

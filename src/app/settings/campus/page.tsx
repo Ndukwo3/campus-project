@@ -111,10 +111,10 @@ export default function CampusSettingsPage() {
       {toast && <Toast message={toast} />}
       {showLeaveConfirm && (
         <ConfirmModal
-          title="Leave Campus Network?"
-          description="You'll lose access to all campus-exclusive content, groups, and events. This action cannot be undone."
+          title="Leave Univas Network?"
+          description="You'll lose access to all Univas-exclusive content, groups, and events. This action cannot be undone."
           confirmLabel="Leave Network"
-          onConfirm={() => showToast("⚠️ You have left the campus network.")}
+          onConfirm={() => showToast("⚠️ You have left the Univas network.")}
           onClose={() => setShowLeaveConfirm(false)}
         />
       )}
@@ -129,7 +129,7 @@ export default function CampusSettingsPage() {
         <Link href="/settings" className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition shadow-sm shrink-0 border border-transparent dark:border-zinc-800">
           <ArrowLeft size={20} className="text-black dark:text-white" />
         </Link>
-        <span className="font-bold text-[14px] uppercase tracking-[0.2em] text-black dark:text-white">Campus Tools</span>
+        <span className="font-bold text-[14px] uppercase tracking-[0.2em] text-black dark:text-white">Univas Tools</span>
         <div className="w-10 h-10" />
       </div>
 
@@ -147,7 +147,7 @@ export default function CampusSettingsPage() {
             </div>
           </div>
           <p className="text-[12px] text-zinc-400 mt-2 px-4 text-center">
-            To change your campus, you must contact support with proof of enrollment.
+            To change your university, you must contact support with proof of enrollment.
           </p>
         </section>
 
@@ -206,7 +206,7 @@ export default function CampusSettingsPage() {
             className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 rounded-2xl py-4 font-bold text-[15px] hover:bg-red-100 transition-colors active:scale-95"
           >
             <LogOut size={18} />
-            Leave Campus Network
+            Leave Univas Network
           </button>
         </section>
 

@@ -34,7 +34,7 @@ export default function SearchSkeleton() {
         </div>
       </section>
 
-      {/* Campus Groups Skeleton */}
+      {/* Univas Groups Skeleton */}
       <section>
         <div className="w-36 h-5 rounded-md bg-zinc-200 mb-4 animate-pulse" />
         <div className="grid grid-cols-2 gap-4">

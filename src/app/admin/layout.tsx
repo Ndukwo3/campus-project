@@ -39,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (profile.moderated_university_id) {
            setModUni({ 
              id: profile.moderated_university_id as string, 
-             name: (profile.universities as any)?.name || 'Campus' 
+             name: (profile.universities as any)?.name || 'Univas' 
            });
         }
       } else {
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { icon: <Users size={18} />, label: "User Management", href: "/admin/users", allowed: ['super_admin', 'admin'] },
     { icon: <Shield size={18} />, label: "Team Management", href: "/admin/team", allowed: ['super_admin'] },
     { icon: <FileText size={18} />, label: "Review Contributions", href: "/admin/contributions", allowed: ['super_admin', 'admin', 'moderator'] },
-    { icon: <BookOpen size={18} />, label: "Campus Resources", href: "/admin/campus", allowed: ['super_admin', 'admin', 'moderator'] },
+    { icon: <BookOpen size={18} />, label: "Univas Resources", href: "/admin/campus", allowed: ['super_admin', 'admin', 'moderator'] },
     { icon: <ShieldAlert size={18} />, label: "Reported Content", href: "/admin/reports", allowed: ['super_admin', 'admin'] }
   ].filter(item => item.allowed.includes(role || ''));
 
