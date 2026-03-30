@@ -121,13 +121,36 @@ export default function MessagesPage() {
     staleTime: 30 * 1000,
   });
 
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+
   useEffect(() => {
+    const presenceChannel = supabase.channel('online-users');
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState();
+        const activeIds = Object.values(state).flat().map((p: any) => p.user_id);
+        setOnlineUsers(activeIds);
+      })
+      .subscribe(async (status: string) => {
+        if (status === 'SUBSCRIBED') {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await presenceChannel.track({ user_id: user.id });
+          }
+        }
+      });
+
     const msgChannel = supabase.channel('inbox-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
          queryClient.invalidateQueries({ queryKey: ['inbox'] });
       })
       .subscribe();
 
+    return () => {
+      supabase.removeChannel(presenceChannel);
+      supabase.removeChannel(msgChannel);
+    };
   }, [supabase, queryClient]);
 
   const filteredChats = chats.filter(c => 
@@ -266,20 +289,22 @@ export default function MessagesPage() {
       {/* Active Users Section - Horizontal Scroll */}
       <div className="py-6 overflow-hidden">
         <div className="px-6 flex items-center justify-between mb-4">
-          <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-zinc-400 dark:text-zinc-600">Active Now</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-zinc-400 dark:text-zinc-600">Your Connections</h2>
           <span className="w-2 h-2 bg-[#4ADE80] rounded-full animate-pulse"></span>
         </div>
         
         {activeUsers.length > 0 ? (
           <div className="flex gap-5 overflow-x-auto px-6 pb-2 scrollbar-hide">
-            {activeUsers.map((user: any) => (
+            {activeUsers.map((user: any) => {
+              const isActive = onlineUsers.includes(user.id);
+              return (
               <div 
                 key={user.id} 
                 onClick={() => handleStartChat(user.id)}
                 className="flex flex-col items-center gap-3 shrink-0 group cursor-pointer active:scale-95 transition-transform"
               >
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-full overflow-hidden p-[2.5px] bg-gradient-to-tr from-[#E5FF66] to-[#4ADE80] ring-1 ring-zinc-100/50 dark:ring-zinc-800/50">
+                  <div className={`w-16 h-16 rounded-full overflow-hidden p-[2.5px] ${isActive ? 'bg-gradient-to-tr from-[#E5FF66] to-[#4ADE80]' : 'bg-transparent'} ring-1 ring-zinc-100/50 dark:ring-zinc-800/50 transition-colors duration-500`}>
                     <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-zinc-900 flex items-center justify-center">
                       {user.avatar ? (
                         <Image 
@@ -287,18 +312,18 @@ export default function MessagesPage() {
                           alt={user.name} 
                           width={64} 
                           height={64} 
-                          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" 
+                          className={`object-cover w-full h-full transition-all duration-500 group-hover:scale-110 ${isActive ? '' : 'opacity-80'}`}
                         />
                       ) : (
                         <User className="text-zinc-300 dark:text-zinc-700 w-8 h-8" />
                       )}
                     </div>
                   </div>
-                  <div className="absolute bottom-0 right-0 w-4.5 h-4.5 bg-[#4ADE80] rounded-full border-[3px] border-white dark:border-black shadow-sm"></div>
+                  <div className={`absolute bottom-0 right-0 w-4.5 h-4.5 rounded-full border-[3px] border-white dark:border-[#09090b] shadow-sm transition-colors duration-500 ${isActive ? 'bg-[#4ADE80]' : 'bg-zinc-300 dark:bg-zinc-700'}`}></div>
                 </div>
-                <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 tracking-tight max-w-[64px] truncate">{user.name}</span>
+                <span className={`text-[11px] font-bold tracking-tight max-w-[64px] truncate transition-colors duration-500 ${isActive ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 dark:text-zinc-500'}`}>{user.name}</span>
               </div>
-            ))}
+            )})}
           </div>
         ) : (
           <div className="px-6 py-4 flex items-center gap-3">
@@ -324,53 +349,53 @@ export default function MessagesPage() {
           {isLoading ? (
             <ChatListSkeleton />
           ) : filteredChats.length > 0 ? (
-            filteredChats.map((chat) => (
-            <Link 
-              key={chat.id} 
-              href={`/messages/${chat.id}`}
-              className="flex items-center gap-4 p-3 rounded-[28px] hover:bg-white dark:hover:bg-zinc-900/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:hover:shadow-none active:scale-[0.98] transition-all cursor-pointer group"
-            >
-              <div className="relative shrink-0">
-                <div className="w-[60px] h-[60px] rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 ring-4 ring-transparent group-hover:ring-[#E5FF66]/30 transition-all">
-                  {chat.avatar ? (
-                    <Image 
-                      src={chat.avatar} 
-                      alt={chat.name} 
-                      width={60} 
-                      height={60} 
-                      className="object-cover w-full h-full" 
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-900/50 text-zinc-300 dark:text-zinc-700">
-                      <User size={30} />
-                    </div>
-                  )}
+            filteredChats.map((chat) => {
+              const isActive = onlineUsers.includes(chat.partner_id);
+              return (
+              <Link 
+                key={chat.id} 
+                href={`/messages/${chat.id}`}
+                className="flex items-center gap-4 p-3 rounded-[28px] hover:bg-white dark:hover:bg-zinc-900/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:hover:shadow-none active:scale-[0.98] transition-all cursor-pointer group"
+              >
+                <div className="relative shrink-0">
+                  <div className="w-[60px] h-[60px] rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 ring-4 ring-transparent group-hover:ring-[#E5FF66]/30 transition-all">
+                    {chat.avatar ? (
+                      <Image 
+                        src={chat.avatar} 
+                        alt={chat.name} 
+                        width={60} 
+                        height={60} 
+                        className="object-cover w-full h-full" 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-900/50 text-zinc-300 dark:text-zinc-700">
+                        <User size={30} />
+                      </div>
+                    )}
+                  </div>
+                  <div className={`absolute bottom-0 right-0 w-4.5 h-4.5 rounded-full border-[3px] border-white dark:border-[#09090b] shadow-sm transition-colors duration-500 ${isActive ? 'bg-[#4ADE80]' : 'bg-zinc-300 dark:bg-zinc-700'}`}></div>
                 </div>
-                {chat.online && (
-                  <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#4ADE80] rounded-full border-2 border-white dark:border-black shadow-sm"></div>
-                )}
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center mb-0.5">
-                  <h3 className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 truncate tracking-tight">{chat.name}</h3>
-                  <span className={`text-[11px] font-medium ${chat.unread > 0 ? "text-zinc-900 dark:text-[#E5FF66] font-bold" : "text-zinc-400 dark:text-zinc-600"}`}>
-                    {chat.time}
-                  </span>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center mb-0.5">
+                    <h3 className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 truncate tracking-tight">{chat.name}</h3>
+                    <span className={`text-[11px] font-medium ${chat.unread > 0 ? "text-zinc-900 dark:text-[#E5FF66] font-bold" : "text-zinc-400 dark:text-zinc-600"}`}>
+                      {chat.time}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center gap-2">
+                    <p className={`text-[13.5px] truncate flex-1 tracking-tight ${chat.unread > 0 ? "text-zinc-900 dark:text-zinc-300 font-semibold" : "text-zinc-500 dark:text-zinc-400 font-medium"}`}>
+                      {chat.lastMessage}
+                    </p>
+                    {chat.unread > 0 && (
+                      <div className="min-w-[20px] h-5 px-1.5 bg-[#E5FF66] rounded-full flex items-center justify-center shrink-0 shadow-[0_2px_10px_rgba(229,255,102,0.4)]">
+                        <span className="text-[10px] font-black text-black">{chat.unread}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex justify-between items-center gap-2">
-                  <p className={`text-[13.5px] truncate flex-1 tracking-tight ${chat.unread > 0 ? "text-zinc-900 dark:text-zinc-300 font-semibold" : "text-zinc-500 dark:text-zinc-400 font-medium"}`}>
-                    {chat.lastMessage}
-                  </p>
-                  {chat.unread > 0 && (
-                    <div className="min-w-[20px] h-5 px-1.5 bg-[#E5FF66] rounded-full flex items-center justify-center shrink-0 shadow-[0_2px_10px_rgba(229,255,102,0.4)]">
-                      <span className="text-[10px] font-black text-black">{chat.unread}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Link>
-           ))
+              </Link>
+            )})
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
                <div className="w-16 h-16 bg-zinc-50 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-4">

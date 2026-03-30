@@ -308,6 +308,25 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
   const [isLongPressActive, setIsLongPressActive] = useState(false);
   const [isViewOnceEnabled, setIsViewOnceEnabled] = useState(false);
 
+  const [partnerIsOnline, setPartnerIsOnline] = useState(false);
+
+  useEffect(() => {
+    if (!partner) return;
+    const presenceChannel = supabase.channel('online-users');
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState();
+        const activeIds = Object.values(state).flat().map((p: any) => p.user_id);
+        setPartnerIsOnline(activeIds.includes(partner.id));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [supabase, partner]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -772,27 +791,27 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
           </Link>
           <div className="flex items-center gap-3">
             <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="relative cursor-pointer transition active:scale-95 block">
-              <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#E5FF66] bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+              <div className={`w-11 h-11 rounded-full overflow-hidden border-2 transition-colors ${partnerIsOnline ? 'border-[#E5FF66]' : 'border-transparent'} bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center`}>
                 {partner?.avatar_url ? (
                   <Image 
                     src={partner.avatar_url} 
                     alt={partner.full_name || "User"} 
                     width={44} 
                     height={44} 
-                    className="object-cover w-full h-full" 
+                    className={`object-cover w-full h-full transition-opacity ${partnerIsOnline ? 'opacity-100' : 'opacity-80'}`} 
                   />
                 ) : (
                   <User className="w-6 h-6 text-zinc-400 dark:text-zinc-600" />
                 )}
               </div>
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#4ADE80] rounded-full border-2 border-white dark:border-black"></div>
+              <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-[#09090b] transition-colors ${partnerIsOnline ? 'bg-[#4ADE80]' : 'bg-zinc-300 dark:bg-zinc-700'}`}></div>
             </Link>
             <div>
               <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 leading-tight hover:underline cursor-pointer block">
                 {partner?.full_name || partner?.username || "Loading..."}
               </Link>
-              <p className={`text-[11px] font-medium transition-colors ${partnerIsTyping ? "text-primary" : "text-[#4ADE80]"}`}>
-                {partnerIsTyping ? "Typing..." : "Online"}
+              <p className={`text-[11px] font-medium transition-colors ${partnerIsTyping ? "text-primary" : (partnerIsOnline ? "text-[#4ADE80]" : "text-zinc-500 dark:text-zinc-500")}`}>
+                {partnerIsTyping ? "Typing..." : (partnerIsOnline ? "Online" : "Offline")}
               </p>
             </div>
           </div>
