@@ -14,12 +14,12 @@ import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import FeedCardSkeleton from "@/components/skeletons/FeedCardSkeleton";
 import { Loader2, Sparkles } from "lucide-react";
 import Toast from "@/components/Toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
   const router = useRouter();
   const supabase = createClient();
-  const [posts, setPosts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<any>(null);
   const [isPostingOptimistic, setIsPostingOptimistic] = useState(false);
   
@@ -47,61 +47,50 @@ export default function Home() {
   const [userUniId, setUserUniId] = useState<string | undefined>(undefined);
   const uniIdRef = useRef<string | undefined>(undefined);
 
-  const fetchPosts = async (userId: string, universityId?: string) => {
-    // Fetch posts with author info
-    let query = supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles:user_id (username, full_name, avatar_url),
-        universities:university_id (name)
-      `);
-    
-    if (universityId) {
-      query = query.eq('university_id', universityId);
-    }
+  // 🏛️ The "Instant-Switch" Fetch Logic
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['posts', user?.id, userUniId],
+    queryFn: async () => {
+      if (!user?.id || !userUniId) return [];
 
-    const { data: dbPosts, error } = await query.order('created_at', { ascending: false });
+      let query = supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (username, full_name, avatar_url),
+          universities:university_id (name)
+        `);
+      
+      if (userUniId) {
+        query = query.eq('university_id', userUniId);
+      }
 
-    if (dbPosts) {
-      // Fetch user's likes to determine isLiked status
-      const { data: userLikes } = await supabase
-        .from('likes')
-        .select('post_id')
-        .eq('user_id', userId);
+      const { data: dbPosts, error } = await query.order('created_at', { ascending: false });
 
-      const likedPostIds = new Set(userLikes?.map((l: any) => l.post_id) || []);
+      if (error) throw error;
+      if (!dbPosts) return [];
 
-      const processedPosts = (dbPosts || []).map((post: any) => ({
+      // Parallel fetching for likes, bookmarks, and reposts
+      const [userLikes, userBookmarks, userReposts] = await Promise.all([
+        supabase.from('likes').select('post_id').eq('user_id', user.id),
+        supabase.from('bookmarks').select('post_id').eq('user_id', user.id),
+        supabase.from('reposts').select('post_id').eq('user_id', user.id)
+      ]);
+
+      const likedPostIds = new Set(userLikes.data?.map((l: any) => l.post_id) || []);
+      const bookmarkedPostIds = new Set(userBookmarks.data?.map((b: any) => b.post_id) || []);
+      const repostedPostIds = new Set(userReposts.data?.map((r: any) => r.post_id) || []);
+
+      return dbPosts.map((post: any) => ({
         ...post,
-        isLiked: likedPostIds.has(post.id)
-      }));
-
-      // Fetch user's bookmarks to determine isBookmarked status
-      const { data: userBookmarks } = await supabase
-        .from('bookmarks')
-        .select('post_id')
-        .eq('user_id', userId);
-
-      const bookmarkedPostIds = new Set(userBookmarks?.map((b: any) => b.post_id) || []);
-
-      // Fetch user's reposts to determine isReposted status
-      const { data: userReposts } = await supabase
-        .from('reposts')
-        .select('post_id')
-        .eq('user_id', userId);
-
-      const repostedPostIds = new Set(userReposts?.map((r: any) => r.post_id) || []);
-
-      const finalPosts = processedPosts.map((post: any) => ({
-        ...post,
+        isLiked: likedPostIds.has(post.id),
         isBookmarked: bookmarkedPostIds.has(post.id),
         isReposted: repostedPostIds.has(post.id)
       }));
-
-      setPosts(finalPosts);
-    }
-  };
+    },
+    enabled: !!user?.id && !!userUniId,
+    staleTime: 2 * 60 * 1000, // Keep in memory for 2 minutes
+  });
 
   const openDeleteModal = (postId: string) => {
     setSelectedPostForDelete(postId);
@@ -120,8 +109,10 @@ export default function Home() {
 
       if (error) throw error;
 
-      // Optimistic update
-      setPosts(prev => prev.filter((p: any) => p.id !== selectedPostForDelete));
+      // Optimistic cache update
+      queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
+        old?.filter((p: any) => p.id !== selectedPostForDelete)
+      );
       setIsDeleteModalOpen(false);
     } catch (err: any) {
       console.error("Error deleting post:", err.message);
@@ -156,13 +147,10 @@ export default function Home() {
         const uniId = profile.university_id;
         setUserUniId(uniId);
         uniIdRef.current = uniId;
-        await fetchPosts(authUser.id, uniId);
       } catch (err: any) {
         if (err.name !== 'AbortError' && !err.message?.includes('Lock broken')) {
           console.error("Initialization error:", err);
         }
-      } finally {
-        setIsLoading(false);
       }
 
       // Check for optimistic posting state
@@ -170,36 +158,26 @@ export default function Home() {
         const isPosting = sessionStorage.getItem('isPosting');
         if (isPosting === 'true') {
           setIsPostingOptimistic(true);
-          // Fallback: if realtime doesn't fire within 8s (e.g. in WebView APK), clear it manually
           setTimeout(async () => {
             sessionStorage.removeItem('isPosting');
             setIsPostingOptimistic(false);
-            // Also refresh the feed to show the new post
-            const { data: { user: u } } = await supabase.auth.getUser();
-            if (u && uniIdRef.current) {
-              await fetchPosts(u.id, uniIdRef.current);
-            }
+            queryClient.invalidateQueries({ queryKey: ['posts'] });
           }, 8000);
         }
       };
       checkPostingState();
-
     }
 
     checkUserAndInit();
 
-    // Auto-refresh when app comes back into focus (critical for WebView APKs)
+    // Auto-refresh when app comes back into focus
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
-        const { data: { user: u } } = await supabase.auth.getUser();
-        if (u && uniIdRef.current) {
-          await fetchPosts(u.id, uniIdRef.current);
-        }
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // 2. Subscribe to REALTIME post changes outside the async function so we can clean it up
     const postsSubscription = supabase
       .channel('public:posts')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload: any) => {
@@ -207,15 +185,15 @@ export default function Home() {
            sessionStorage.removeItem('isPosting');
            setIsPostingOptimistic(false);
         }
-        if (user && uniIdRef.current) {
-          await fetchPosts(user.id, uniIdRef.current);
-        }
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload: any) => {
-        setPosts(prev => prev.map((p: any) => p.id === payload.new.id ? { ...p, ...payload.new } : p));
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload: any) => {
-        setPosts(prev => prev.filter((p: any) => p.id !== payload.old.id));
+        queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
+          old?.filter((p: any) => p.id !== payload.old.id)
+        );
       })
       .subscribe();
 
@@ -224,7 +202,7 @@ export default function Home() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
 
-  }, [router, supabase, user]);
+  }, [router, supabase, user?.id, userUniId, queryClient]);
 
 
   const handleLike = async (postId: string) => {
@@ -324,8 +302,10 @@ export default function Home() {
         .insert({ post_id: postId, user_id: user.id });
       showToast("Post bookmarked!");
     }
-    // Update local state
-    setPosts(prev => prev.map((p: any) => p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p));
+    // Optimistic UI update
+    queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
+      old?.map((p: any) => p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p)
+    );
   };
 
   const handleRepost = async (postId: string) => {
@@ -342,7 +322,9 @@ export default function Home() {
       
       if (!error) {
         showToast("Repost removed");
-        setPosts(prev => prev.map((p: any) => p.id === postId ? { ...p, isReposted: false } : p));
+        queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
+          old?.map((p: any) => p.id === postId ? { ...p, isReposted: false } : p)
+        );
       }
     } else {
       // Repost
@@ -352,7 +334,9 @@ export default function Home() {
       
       if (!error) {
         showToast("Post reposted!");
-        setPosts(prev => prev.map((p: any) => p.id === postId ? { ...p, isReposted: true } : p));
+        queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
+          old?.map((p: any) => p.id === postId ? { ...p, isReposted: true } : p)
+        );
       } else {
         showToast("Repost failed", "error");
       }
@@ -396,7 +380,7 @@ export default function Home() {
             <FeedCardSkeleton />
           </div>
         ) : posts.length > 0 ? (
-          posts.map((post) => (
+          posts.map((post: any) => (
             <FeedCard
               key={post.id}
               id={post.id}

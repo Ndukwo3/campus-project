@@ -1,0 +1,26 @@
+﻿Alias name: android
+Creation date: Mar 29, 2026
+Entry type: PrivateKeyEntry
+Certificate chain length: 1
+Certificate[1]:
+Owner: CN=Ndukwo Victor, OU=AI Dept, O=NEV Kreation, C=NG
+Issuer: CN=Ndukwo Victor, OU=AI Dept, O=NEV Kreation, C=NG
+Serial number: 74df378281004cee
+Valid from: Sun Mar 29 14:26:36 WAT 2026 until: Mon Dec 30 14:26:36 WAT 2080
+Certificate fingerprints:
+	 SHA1: FA:C2:6C:0C:69:C1:AD:B2:20:4D:F9:88:23:64:6D:AE:45:CD:E6:6A
+	 SHA256: 92:50:0A:B0:80:A8:E2:E9:30:3B:F1:36:E3:96:62:CB:BC:1D:1B:D3:17:5F:00:96:FF:8D:F5:2E:69:6A:9C:15
+Signature algorithm name: SHA256withRSA
+Subject Public Key Algorithm: 2048-bit RSA key
+Version: 3
+
+Extensions: 
+
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: A3 49 7A 9B 08 98 CB 90   CA D2 CD 66 13 35 A0 6B  .Iz........f.5.k
+0010: 67 BF D4 C0                                        g...
+]
+]
+

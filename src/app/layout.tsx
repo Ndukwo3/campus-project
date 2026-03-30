@@ -49,6 +49,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalModals } from "@/components/GlobalModals";
 import FloatingCreateButton from "@/components/FloatingCreateButton";
 import Script from "next/script";
+import Providers from "@/components/Providers";
 
 
 
@@ -80,17 +81,19 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${montserrat.variable} ${geistMono.variable} font-sans antialiased bg-white dark:bg-[#0A0A0A] text-zinc-900 dark:text-zinc-100 transition-colors duration-300`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <GlobalStateLoader />
-          {children}
-          <FloatingCreateButton />
-          <GlobalModals />
-        </ThemeProvider>
+        <Providers>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <GlobalStateLoader />
+            {children}
+            <FloatingCreateButton />
+            <GlobalModals />
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

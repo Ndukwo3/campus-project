@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import Toast from "@/components/Toast";
 import dynamic from "next/dynamic";
+import { useQuery } from "@tanstack/react-query";
 
 const BottomNavigation = dynamic(() => import("../../components/BottomNavigation"), { ssr: false });
 
@@ -18,8 +19,6 @@ export default function ChannelsPage() {
   const router = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState<any>(null);
-  const [communities, setCommunities] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "active" | "unread">("all");
 
@@ -41,20 +40,21 @@ export default function ChannelsPage() {
         return;
       }
       setUser(authUser);
-      fetchChannels(authUser.id);
     }
     init();
   }, [supabase, router]);
 
-  const fetchChannels = async (userId: string) => {
-    setIsLoading(true);
-    try {
+  const { data: communities = [], isLoading } = useQuery({
+    queryKey: ['communities', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data: userMemberships } = await supabase
         .from('group_members')
         .select('group_id, groups (id, name, image_url)')
-        .eq('user_id', userId);
+        .eq('user_id', user.id);
 
-      if (!userMemberships) return;
+      if (!userMemberships) return [];
       const groupIds = userMemberships.map((m: any) => m.group_id);
       
       const { data: channelData } = await supabase
@@ -63,29 +63,25 @@ export default function ChannelsPage() {
         .in('group_id', groupIds)
         .order('name', { ascending: true });
 
-      const grouped = userMemberships.map((membership: any) => {
+      return userMemberships.map((membership: any) => {
         const group = membership.groups as any;
         return {
           ...group,
           channels: (channelData || []).filter((c: any) => c.group_id === group.id)
         };
       }).filter((g: any) => g.channels.length > 0);
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      setCommunities(grouped);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filteredCommunities = communities.map(comm => ({
+  const filteredCommunities = communities.map((comm: any) => ({
     ...comm,
     channels: comm.channels.filter((c: any) => 
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       comm.name.toLowerCase().includes(searchQuery.toLowerCase())
     )
-  })).filter(comm => comm.channels.length > 0);
+  })).filter((comm: any) => comm.channels.length > 0);
 
   // Animation Variants
   // Animation Variants
@@ -203,7 +199,7 @@ export default function ChannelsPage() {
               className="space-y-10"
             >
               <AnimatePresence mode="popLayout">
-                {filteredCommunities.map((community) => (
+                {filteredCommunities.map((community: any) => (
                   <motion.div 
                     variants={itemVariants}
                     layout

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { motion } from "framer-motion";
 import { 
   Loader2, 
   ChevronLeft, 
@@ -16,7 +17,9 @@ import {
 } from "lucide-react";
 
 // Use CDN for the worker to avoid SSR and setup issues in Next.js
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Optimized worker initialization for local bundle loading if possible, or faster unpkg
+// Using .js instead of .mjs for broader browser compatibility
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface PremiumPdfViewerProps {
   url: string;
@@ -99,8 +102,8 @@ export default function PremiumPdfViewer({ url, onClose, title }: PremiumPdfView
       >
         {loading && (
           <div className="flex flex-col items-center justify-center h-full gap-4 opacity-50">
-            <Loader2 size={40} className="animate-spin text-[#E5FF66]" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em]">Decrypting Resource...</p>
+            <Loader2 size={32} className="animate-spin text-[#E5FF66]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#E5FF66]">Preparing Material...</p>
           </div>
         )}
 
@@ -123,22 +126,36 @@ export default function PremiumPdfViewer({ url, onClose, title }: PremiumPdfView
             </button>
           </div>
         ) : (
-          <Document
-            file={url}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            loading={null}
-            className="flex flex-col items-center gap-8 shadow-2xl"
+          <motion.div
+            drag={scale > 1}
+            dragConstraints={{ 
+              left: -500 * scale, 
+              right: 500 * scale, 
+              top: -800 * scale, 
+              bottom: 800 * scale 
+            }}
+            dragElastic={0.05}
+            dragMomentum={true}
+            className="cursor-grab active:cursor-grabbing w-full flex justify-center"
+            style={{ touchAction: scale > 1 ? "none" : "auto" }}
           >
-            <Page 
-              pageNumber={pageNumber} 
-              scale={scale} 
-              width={containerWidth}
-              renderAnnotationLayer={true}
-              renderTextLayer={true}
-              className="rounded-lg overflow-hidden border border-white/5"
-            />
-          </Document>
+            <Document
+              file={url}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={null}
+              className="flex flex-col items-center shadow-2xl"
+            >
+              <Page 
+                pageNumber={pageNumber} 
+                scale={scale} 
+                width={containerWidth}
+                renderAnnotationLayer={true}
+                renderTextLayer={true}
+                className="rounded-lg overflow-hidden border border-white/5"
+              />
+            </Document>
+          </motion.div>
         )}
       </div>
 
@@ -170,7 +187,7 @@ export default function PremiumPdfViewer({ url, onClose, title }: PremiumPdfView
 
       {/* Security Overlay (Subtle Brand Logo) */}
       <div className="fixed bottom-6 right-6 opacity-10 pointer-events-none select-none">
-         <h2 className="text-2xl font-black italic tracking-tighter uppercase whitespace-pre">CAMPUS\HERO</h2>
+         <h2 className="text-2xl font-black italic tracking-tighter uppercase whitespace-pre">CAMPUS HUB</h2>
       </div>
     </div>
   );

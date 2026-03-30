@@ -12,166 +12,123 @@ import { createClient } from "@/lib/supabase";
 
 // Realtime handling will be done here
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 export default function MessagesPage() {
   const supabase = createClient();
   const router = useRouter();
-  const [chats, setChats] = useState<any[]>([]);
-  const [activeUsers, setActiveUsers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-    let lastId = "";
-    const fetchInProgress = { current: false };
+  // 🏛️ The "Instant-Inbox" Engine
+  const { data: chats = [], isLoading } = useQuery({
+    queryKey: ['inbox'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) return [];
 
-    async function fetchMessages() {
-      if (fetchInProgress.current) return;
-      fetchInProgress.current = true;
+      const { data: myConversations, error: convError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
 
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const user = session?.user;
-        if (!user || !isMounted) {
-          if (isMounted) setIsLoading(false);
-          return;
-        }
+      if (convError || !myConversations || myConversations.length === 0) return [];
 
-        // Avoid re-fetching the same data if session hasn't changed unless force
-        if (user.id === lastId && !isLoading) {
-           // Skip if we already have it, unless it's the very first load
-        }
-        lastId = user.id;
+      const conversationIds = myConversations.map((c: any) => c.conversation_id);
 
-        // 1. Get user's conversation list - just IDs to keep it tiny
-        const { data: myConversations, error: convError } = await supabase
+      const [partnersResult, latestMsgsResult] = await Promise.all([
+        supabase
           .from('conversation_participants')
-          .select('conversation_id')
-          .eq('user_id', user.id);
+          .select('conversation_id, profiles(id, username, full_name, avatar_url)')
+          .in('conversation_id', conversationIds)
+          .neq('user_id', user.id),
+        supabase
+          .from('messages')
+          .select('id, conversation_id, content, sender_id, is_read, created_at')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: false })
+      ]);
 
-        if (convError) throw convError;
+      if (!partnersResult.data || !latestMsgsResult.data) return [];
 
-        if (!myConversations || myConversations.length === 0) {
-          if (isMounted) {
-            setChats([]);
-            // Don't return here, still need to fetch friends
-          }
-        } else {
-          const conversationIds = myConversations.map((c: any) => c.conversation_id);
-
-          // 2. Fetch partners and latest messages in PARALLEL
-          const [partnersResult, latestMsgsResult] = await Promise.all([
-            supabase
-              .from('conversation_participants')
-              .select('conversation_id, profiles(id, username, full_name, avatar_url)')
-              .in('conversation_id', conversationIds)
-              .neq('user_id', user.id),
-            supabase
-              .from('messages')
-              .select('id, conversation_id, content, sender_id, is_read, created_at')
-              .in('conversation_id', conversationIds)
-              .order('created_at', { ascending: false })
-          ]);
-
-          if (partnersResult.data && latestMsgsResult.data) {
-             // First, calculate unread counts for each conversation
-             const unreadCounts: Record<string, number> = {};
-             for (const msg of latestMsgsResult.data) {
-               if (!msg.is_read && msg.sender_id !== user.id) {
-                 unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
-               }
-             }
-
-             const builtChats = [];
-             const processedIds = new Set();
-             
-             // Now build the chat items using the latest message for each convo
-             for (const msg of latestMsgsResult.data) {
-               if (!processedIds.has(msg.conversation_id)) {
-                 processedIds.add(msg.conversation_id);
-                 const partner = partnersResult.data.find((p: any) => p.conversation_id === msg.conversation_id)?.profiles;
-                 const partnerData = Array.isArray(partner) ? partner[0] : partner;
-                 
-                 builtChats.push({
-                   id: msg.conversation_id,
-                   partner_id: partnerData?.id,
-                   name: partnerData?.full_name || partnerData?.username || "Unknown Student",
-                   avatar: partnerData?.avatar_url,
-                   lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
-                                : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
-                                : msg.content,
-                   time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                   unread: unreadCounts[msg.conversation_id] || 0,
-                   online: true, 
-                 });
-               }
-             }
-
-             if (isMounted) setChats(builtChats);
-          }
+      const unreadCounts: Record<string, number> = {};
+      for (const msg of latestMsgsResult.data) {
+        if (!msg.is_read && msg.sender_id !== user.id) {
+          unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
         }
-
-        // 3. Fetch Active Friends
-        const { data: friends, error: friendError } = await supabase
-          .from('friends')
-          .select('user_id1, user_id2')
-          .or(`user_id1.eq.${user.id},user_id2.eq.${user.id}`);
-          
-        if (!friendError && friends && friends.length > 0) {
-          const friendIds = friends.map((f: any) => f.user_id1 === user.id ? f.user_id2 : f.user_id1);
-          const { data: friendProfiles } = await supabase
-            .from('profiles')
-            .select('id, full_name, username, avatar_url, last_seen')
-            .in('id', friendIds);
-            
-          if (friendProfiles && isMounted) {
-            const processedActives = friendProfiles.map((p: any) => ({
-              id: p.id,
-              name: p.full_name || p.username,
-              avatar: p.avatar_url,
-              online: p.last_seen ? (new Date().getTime() - new Date(p.last_seen).getTime() < 5 * 60 * 1000) : false
-            }));
-            setActiveUsers(processedActives);
-          }
-        } else if (isMounted) {
-          setActiveUsers([]);
-        }
-
-      } catch (err: any) {
-        if (err.name !== 'AbortError' && !err.message?.includes('Lock broken')) {
-          console.error("Messages Engine Error:", err);
-        }
-      } finally {
-        fetchInProgress.current = false;
-        if (isMounted) setIsLoading(false);
       }
-    }
-    
-    fetchMessages();
-    
-    // Subscribe to all changes in messages table to keep unread counts in sync
+
+      const builtChats = [];
+      const processedIds = new Set();
+      
+      for (const msg of latestMsgsResult.data) {
+        if (!processedIds.has(msg.conversation_id)) {
+          processedIds.add(msg.conversation_id);
+          const partner = partnersResult.data.find((p: any) => p.conversation_id === msg.conversation_id)?.profiles;
+          const partnerData = Array.isArray(partner) ? partner[0] : partner;
+          
+          builtChats.push({
+            id: msg.conversation_id,
+            partner_id: partnerData?.id,
+            name: partnerData?.full_name || partnerData?.username || "Unknown Student",
+            avatar: partnerData?.avatar_url,
+            lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
+                         : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
+                         : msg.content,
+            time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            unread: unreadCounts[msg.conversation_id] || 0,
+            online: true, 
+          });
+        }
+      }
+      return builtChats;
+    },
+    staleTime: 60 * 1000,
+  });
+
+  const { data: activeUsers = [] } = useQuery({
+    queryKey: ['active-users'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data: friends, error: friendError } = await supabase
+        .from('friends')
+        .select('user_id1, user_id2')
+        .or(`user_id1.eq.${user.id},user_id2.eq.${user.id}`);
+        
+      if (friendError || !friends || friends.length === 0) return [];
+
+      const friendIds = friends.map((f: any) => f.user_id1 === user.id ? f.user_id2 : f.user_id1);
+      const { data: friendProfiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, avatar_url, last_seen')
+        .in('id', friendIds);
+        
+      if (!friendProfiles) return [];
+
+      return friendProfiles.map((p: any) => ({
+        id: p.id,
+        name: p.full_name || p.username,
+        avatar: p.avatar_url,
+        online: p.last_seen ? (new Date().getTime() - new Date(p.last_seen).getTime() < 5 * 60 * 1000) : false
+      }));
+    },
+    staleTime: 30 * 1000,
+  });
+
+  useEffect(() => {
     const msgChannel = supabase.channel('inbox-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-         fetchMessages();
+         queryClient.invalidateQueries({ queryKey: ['inbox'] });
       })
       .subscribe();
 
-    // Listen for auth changes to re-fetch
-    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((event: string) => {
-        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-            fetchMessages();
-        }
-    });
-      
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(msgChannel);
-      authListener.unsubscribe();
-    };
-  }, [supabase]);
+  }, [supabase, queryClient]);
 
   const filteredChats = chats.filter(c => 
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -315,7 +272,7 @@ export default function MessagesPage() {
         
         {activeUsers.length > 0 ? (
           <div className="flex gap-5 overflow-x-auto px-6 pb-2 scrollbar-hide">
-            {activeUsers.map((user) => (
+            {activeUsers.map((user: any) => (
               <div 
                 key={user.id} 
                 onClick={() => handleStartChat(user.id)}
