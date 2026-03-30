@@ -223,9 +223,22 @@ export default function LibraryPage() {
               universities={universities} 
               isLoading={isLoading}
               selectedId={selectedUni?.id}
-              onSelect={(uni) => { 
+              onSelect={async (uni) => { 
                 setSelectedUni(uni); 
-                handleNext("college");
+                setIsLoading(true);
+                const { data } = await supabase
+                  .from('colleges')
+                  .select('id')
+                  .eq('university_id', uni.id)
+                  .limit(1);
+                
+                setIsLoading(false);
+                if (data && data.length > 0) {
+                  handleNext("college");
+                } else {
+                  setSelectedCollege(null);
+                  handleNext("department");
+                }
               }} 
             />
           )}

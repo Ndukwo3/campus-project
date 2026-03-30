@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import Toast from "@/components/Toast";
 import FeedCard from "@/components/FeedCard";
+import ConnectionsModal from "@/components/ConnectionsModal";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function ProfilePage() {
   const [currentUserLikes, setCurrentUserLikes] = useState<Set<string>>(new Set());
   const [currentUserBookmarks, setCurrentUserBookmarks] = useState<Set<string>>(new Set());
   const [currentUserReposts, setCurrentUserReposts] = useState<Set<string>>(new Set());
+  const [isConnectionsOpen, setIsConnectionsOpen] = useState(false);
   
   // Toast State
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
@@ -498,7 +500,10 @@ export default function ProfilePage() {
           <span className="text-[10px] text-zinc-400 dark:text-zinc-600 font-black uppercase tracking-[0.2em]">Posts</span>
         </div>
         <div className="w-[1px] h-10 bg-zinc-100 dark:bg-zinc-800" />
-        <div className="flex flex-col items-center gap-1 group cursor-pointer w-1/2">
+        <div 
+          onClick={() => setIsConnectionsOpen(true)}
+          className="flex flex-col items-center gap-1 group cursor-pointer w-1/2"
+        >
           <span className="text-2xl font-black text-black dark:text-white group-hover:scale-110 transition-transform">{connectionCount}</span>
           <span className="text-[10px] text-zinc-400 dark:text-zinc-600 font-black uppercase tracking-[0.2em]">Connections</span>
         </div>
@@ -1144,6 +1149,13 @@ export default function ProfilePage() {
 
       {/* Bottom Navigation */}
       <BottomNavigation />
+      
+      <ConnectionsModal 
+        isOpen={isConnectionsOpen}
+        onClose={() => setIsConnectionsOpen(false)}
+        userId={profile?.id}
+        userName={profile?.full_name || "User"}
+      />
       
       {/* Premium Crop Modal */}
       <AnimatePresence>

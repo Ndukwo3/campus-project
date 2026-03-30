@@ -1,193 +1,211 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Loader2, 
   ChevronLeft, 
   ChevronRight, 
   ZoomIn, 
   ZoomOut, 
-  RotateCcw,
-  X,
-  AlertCircle
+  AlertCircle,
+  ExternalLink,
+  RotateCw
 } from "lucide-react";
 
-// Use CDN for the worker to avoid SSR and setup issues in Next.js
-// Optimized worker initialization for local bundle loading if possible, or faster unpkg
-// Using .js instead of .mjs for broader browser compatibility
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Ensure reliable PDF worker loading matching the exact react-pdf version
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-interface PremiumPdfViewerProps {
+interface IntegratedPdfViewerProps {
   url: string;
   onClose: () => void;
   title?: string;
 }
 
-export default function PremiumPdfViewer({ url, onClose, title }: PremiumPdfViewerProps) {
+export default function IntegratedPdfViewer({ url, onClose, title }: IntegratedPdfViewerProps) {
   const [numPages, setNumPages] = useState<number>(0);
-  const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(400);
+  const [rotation, setRotation] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Pinch-to-zoom tracking
+  const [touchStartDist, setTouchStartDist] = useState(0);
+  const [lastScale, setLastScale] = useState(1);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setContainerWidth(Math.min(window.innerWidth - 32, 416));
-      
-      const handleResize = () => {
-         setContainerWidth(Math.min(window.innerWidth - 32, 416));
-      };
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }
+    const updateWidth = () => {
+      setContainerWidth(Math.min(window.innerWidth, 500));
+    };
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
   }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].pageX - e.touches[1].pageX,
+        e.touches[0].pageY - e.touches[1].pageY
+      );
+      setTouchStartDist(dist);
+      setLastScale(scale);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchStartDist > 0) {
+      const dist = Math.hypot(
+        e.touches[0].pageX - e.touches[1].pageX,
+        e.touches[0].pageY - e.touches[1].pageY
+      );
+      const newScale = lastScale * (dist / touchStartDist);
+      setScale(Math.min(Math.max(newScale, 0.5), 4.0));
+    }
+  };
+
+  const handleTouchEnd = () => setTouchStartDist(0);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
     setLoading(false);
+    setError(null);
   }
 
   function onDocumentLoadError(err: Error) {
     console.error("PDF Load Error:", err);
-    setError("Unable to load document. Please check your internet or try again later.");
+    setError("Failed to initialize document reader within the app.");
     setLoading(false);
   }
 
-  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.25, 3.0));
-  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5));
-  const handleResetZoom = () => setScale(1.0);
-
   return (
-    <div className="fixed inset-y-0 left-1/2 -translate-x-1/2 w-full max-w-md z-[100] bg-black/95 backdrop-blur-xl flex flex-col overflow-hidden text-white safe-area-inset border-x border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-      <div className="p-3 sm:p-4 flex items-center gap-2 border-b border-white/10 bg-zinc-950/50 backdrop-blur-md">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-zinc-950 text-white font-sans overflow-hidden select-none">
+      {/* Immersive Reader Header */}
+      <motion.header 
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-zinc-950/80 backdrop-blur-2xl absolute top-0 left-0 right-0 z-30"
+      >
+        <div className="flex items-center gap-4 flex-1 min-w-0">
           <button 
             onClick={onClose}
-            className="w-10 h-10 shrink-0 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all"
+            className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all border border-white/5"
           >
             <ChevronLeft size={20} />
           </button>
-          <div className="flex-1 min-w-0 pr-1">
-            <h3 className="text-sm font-black uppercase italic tracking-tight truncate leading-none">
-              {title || "Academic Resource"}
+          <div className="flex-1 min-w-0 max-w-[200px]">
+            <h3 className="text-xs font-black uppercase italic tracking-tighter truncate leading-none text-white/90">
+              {title || "Class Resource"}
             </h3>
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5 truncate">
-              {pageNumber} of {numPages || "--"} Pages
+            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-1.5 leading-none">
+              SECURE VIEW · {numPages || "--"} PAGES
             </p>
           </div>
         </div>
 
-        <div className="flex items-center shrink-0 bg-white/5 p-1 rounded-2xl border border-white/5">
-          <button onClick={handleZoomOut} className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center active:scale-90 transition-all text-zinc-400 hover:text-white">
-            <ZoomOut size={16} />
+        <div className="flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/5 scale-90 sm:scale-100">
+          <button 
+            onClick={() => setRotation(r => (r + 90) % 360)}
+            className="w-8 h-8 rounded-xl hover:bg-white/10 flex items-center justify-center text-zinc-500"
+          >
+            <RotateCw size={14} />
           </button>
-          <button onClick={handleResetZoom} className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center active:scale-90 transition-all text-zinc-500 hover:text-white">
-            <RotateCcw size={14} />
+          <div className="w-[1px] h-4 bg-white/10 mx-1" />
+          <button onClick={() => setScale(s => Math.max(s - 0.25, 0.5))} className="w-8 h-8 rounded-xl hover:bg-white/10 flex items-center justify-center text-zinc-500">
+            <ZoomOut size={14} />
           </button>
-          <button onClick={handleZoomIn} className="w-9 h-9 rounded-xl hover:bg-white/10 flex items-center justify-center active:scale-90 transition-all text-[#E5FF66]">
-            <ZoomIn size={16} />
+          <div className="px-2 text-[10px] font-black tabular-nums">{Math.round(scale * 100)}%</div>
+          <button onClick={() => setScale(s => Math.min(s + 0.25, 4.0))} className="w-8 h-8 rounded-xl hover:bg-white/10 flex items-center justify-center text-[#E5FF66]">
+            <ZoomIn size={14} />
           </button>
         </div>
-      </div>
+      </motion.header>
 
-      {/* Main Content Area */}
+      {/* Reader Engine */}
       <div 
-        className="flex-1 overflow-auto scrollbar-hide py-10 px-4 flex flex-col items-center bg-zinc-900/50"
-        onContextMenu={(e) => e.preventDefault()} // Security
+        ref={containerRef}
+        className="flex-1 overflow-auto bg-zinc-950 pt-20 pb-32 px-4 flex flex-col items-center scrollbar-hide"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onContextMenu={(e) => e.preventDefault()}
       >
         {loading && (
-          <div className="flex flex-col items-center justify-center h-full gap-4 opacity-50">
+          <div className="flex flex-col items-center justify-center h-full gap-4 opacity-40">
             <Loader2 size={32} className="animate-spin text-[#E5FF66]" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#E5FF66]">Preparing Material...</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E5FF66] animate-pulse">Initializing Reader...</p>
           </div>
         )}
 
         {error ? (
-          <div className="flex flex-col items-center justify-center h-full gap-6 max-w-xs text-center">
-            <div className="w-16 h-16 rounded-3xl bg-red-500/10 flex items-center justify-center text-red-500">
-              <AlertCircle size={32} />
+          <div className="flex flex-col items-center justify-center h-full gap-10 text-center max-w-[320px]">
+            <div className="w-24 h-24 rounded-[40px] bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20">
+              <AlertCircle size={44} />
             </div>
-            <div className="space-y-2">
-              <h4 className="font-black uppercase italic">Viewer Encountered Error</h4>
+            <div className="space-y-4">
+              <h4 className="text-xl font-black uppercase italic tracking-tighter">Reader Encountered Error</h4>
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-relaxed">
                 {error}
               </p>
+              <a 
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  // If we open externally, we can also close the viewer to return.
+                  onClose();
+                }}
+                className="mt-6 flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 transition-all text-white px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest w-full border border-white/5 active:scale-95"
+              >
+                <ExternalLink size={16} /> Open Document Externally
+              </a>
             </div>
-            <button 
-              onClick={onClose}
-              className="px-8 py-3 bg-white text-black rounded-2xl text-[10px] font-black uppercase tracking-widest"
-            >
-              Try Again
-            </button>
           </div>
         ) : (
-          <motion.div
-            drag={scale > 1}
-            dragConstraints={{ 
-              left: -500 * scale, 
-              right: 500 * scale, 
-              top: -800 * scale, 
-              bottom: 800 * scale 
+          <div 
+            className="relative will-change-transform transition-transform duration-300 ease-out pb-32"
+            style={{ 
+              transform: `rotate(${rotation}deg)`,
+              transformOrigin: 'center center'
             }}
-            dragElastic={0.05}
-            dragMomentum={true}
-            className="cursor-grab active:cursor-grabbing w-full flex justify-center"
-            style={{ touchAction: scale > 1 ? "none" : "auto" }}
           >
             <Document
               file={url}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
               loading={null}
-              className="flex flex-col items-center shadow-2xl"
+              className="flex flex-col items-center gap-6"
             >
-              <Page 
-                pageNumber={pageNumber} 
-                scale={scale} 
-                width={containerWidth}
-                renderAnnotationLayer={true}
-                renderTextLayer={true}
-                className="rounded-lg overflow-hidden border border-white/5"
-              />
+              {Array.from(new Array(numPages), (el, index) => (
+                <motion.div
+                  key={`page_${index + 1}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(index * 0.05, 0.5) }}
+                  className="shadow-[0_0_80px_rgba(0,0,0,0.6)] rounded-sm overflow-hidden"
+                >
+                  <Page 
+                    pageNumber={index + 1} 
+                    scale={scale} 
+                    width={containerWidth - 32}
+                    renderAnnotationLayer={true}
+                    renderTextLayer={true}
+                    loading={<div className="bg-white/5 animate-pulse" style={{ width: containerWidth-32, height: (containerWidth-32)*1.4 }} />}
+                  />
+                </motion.div>
+              ))}
             </Document>
-          </motion.div>
+          </div>
         )}
       </div>
 
-      {/* Navigation Controls */}
-      {!loading && !error && numPages > 0 && (
-        <div className="p-6 pb-10 flex items-center justify-center gap-6 bg-gradient-to-t from-black to-transparent">
-          <button 
-            disabled={pageNumber <= 1}
-            onClick={() => setPageNumber(prev => prev - 1)}
-            className="w-14 h-14 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center disabled:opacity-20 active:scale-90 transition-all group"
-          >
-            <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
-          </button>
-
-          <div className="px-8 py-3 rounded-2xl bg-zinc-950 border border-white/5 flex flex-col items-center shadow-lg">
-             <span className="text-[14px] font-black italic">{pageNumber} <span className="text-zinc-500 text-[10px] not-italic">/ {numPages}</span></span>
-             <span className="text-[8px] font-black text-zinc-600 uppercase tracking-tighter">Swipe / Tap to Page</span>
-          </div>
-
-          <button 
-            disabled={pageNumber >= numPages}
-            onClick={() => setPageNumber(prev => prev + 1)}
-            className="w-14 h-14 rounded-full bg-[#E5FF66] text-black flex items-center justify-center disabled:opacity-20 active:scale-90 transition-all group"
-          >
-            <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-      )}
-
-      {/* Security Overlay (Subtle Brand Logo) */}
-      <div className="fixed bottom-6 right-6 opacity-10 pointer-events-none select-none">
-         <h2 className="text-2xl font-black italic tracking-tighter uppercase whitespace-pre">CAMPUS HUB</h2>
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] select-none scale-150 overflow-hidden">
+        <h2 className="text-[120px] font-black italic -rotate-12 tracking-tighter whitespace-pre text-center">CAMPUS HUB PROTECTED</h2>
       </div>
     </div>
   );
