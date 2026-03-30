@@ -4,8 +4,48 @@ import { Home, MessageSquare, Plus, Search, User, BookOpen } from "lucide-react"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 export default function BottomNavigation() {
   const pathname = usePathname();
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  // 🏛️ The "Instant-Alert" Engine
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['unread-messages'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) return 0;
+
+      // Fetch unread messages NOT from this user
+      const { count, error } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_read', false)
+        .neq('sender_id', user.id);
+
+      if (error) return 0;
+      return count || 0;
+    },
+    refetchInterval: 30000, // Refresh every 30s as fallback
+  });
+
+  // 🛰️ Real-time Listener for the badge
+  useEffect(() => {
+    const channel = supabase.channel('unread-badge')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['unread-messages'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, queryClient]);
 
   const isHome = pathname === "/";
   const isMessages = pathname === "/messages";
@@ -51,9 +91,16 @@ export default function BottomNavigation() {
         <Link 
           href="/messages" 
           prefetch={true}
-          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition-all duration-300 ${isMessages ? "text-zinc-900 dark:text-zinc-100 scale-110" : "text-zinc-400 hover:text-zinc-600"}`}
+          className={`flex flex-col items-center justify-center gap-1.5 w-12 transition-all duration-300 relative ${isMessages ? "text-zinc-900 dark:text-zinc-100 scale-110" : "text-zinc-400 hover:text-zinc-600"}`}
         >
-          <MessageSquare size={22} strokeWidth={isMessages ? 2.5 : 2} />
+          <div className="relative">
+            <MessageSquare size={22} strokeWidth={isMessages ? 2.5 : 2} />
+            {unreadCount > 0 && (
+              <div className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-black dark:bg-zinc-100 rounded-full flex items-center justify-center border-2 border-white dark:border-black animate-in zoom-in duration-300">
+                <span className="text-[9px] font-black text-[#E5FF66] dark:text-black leading-none">{unreadCount}</span>
+              </div>
+            )}
+          </div>
           <div className={`h-1 w-1 rounded-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-300 ${isMessages ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
         
