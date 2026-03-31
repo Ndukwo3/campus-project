@@ -37,7 +37,10 @@ export const metadata: Metadata = {
 import type { Viewport } from 'next'
 
 export const viewport: Viewport = {
-  themeColor: '#0A0A0A',
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -50,6 +53,7 @@ import { GlobalModals } from "@/components/GlobalModals";
 import FloatingCreateButton from "@/components/FloatingCreateButton";
 import Script from "next/script";
 import Providers from "@/components/Providers";
+import ThemeColorUpdater from "@/components/ThemeColorUpdater";
 
 
 
@@ -88,6 +92,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <ThemeColorUpdater />
             <GlobalStateLoader />
             {children}
             <FloatingCreateButton />
