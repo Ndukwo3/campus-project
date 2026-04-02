@@ -395,8 +395,9 @@ export default function SearchPage() {
                   <h2 className="text-[17px] font-black tracking-tight text-zinc-900 dark:text-zinc-100">
                     {searchQuery ? "Univas Results" : "People you may know"}
                   </h2>
-                  <link href="#" className="flex items-center gap-1 text-[11px] font-black text-zinc-400 dark:text-zinc-600 hover:text-black dark:hover:text-white transition-colors" />
+                  <button className="flex items-center gap-1 text-[11px] font-black text-zinc-400 dark:text-zinc-600 hover:text-black dark:hover:text-white transition-colors">
                     REFRESH <Users size={12} />
+                  </button>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <AnimatePresence mode="popLayout">
@@ -479,7 +480,7 @@ export default function SearchPage() {
               <section>
                 <div className="flex items-center justify-between mb-5 px-1">
                   <h2 className="text-[17px] font-black tracking-tight text-zinc-900 dark:text-zinc-100">Communities</h2>
-                  <Link href="/campus" className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white">SEE MAP</Link>
+                  <Link href="/univas" className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white">SEE MAP</Link>
                 </div>
                 <div className="grid grid-cols-2 gap-4 pb-12">
                   <AnimatePresence>

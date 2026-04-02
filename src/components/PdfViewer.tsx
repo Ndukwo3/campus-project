@@ -5,7 +5,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2,
   ChevronLeft,
@@ -24,6 +24,7 @@ interface IntegratedPdfViewerProps {
   url: string;
   onClose: () => void;
   title?: string;
+  courseCode?: string;
 }
 
 // Zoom controls component inside TransformWrapper context
@@ -60,7 +61,7 @@ function ZoomControls({ rotation, onRotate }: { rotation: number; onRotate: () =
   );
 }
 
-export default function IntegratedPdfViewer({ url, onClose, title }: IntegratedPdfViewerProps) {
+export default function IntegratedPdfViewer({ url, onClose, title, courseCode }: IntegratedPdfViewerProps) {
   const [numPages, setNumPages] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,8 +77,8 @@ export default function IntegratedPdfViewer({ url, onClose, title }: IntegratedP
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-    setNumPages(numPages);
+  async function onDocumentLoadSuccess(pdf: any) {
+    setNumPages(pdf.numPages);
     setLoading(false);
     setError(null);
   }
@@ -215,6 +216,7 @@ export default function IntegratedPdfViewer({ url, onClose, title }: IntegratedP
                 </TransformComponent>
               )}
             </div>
+
           </>
         )}
       </TransformWrapper>

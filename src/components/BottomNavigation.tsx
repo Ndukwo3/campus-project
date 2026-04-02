@@ -51,7 +51,7 @@ export default function BottomNavigation() {
   const isMessages = pathname === "/messages";
   const isProfile = pathname === "/profile";
   const isSearch = pathname === "/search";
-  const isUnivas = pathname === "/campus";
+  const isUnivas = pathname === "/univas";
 
   return (
     <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 dark:bg-black/80 backdrop-blur-xl border-t border-zinc-100/50 dark:border-zinc-800/50 z-50 pb-[env(safe-area-inset-bottom)] transition-colors">
@@ -79,7 +79,7 @@ export default function BottomNavigation() {
 
         {/* Univas */}
         <Link 
-          href="/campus" 
+          href="/univas" 
           prefetch={true}
           className={`flex flex-col items-center justify-center gap-1.5 w-12 transition-all duration-300 ${isUnivas ? "text-zinc-900 dark:text-zinc-100 scale-110" : "text-zinc-400 hover:text-zinc-600"}`}
         >

@@ -44,9 +44,9 @@ export default function AdminOverviewPage() {
 
   const statCards = [
     { icon: <Users size={24} />, label: "Total Students", value: stats?.totalUsers || 0, color: "text-blue-500", bg: "bg-blue-500/10", href: "/admin/users" },
-    { icon: <School size={24} />, label: "Universities", value: stats?.totalUniversities || 0, color: "text-[#E5FF66]", bg: "bg-[#E5FF66]/10", href: "/admin/campus" },
-    { icon: <BookOpen size={24} />, label: "Departments", value: stats?.totalDepartments || 0, color: "text-purple-500", bg: "bg-purple-500/10", href: "/admin/campus" },
-    { icon: <Activity size={24} />, label: "Approved Resources", value: stats?.totalResources || 0, color: "text-emerald-500", bg: "bg-emerald-500/10", href: "/admin/campus" },
+    { icon: <School size={24} />, label: "Universities", value: stats?.totalUniversities || 0, color: "text-[#E5FF66]", bg: "bg-[#E5FF66]/10", href: "/admin/univas" },
+    { icon: <BookOpen size={24} />, label: "Departments", value: stats?.totalDepartments || 0, color: "text-purple-500", bg: "bg-purple-500/10", href: "/admin/univas" },
+    { icon: <Activity size={24} />, label: "Approved Resources", value: stats?.totalResources || 0, color: "text-emerald-500", bg: "bg-emerald-500/10", href: "/admin/univas" },
   ];
 
   return (

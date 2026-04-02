@@ -86,7 +86,7 @@ export default function AIAssistantPage() {
       {/* Premium Glass Header */}
       <div className="sticky top-0 z-30 bg-zinc-900 px-4 py-5 flex items-center justify-between border-b border-white/10 shadow-lg">
         <div className="flex items-center gap-3">
-          <Link href="/campus" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors active:scale-95 text-white">
+          <Link href="/univas" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors active:scale-95 text-white">
             <ArrowLeft size={20} />
           </Link>
           <div className="flex flex-col">

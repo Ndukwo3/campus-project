@@ -10,12 +10,10 @@ export default function SignupPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   const [showPassword, setShowPassword] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +25,7 @@ export default function SignupPage() {
 
     try {
       const { data, error: signupError } = await supabase.auth.signUp({
-        email: authMethod === "email" ? email : `${phone}@univas.app`, // Fallback for phone-like signup in MVP
+        email: email,
         password,
         options: {
           data: {
@@ -84,27 +82,7 @@ export default function SignupPage() {
         <h1 className="text-3xl font-black text-center mb-2 tracking-tight uppercase">Create Account</h1>
         <p className="text-zinc-500 dark:text-zinc-400 text-center mb-8 font-bold text-[13px] uppercase tracking-widest">Join <span className="text-zinc-900 dark:text-[#E2FF3D] font-black italic underline decoration-[#E5FF66] decoration-4 underline-offset-4">Univas</span></p>
 
-        {/* Toggle Pill */}
-        <div className="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-full mb-8 relative">
-          <div
-            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[#E5FF66] rounded-full transition-transform duration-300 ease-in-out ${authMethod === "email" ? "translate-x-0" : "translate-x-full"
-              }`}
-          />
-          <button
-            onClick={() => setAuthMethod("email")}
-            className={`flex-1 py-3.5 text-sm font-black rounded-full z-10 transition-colors ${authMethod === "email" ? "text-zinc-900" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
-              }`}
-          >
-            Email
-          </button>
-          <button
-            onClick={() => setAuthMethod("phone")}
-            className={`flex-1 py-3.5 text-sm font-black rounded-full z-10 transition-colors ${authMethod === "phone" ? "text-zinc-900" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
-              }`}
-          >
-            Phone number
-          </button>
-        </div>
+
 
         <form onSubmit={handleSignup}>
           {/* Form Group - Name */}
@@ -133,31 +111,18 @@ export default function SignupPage() {
             </div>
           </div>
 
-          {/* Form Group - Email/Phone */}
+          {/* Form Group - Email */}
           <div className="mb-6">
-            <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">
-              {authMethod === "email" ? "Email" : "Phone number"}
-            </label>
+            <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Email</label>
             <div className="relative">
-              {authMethod === "email" ? (
-                <input
-                  type="email"
-                  placeholder="johndoe@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-bold text-black dark:text-white border border-transparent dark:border-zinc-800"
-                />
-              ) : (
-                <input
-                  type="tel"
-                  placeholder="+1 (555) 000-0000"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-bold text-black dark:text-white border border-transparent dark:border-zinc-800"
-                />
-              )}
+              <input
+                type="email"
+                placeholder="johndoe@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#E5FF66]/50 transition-all font-bold text-black dark:text-white border border-transparent dark:border-zinc-800"
+              />
             </div>
           </div>
 

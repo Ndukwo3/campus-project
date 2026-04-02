@@ -14,7 +14,7 @@ import Toast from "@/components/Toast";
 import dynamic from "next/dynamic";
 
 const BottomNavigation = dynamic(() => import("../../components/BottomNavigation"), { ssr: false });
-const PdfViewer = dynamic(() => import("../../components/PdfViewer"), { 
+const PdfViewer = dynamic<{ url: string; onClose: () => void; title?: string; courseCode?: string }>(() => import("../../components/PdfViewer"), { 
   ssr: false,
   loading: () => (
     <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
@@ -607,7 +607,7 @@ function ResourceHub({
 }) {
   const [resources, setResources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewingPdf, setViewingPdf] = useState<{url: string, title: string} | null>(null);
+  const [viewingPdf, setViewingPdf] = useState<{url: string, title: string, courseCode?: string} | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const supabase = createClient();
   const router = useRouter();
@@ -718,7 +718,7 @@ function ResourceHub({
                   </div>
                 </div>
                 <button 
-                  onClick={() => setViewingPdf({ url: resource.file_url, title: resource.title })}
+                  onClick={() => setViewingPdf({ url: resource.file_url, title: resource.title, courseCode: resource.course_code })}
                   className="px-6 py-3 bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-90 transition-all hover:rotate-1"
                 >
                   View PDF
@@ -745,6 +745,7 @@ function ResourceHub({
         <PdfViewer 
           url={viewingPdf.url} 
           title={viewingPdf.title} 
+          courseCode={viewingPdf.courseCode}
           onClose={() => setViewingPdf(null)} 
         />
       )}

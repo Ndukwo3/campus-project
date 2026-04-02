@@ -45,14 +45,18 @@
 
 ## Phase 5 — Study Groups
 
-- [ ] Group Management
-  - [ ] Create and join academic groups
-  - [ ] Group member list
-  - [ ] Realtime group chat
+- [x] Group Management
+  - [x] Create and join academic groups
+  - [x] Group member list
+  - [x] Realtime group chat
 
 ## Phase 6 — AI Academic Assistant
 
 - [x] AI Integration
+  - [x] Create `src/components/LibraryAiAssistant.tsx`
+  - [x] Update `src/app/library/page.tsx` to pass `course_code`
+  - [x] Update `src/components/PdfViewer.tsx` with AI trigger and panel
+  - [x] Verify AI assistant UI and "flow up" animation
   - [x] Integrate external AI API (using secure server-side env vars)
   - [x] Interface for asking academic questions
   - [x] Support generating explanations, study summaries, and quick revision help
