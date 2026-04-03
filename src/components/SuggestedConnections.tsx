@@ -44,7 +44,7 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
         .or(`user_id1.eq.${userId},user_id2.eq.${userId}`);
 
 
-      const friendIds = new Set(friendsData?.flatMap(f => [f.user_id1, f.user_id2]) || []);
+      const friendIds = new Set(friendsData?.flatMap((f: { user_id1: string; user_id2: string }) => [f.user_id1, f.user_id2]) || []);
       friendIds.add(userId);
 
 
