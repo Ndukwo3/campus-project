@@ -95,8 +95,8 @@ export default function RootLayout({
             <ThemeColorUpdater />
             <GlobalStateLoader />
             {children}
-            <FloatingCreateButton />
             <GlobalModals />
+
           </ThemeProvider>
         </Providers>
       </body>

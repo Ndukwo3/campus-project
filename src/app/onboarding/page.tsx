@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, ChevronDown, Check, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import { ArrowLeft, Check, Loader2, User, UserPlus, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type UniversityType = "Federal" | "State" | "Private";
 
@@ -13,8 +15,12 @@ const LEVELS = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level",
 export default function OnboardingPage() {
   const router = useRouter();
   const supabase = createClient();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState(1);
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [uniType, setUniType] = useState<UniversityType>("Federal");
   const [universities, setUniversities] = useState<any[]>([]);
   const [selectedUni, setSelectedUni] = useState("");
@@ -26,12 +32,99 @@ export default function OnboardingPage() {
   const [username, setUsername] = useState("");
   const [isCompleting, setIsCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Suggested Connections States (Moved here for Step 4)
+  const [connectingIds, setConnectingIds] = useState<Set<string>>(new Set());
+  const universityId = selectedUni; // Just to keep the query clean
+  
+  const { data: suggestions = [], isLoading: isLoadingSuggestions } = useQuery({
+    queryKey: ['suggested-connections', selectedUni],
+    queryFn: async () => {
+      if (!selectedUni || step !== 4) return [];
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data: friendsData } = await supabase
+        .from('friends')
+        .select('user_id1, user_id2')
+        .or(`user_id1.eq.${user.id},user_id2.eq.${user.id}`);
+
+      const friendIds = new Set(friendsData?.flatMap((f: any) => [f.user_id1, f.user_id2]) || []);
+      friendIds.add(user.id);
+
+      const { data: admins } = await supabase.from('profiles').select('*').eq('role', 'admin').limit(3);
+      const { data: students } = await supabase.from('profiles')
+        .select('*')
+        .eq('university_id', selectedUni)
+        .neq('role', 'super_admin')
+        .neq('role', 'admin')
+        .limit(20);
+
+      let studentList = students || [];
+      if (studentList.length < 5) {
+        const { data: globalUsers } = await supabase.from('profiles')
+           .select('*')
+           .neq('role', 'super_admin')
+           .neq('role', 'admin')
+           .neq('university_id', selectedUni)
+           .limit(10);
+        studentList = [...studentList, ...(globalUsers || [])];
+      }
+
+      const filteredStudents = studentList.filter((u: any) => !friendIds.has(u.id));
+      const filteredAdmins = (admins || []).filter((u: any) => !friendIds.has(u.id));
+      
+      const seen = new Set();
+      const uniqueStudents = filteredStudents.filter((u: any) => {
+         if (seen.has(u.id)) return false;
+         seen.add(u.id);
+         return true;
+      });
+
+      return [...filteredAdmins, ...uniqueStudents.sort(() => 0.5 - Math.random()).slice(0, 6)];
+    },
+    enabled: step === 4 && !!selectedUni,
+  });
+
+  const handleConnect = async (targetId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    setConnectingIds(prev => new Set(prev).add(targetId));
+    try {
+      await supabase.from('friends').insert({ user_id1: user.id, user_id2: targetId });
+      queryClient.setQueryData(['suggested-connections', selectedUni], (old: any) => old?.filter((u: any) => u.id !== targetId));
+
+    } catch (err) {
+      console.error("Connection failed:", err);
+    } finally {
+      setConnectingIds(prev => {
+        const next = new Set(prev);
+        next.delete(targetId);
+        return next;
+      });
+    }
+  };
+
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setError("Your session has expired. Please log in again to continue.");
+      } else {
+        // Pre-fill from metadata if available (for Google users)
+        const metadata = session.user.user_metadata || {};
+        if (metadata.first_name) setFirstName(metadata.first_name);
+        else if (metadata.given_name) setFirstName(metadata.given_name);
+        
+        if (metadata.last_name) setLastName(metadata.last_name);
+        else if (metadata.family_name) setLastName(metadata.family_name);
+        
+        if (metadata.full_name && (!metadata.first_name && !metadata.given_name)) {
+             setFirstName(metadata.full_name.split(' ')[0] || "");
+             setLastName(metadata.full_name.split(' ').slice(1).join(' ') || "");
+        }
       }
     };
     checkUser();
@@ -124,9 +217,9 @@ export default function OnboardingPage() {
         .upsert({
           id: user.id,
           username: username.startsWith('@') ? username : `@${username}`,
-          first_name: metadata.first_name || null,
-          last_name: metadata.last_name || null,
-          full_name: metadata.full_name || "New Student",
+          first_name: firstName,
+          last_name: lastName,
+          full_name: `${firstName} ${lastName}`.trim(),
           university_id: university.id,
           department_id: department.id,
           level: selectedLevel,
@@ -143,11 +236,40 @@ export default function OnboardingPage() {
       });
       if (notificationError) console.error("Could not send welcome notification (table might not exist yet):", notificationError);
 
-      // Finish animation and redirect
-      setTimeout(() => {
-        router.push("/");
-      }, 2000);
+      // 2. Automatically connect with Super Admin
+      const { data: superAdmin } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'super_admin')
+        .single();
 
+      if (superAdmin && superAdmin.id !== user.id) {
+        // Create the official friendship - ensuring user_id1 < user_id2 for the constraint
+        const [id1, id2] = [user.id, superAdmin.id].sort();
+        await supabase
+          .from('friends')
+          .insert({
+            user_id1: id1,
+            user_id2: id2
+          });
+
+
+        
+        // Send a notification to Super Admin that looks like a request
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: superAdmin.id,
+            sender_id: user.id,
+            type: 'connect_request',
+            content: 'wants to connect with you!',
+            is_read: false
+          });
+      }
+
+      // 3. Move to suggestions step
+      setIsCompleting(false);
+      setStep(4);
     } catch (err: any) {
       setError(err.message || "An error occurred during onboarding.");
       setIsCompleting(false);
@@ -161,7 +283,7 @@ export default function OnboardingPage() {
         <div className="flex items-center mb-8">
           {step === 1 ? (
             <Link
-              href="/signup"
+              href="/"
               className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
               aria-label="Go back"
             >
@@ -169,9 +291,9 @@ export default function OnboardingPage() {
             </Link>
           ) : (
             <button
-               onClick={() => setStep(1)}
+               onClick={() => setStep(step - 1)}
               className="w-12 h-12 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-              aria-label="Go back to step 1"
+              aria-label={`Go back to step ${step - 1}`}
             >
               <ArrowLeft className="w-5 h-5 text-zinc-800 dark:text-zinc-200" />
             </button>
@@ -180,6 +302,48 @@ export default function OnboardingPage() {
 
         <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
           {step === 1 ? (
+            <>
+              <h1 className="text-3xl font-black text-center mb-2 tracking-tight text-zinc-900 dark:text-white">What's your name?</h1>
+              <p className="text-zinc-400 dark:text-zinc-500 text-center mb-10 text-sm font-medium">To keep things professional and clear</p>
+
+              <div className="grid grid-cols-2 gap-4 mb-10">
+                <div>
+                  <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">First Name</label>
+                  <input
+                    type="text"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-bold text-black dark:text-white border border-transparent dark:border-zinc-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Last Name</label>
+                  <input
+                    type="text"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#E2FF3D]/50 transition-all font-bold text-black dark:text-white border border-transparent dark:border-zinc-800"
+                  />
+                </div>
+              </div>
+
+              {error && <p className="text-red-500 text-sm mb-4 px-1">{error}</p>}
+
+              <button
+                onClick={() => setStep(2)}
+                disabled={!firstName || !lastName}
+                className={`w-full rounded-2xl py-5 font-black text-[15px] uppercase tracking-widest transition-all shadow-lg dark:shadow-none disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] ${
+                  (!firstName || !lastName) 
+                  ? "bg-[#1A1A24] dark:bg-zinc-800 text-white" 
+                  : "bg-[#E2FF3D] text-black shadow-[#E2FF3D]/20 shadow-xl"
+                }`}
+              >
+                Next Step
+              </button>
+            </>
+          ) : step === 2 ? (
             <>
               <h1 className="text-3xl font-black text-center mb-2 tracking-tight text-zinc-900 dark:text-white">Complete Your Profile</h1>
               <p className="text-zinc-400 dark:text-zinc-500 text-center mb-10 text-sm font-medium">Let's set up your academic details</p>
@@ -295,14 +459,82 @@ export default function OnboardingPage() {
 
               {/* Primary Action Button */}
               <button
-                onClick={() => setStep(2)}
+                onClick={() => setStep(3)}
                 disabled={!selectedUni || !selectedDept || !selectedLevel}
-                className="w-full bg-[#1A1A24] dark:bg-zinc-800 text-white rounded-2xl py-5 font-black text-[15px] uppercase tracking-widest hover:bg-black dark:hover:bg-zinc-700 transition-all mb-10 shadow-lg dark:shadow-none disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98]"
+                className={`w-full rounded-2xl py-5 font-black text-[15px] uppercase tracking-widest transition-all mb-10 shadow-lg dark:shadow-none disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] ${
+                  (!selectedUni || !selectedDept || !selectedLevel) 
+                  ? "bg-[#1A1A24] dark:bg-zinc-800 text-white" 
+                  : "bg-[#E2FF3D] text-black shadow-[#E2FF3D]/20 shadow-xl"
+                }`}
               >
                 Continue
               </button>
             </>
+          ) : step === 4 ? (
+             <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+               <h1 className="text-3xl font-black text-center mb-2 tracking-tight text-zinc-900 dark:text-white leading-tight">Build Your Loop</h1>
+               <p className="text-zinc-500 dark:text-zinc-500 text-center mb-8 text-sm font-medium">Connect with some students from your school</p>
+               
+               <div className="flex-1 overflow-y-auto pr-1 mb-8 max-h-[45vh] scrollbar-hide">
+                 {/* Re-using the logic from SuggestedConnections component but expanded for onboarding */}
+                 <div className="flex flex-col gap-4">
+                   {isLoadingSuggestions ? (
+                      [1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-3xl animate-pulse">
+                          <div className="w-14 h-14 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+                          <div className="flex-1">
+                            <div className="w-24 h-4 bg-zinc-200 dark:bg-zinc-800 rounded-full mb-2" />
+                            <div className="w-16 h-3 bg-zinc-100 dark:bg-zinc-900 rounded-full" />
+                          </div>
+                        </div>
+                      ))
+                   ) : suggestions.map((user: any) => (
+                      <div key={user.id} className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-[32px] border border-transparent hover:border-[#E2FF3D]/20 transition-all group">
+                         <div className="w-14 h-14 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-800 relative flex items-center justify-center shrink-0">
+                           {user.avatar_url ? (
+                              <Image src={user.avatar_url} alt="" fill className="object-cover" />
+                           ) : (
+                              <User className="text-zinc-400 dark:text-zinc-600 w-7 h-7" strokeWidth={2.5} />
+                           )}
+                         </div>
+                         <div className="flex-1 min-w-0">
+                           <h4 className="text-[15px] font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight truncate">{user.full_name}</h4>
+                           <p className="text-[11px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate">@{user.username}</p>
+                         </div>
+                         <button
+                           onClick={() => handleConnect(user.id)}
+                           disabled={connectingIds.has(user.id)}
+                           className={`px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.95] flex items-center gap-2 ${
+                             connectingIds.has(user.id)
+                             ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
+                             : "bg-[#E2FF3D] text-black shadow-lg shadow-[#E2FF3D]/10 hover:shadow-[#E2FF3D]/20"
+                           }`}
+                         >
+                           {connectingIds.has(user.id) ? (
+                             <Loader2 size={14} className="animate-spin" />
+                           ) : (
+                             <UserPlus size={14} />
+                           )}
+                           {connectingIds.has(user.id) ? "Linking..." : "Connect"}
+                         </button>
+                      </div>
+                   ))}
+                 </div>
+               </div>
+
+               <p className="text-center text-[10px] font-black text-zinc-300 dark:text-zinc-700 uppercase tracking-[0.2em] mb-8">
+                 Ready to explore?
+               </p>
+
+               <button
+                 onClick={() => router.push("/")}
+                 className="w-full bg-[#1A1A24] dark:bg-[#E2FF3D] text-white dark:text-black rounded-3xl py-5 font-black text-[15px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-[#E2FF3D]/10"
+               >
+                 Take me to the Feed
+               </button>
+             </div>
           ) : (
+
             <>
               <h1 className="text-3xl font-black text-center mb-2 tracking-tight text-zinc-900 dark:text-white">Choose your username</h1>
               <p className="text-zinc-400 dark:text-zinc-500 text-center mb-10 text-sm font-medium">You can always change this later</p>
@@ -325,11 +557,16 @@ export default function OnboardingPage() {
               <button
                 onClick={handleComplete}
                 disabled={!username || isCompleting}
-                className="w-full bg-[#1A1A24] dark:bg-[#E2FF3D] text-white dark:text-black rounded-2xl py-5 font-black text-[15px] uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all mb-10 shadow-lg dark:shadow-none disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2"
+                 className={`w-full rounded-2xl py-5 font-black text-[15px] uppercase tracking-widest transition-all mb-10 shadow-lg dark:shadow-none disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2 ${
+                  (!username || isCompleting) 
+                  ? "bg-[#1A1A24] dark:bg-zinc-800 text-white" 
+                  : "bg-[#E2FF3D] text-black shadow-[#E2FF3D]/20 shadow-xl"
+                }`}
               >
-                {isCompleting && <Loader2 className="w-5 h-5 animate-spin text-[#E2FF3D] dark:text-zinc-900" />}
+                {isCompleting && <Loader2 className="w-5 h-5 animate-spin text-zinc-900" />}
                 {isCompleting ? "Saving Details..." : "Complete Profile"}
               </button>
+
             </>
           )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { formatRelativeTime } from "@/lib/utils";
@@ -8,32 +8,26 @@ import TopNavigation from "@/components/TopNavigation";
 import StoriesBar from "@/components/StoriesBar";
 import FeedCard from "@/components/FeedCard";
 import BottomNavigation from "@/components/BottomNavigation";
-import CommentModal from "@/components/CommentModal";
-import ShareModal from "@/components/modals/ShareModal";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import FeedCardSkeleton from "@/components/skeletons/FeedCardSkeleton";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Plus } from "lucide-react";
 import Toast from "@/components/Toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import SuggestedConnections from "@/components/SuggestedConnections";
+import Link from "next/link";
 
 export default function Home() {
   const router = useRouter();
   const supabase = createClient();
   const queryClient = useQueryClient();
   const [user, setUser] = useState<any>(null);
-  const [isPostingOptimistic, setIsPostingOptimistic] = useState(false);
   
-  // Modal States
-  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-  const [selectedPostForComment, setSelectedPostForComment] = useState<any>(null);
-  
+  // States
+  const [hasClickedContinue, setHasClickedContinue] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [selectedPostForShare, setSelectedPostForShare] = useState<any>(null);
   const [selectedPostForDelete, setSelectedPostForDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Toast State
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
     message: "",
     type: "success",
@@ -45,32 +39,51 @@ export default function Home() {
   };
 
   const [userUniId, setUserUniId] = useState<string | undefined>(undefined);
-  const uniIdRef = useRef<string | undefined>(undefined);
+  const [connectionCount, setConnectionCount] = useState(0);
 
-  // 🏛️ The "Instant-Switch" Fetch Logic
-  const { data: posts = [], isLoading } = useQuery({
+  // Auto-save loop complete flag as soon as they hit 5 connections
+  useEffect(() => {
+    if (user?.id && connectionCount >= 5) {
+      localStorage.setItem(`loop_complete_${user.id}`, 'true');
+    }
+  }, [connectionCount, user?.id]);
+
+  // 1. Initial State Sync
+  useEffect(() => {
+    async function init() {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        router.push("/welcome");
+        return;
+      }
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', authUser.id).single();
+      if (profile) {
+        setUser(profile);
+        setUserUniId(profile.university_id);
+        // If user has previously completed onboarding, skip loop builder
+        const loopDone = localStorage.getItem(`loop_complete_${authUser.id}`);
+        if (loopDone) setHasClickedContinue(true);
+      }
+    }
+    init();
+  }, [supabase, router]);
+
+
+  // 2. Fetch Posts
+  const { data: postsData, isLoading: isLoadingPosts } = useQuery({
     queryKey: ['posts', user?.id, userUniId],
     queryFn: async () => {
-      if (!user?.id || !userUniId) return [];
-
-      let query = supabase
+      const { data: dbPosts, error } = await supabase
         .from('posts')
         .select(`
           *,
-          profiles:user_id (username, full_name, avatar_url),
-          universities:university_id (name)
-        `);
-      
-      if (userUniId) {
-        query = query.eq('university_id', userUniId);
-      }
+          profiles:user_id (username, full_name, avatar_url)
+        `)
+        .order('created_at', { ascending: false });
 
-      const { data: dbPosts, error } = await query.order('created_at', { ascending: false });
 
-      if (error) throw error;
-      if (!dbPosts) return [];
+      if (error) return [];
 
-      // Parallel fetching for likes, bookmarks, and reposts
       const [userLikes, userBookmarks, userReposts] = await Promise.all([
         supabase.from('likes').select('post_id').eq('user_id', user.id),
         supabase.from('bookmarks').select('post_id').eq('user_id', user.id),
@@ -81,352 +94,179 @@ export default function Home() {
       const bookmarkedPostIds = new Set(userBookmarks.data?.map((b: any) => b.post_id) || []);
       const repostedPostIds = new Set(userReposts.data?.map((r: any) => r.post_id) || []);
 
-      return dbPosts.map((post: any) => ({
+      return (dbPosts || []).map((post: any) => ({
         ...post,
         isLiked: likedPostIds.has(post.id),
         isBookmarked: bookmarkedPostIds.has(post.id),
         isReposted: repostedPostIds.has(post.id)
-      }));
+      })).sort(() => Math.random() - 0.5);
+
+
     },
-    enabled: !!user?.id && !!userUniId,
-    staleTime: 2 * 60 * 1000, // Keep in memory for 2 minutes
+    enabled: !!user?.id,
   });
 
-  const openDeleteModal = (postId: string) => {
-    setSelectedPostForDelete(postId);
-    setIsDeleteModalOpen(true);
-  };
+  const userLoading = isLoadingPosts || !user;
 
-  const confirmDeletePost = async () => {
-    if (!selectedPostForDelete) return;
-    
-    setIsDeleting(true);
-    try {
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', selectedPostForDelete);
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="w-8 h-8 animate-spin text-[#E5FF66]" />
+      </div>
+    );
+  }
 
-      if (error) throw error;
 
-      // Optimistic cache update
-      queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
-        old?.filter((p: any) => p.id !== selectedPostForDelete)
-      );
-      setIsDeleteModalOpen(false);
-    } catch (err: any) {
-      console.error("Error deleting post:", err.message);
-      showToast("Failed to delete post", "error");
-    } finally {
-      setIsDeleting(false);
-      setSelectedPostForDelete(null);
-    }
-  };
-
-  useEffect(() => {
-    async function checkUserAndInit() {
-      try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (!authUser) {
-          router.push("/welcome");
-          return;
-        }
-        setUser(authUser);
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('university_id')
-          .eq('id', authUser.id)
-          .single();
-        
-        if (!profile || !profile.university_id) {
-          router.push("/welcome");
-          return;
-        }
-
-        const uniId = profile.university_id;
-        setUserUniId(uniId);
-        uniIdRef.current = uniId;
-      } catch (err: any) {
-        if (err.name !== 'AbortError' && !err.message?.includes('Lock broken')) {
-          console.error("Initialization error:", err);
-        }
-      }
-
-      // Check for optimistic posting state
-      const checkPostingState = () => {
-        const isPosting = sessionStorage.getItem('isPosting');
-        if (isPosting === 'true') {
-          setIsPostingOptimistic(true);
-          setTimeout(async () => {
-            sessionStorage.removeItem('isPosting');
-            setIsPostingOptimistic(false);
-            queryClient.invalidateQueries({ queryKey: ['posts'] });
-          }, 8000);
-        }
-      };
-      checkPostingState();
-    }
-
-    checkUserAndInit();
-
-    // Auto-refresh when app comes back into focus
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible') {
-        queryClient.invalidateQueries({ queryKey: ['posts'] });
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    const postsSubscription = supabase
-      .channel('public:posts')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload: any) => {
-        if (payload.new) {
-           sessionStorage.removeItem('isPosting');
-           setIsPostingOptimistic(false);
-        }
-        queryClient.invalidateQueries({ queryKey: ['posts'] });
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload: any) => {
-        queryClient.invalidateQueries({ queryKey: ['posts'] });
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload: any) => {
-        queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
-          old?.filter((p: any) => p.id !== payload.old.id)
-        );
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(postsSubscription);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-
-  }, [router, supabase, user?.id, userUniId, queryClient]);
-
+  const posts = postsData || [];
 
   const handleLike = async (postId: string) => {
     if (!user) return;
-
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-
-    if (post.isLiked) {
-      // Unlike
-      const { error } = await supabase
-        .from('likes')
-        .delete()
-        .match({ post_id: postId, user_id: user.id });
-      
-      if (error) {
-        console.error("Unlike Error:", error);
-        showToast("Unlike failed", "error");
-      }
-    } else {
-      // Like
-      const { error } = await supabase
-        .from('likes')
-        .insert({ post_id: postId, user_id: user.id });
-      
-      if (error) {
-        console.error("Like Error:", error);
-        showToast("Like failed", "error");
-      }
-    }
-    // State is handled by Realtime subscription or local optimistic UI if we want it faster
+    if (post.isLiked) { await supabase.from('likes').delete().match({ post_id: postId, user_id: user.id }); } 
+    else { await supabase.from('likes').insert({ post_id: postId, user_id: user.id }); }
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
   };
-
+  
   const handleCommentClick = (postId: string) => {
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-    
-    const postData = {
-      id: postId,
-      authorName: post.profiles?.full_name || post.profiles?.username || "Anonymous",
-      authorImage: post.profiles?.avatar_url || null,
-      description: post.content
-    };
-    window.dispatchEvent(new CustomEvent('open-comment', { detail: postData }));
-  };
-
-  const handleReport = async (postId: string) => {
-    if (!user) return;
-    
-    const reason = window.prompt("Why are you reporting this post? (e.g. Inappropriate content, spam)");
-    if (!reason) return;
-
-    const { error } = await supabase
-      .from('reports')
-      .insert({
-        reporter_id: user.id,
-        post_id: postId,
-        reason: reason
-      });
-
-    if (error) {
-      showToast("Failed to send report. Please try again.", "error");
-    } else {
-      showToast("Report sent. Thank you for your help!");
-    }
+    window.dispatchEvent(new CustomEvent('open-comment', { detail: { id: postId, authorName: post.profiles?.full_name || post.profiles?.username, authorImage: post.profiles?.avatar_url, description: post.content }}));
   };
 
   const handleShare = (postId: string) => {
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-    
-    const postData = {
-      id: postId,
-      authorName: post.profiles?.full_name || post.profiles?.username || "Anonymous",
-      authorImage: post.profiles?.avatar_url || null,
-      description: post.content
-    };
-    window.dispatchEvent(new CustomEvent('open-share', { detail: postData }));
+    window.dispatchEvent(new CustomEvent('open-share', { detail: { id: postId, authorName: post.profiles?.full_name, description: post.content }}));
   };
 
   const handleBookmark = async (postId: string) => {
     if (!user) return;
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-
-    if (post.isBookmarked) {
-      // Unbookmark
-      await supabase
-        .from('bookmarks')
-        .delete()
-        .match({ post_id: postId, user_id: user.id });
-      showToast("Removed from bookmarks");
-    } else {
-      // Bookmark
-      await supabase
-        .from('bookmarks')
-        .insert({ post_id: postId, user_id: user.id });
-      showToast("Post bookmarked!");
-    }
-    // Optimistic UI update
-    queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
-      old?.map((p: any) => p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p)
-    );
+    if (post.isBookmarked) { await supabase.from('bookmarks').delete().match({ post_id: postId, user_id: user.id }); }
+    else { await supabase.from('bookmarks').insert({ post_id: postId, user_id: user.id }); }
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
   };
 
   const handleRepost = async (postId: string) => {
     if (!user) return;
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-
-    if (post.isReposted) {
-      // Unrepost
-      const { error } = await supabase
-        .from('reposts')
-        .delete()
-        .match({ post_id: postId, user_id: user.id });
-      
-      if (!error) {
-        showToast("Repost removed");
-        queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
-          old?.map((p: any) => p.id === postId ? { ...p, isReposted: false } : p)
-        );
-      }
-    } else {
-      // Repost
-      const { error } = await supabase
-        .from('reposts')
-        .insert({ post_id: postId, user_id: user.id });
-      
-      if (!error) {
-        showToast("Post reposted!");
-        queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => 
-          old?.map((p: any) => p.id === postId ? { ...p, isReposted: true } : p)
-        );
-      } else {
-        showToast("Repost failed", "error");
-      }
-    }
+    if (post.isReposted) { await supabase.from('reposts').delete().match({ post_id: postId, user_id: user.id }); }
+    else { await supabase.from('reposts').insert({ post_id: postId, user_id: user.id }); }
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
   };
 
-  // Removed blocking loading screen to allow instant optimistic UI
+  const openDeleteModal = (postId: string) => { setSelectedPostForDelete(postId); setIsDeleteModalOpen(true); };
 
-  return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black pb-[100px] max-w-md mx-auto relative shadow-sm border-x border-zinc-100/50 dark:border-zinc-800/50 h-full transition-colors">
-      <Toast 
-        message={toast.message} 
-        type={toast.type} 
-        isVisible={toast.isVisible} 
-        onClose={() => setToast({ ...toast, isVisible: false })} 
-      />
-      <TopNavigation />
-      <StoriesBar />
-      
-      {/* Optimistic UI: Posting Banner */}
-      {isPostingOptimistic && (
-        <div className="px-5 mb-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none border border-zinc-100 dark:border-zinc-800 flex items-center gap-3 animate-pulse">
-            <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden text-zinc-300 dark:text-zinc-700">
-               <div className="absolute inset-0 bg-gradient-to-tr from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-700 animate-[spin_2s_linear_infinite]" />
-            </div>
-            <div className="flex-1">
-              <div className="w-24 h-4 bg-zinc-200 dark:bg-zinc-800 rounded-full mb-2"></div>
-              <div className="w-48 h-3 bg-zinc-100 dark:bg-zinc-800/50 rounded-full"></div>
-            </div>
-            <p className="text-[13px] font-bold text-zinc-400 dark:text-zinc-500">Posting...</p>
+  const confirmDeletePost = async () => {
+    if (!selectedPostForDelete) return;
+    setIsDeleting(true);
+    await supabase.from('posts').delete().eq('id', selectedPostForDelete);
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
+    setIsDeleteModalOpen(false);
+    setIsDeleting(false);
+  };
+
+  // 🏆 DETERMINING THE VIEW STATE
+  const showBuildYourLoop = posts.length === 0 && !hasClickedContinue && !!user?.id && !!userUniId;
+
+  if (showBuildYourLoop) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col font-sans overflow-hidden">
+        {/* Header Section */}
+        <div className="pt-16 pb-8 px-8 flex flex-col items-center">
+          <div className="w-24 h-24 bg-zinc-900 rounded-[32px] flex items-center justify-center mb-10 shadow-[0_0_30px_rgba(229,255,102,0.1)] relative group">
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#E5FF66]/20 to-transparent rounded-[32px]" />
+            <span className="text-[#E5FF66] font-[900] text-4xl italic tracking-tighter z-10">U</span>
+            <span className="text-white font-[900] text-4xl italic tracking-tighter z-10">-v</span>
+          </div>
+
+          
+          <h1 className="text-[38px] leading-[0.95] font-[900] text-white text-center mb-4 tracking-tighter italic uppercase">
+            CONNECT WITH<br/>PEOPLE
+          </h1>
+          <p className="text-zinc-500 text-center text-[12px] leading-relaxed max-w-[280px] font-bold uppercase tracking-widest italic opacity-80">
+            Follow at least 5 students to fuel your feed and start your Univas experience.
+          </p>
+
+          
+          {/* Progress Banner */}
+          <div className="mt-8 w-full max-w-[240px] bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-4 flex flex-col items-center gap-3">
+             <div className="flex gap-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className={`h-2 w-8 rounded-full transition-all duration-500 ${i < connectionCount ? 'bg-[#E5FF66] shadow-[0_0_10px_rgba(229,255,102,0.4)]' : 'bg-zinc-800'}`} />
+                ))}
+             </div>
+             <span className="text-[10px] font-black text-[#E5FF66] uppercase tracking-[0.2em]">
+               {connectionCount < 5 ? `${5 - connectionCount} more to go` : "Loop Synchronized"}
+             </span>
+
           </div>
         </div>
-      )}
 
-      <main className="px-4 mt-2 mb-8">
-        {isLoading ? (
-          <div className="flex flex-col gap-6">
-            <FeedCardSkeleton />
-            <FeedCardSkeleton />
-            <FeedCardSkeleton />
-          </div>
-        ) : posts.length > 0 ? (
-          posts.map((post: any) => (
-            <FeedCard
-              key={post.id}
-              id={post.id}
-              authorId={post.user_id}
-              currentUserId={user?.id}
-              authorName={post.profiles?.full_name || post.profiles?.username || "Anonymous"}
-              authorImage={post.profiles?.avatar_url || null}
-              timePosted={formatRelativeTime(new Date(post.created_at))}
-              postImage={post.image_url || null}
-              likes={post.likes_count || 0}
-              comments={post.comments_count || 0}
-              description={post.content}
-              isLiked={post.isLiked}
-              isBookmarked={post.isBookmarked}
-              isReposted={post.isReposted}
-              onLike={handleLike}
-              onComment={handleCommentClick}
-              onReport={handleReport}
-              onDelete={openDeleteModal}
-              onShare={handleShare}
-              onBookmark={handleBookmark}
-              onRepost={handleRepost}
-            />
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 px-10 text-center">
-            <div className="w-20 h-20 bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
-              <Sparkles className="w-10 h-10 text-[#E5FF66]" />
-            </div>
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Welcome to the Feed!</h3>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed">
-              There aren't any posts from your university yet. Be the first to share something amazing!
+
+
+        {/* Scrollable Connections List */}
+        <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-4 custom-scrollbar">
+          <SuggestedConnections userId={user.id} universityId={userUniId} onCountChange={setConnectionCount} />
+          
+          <div className="pt-4 pb-8 text-center">
+            <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">
+              DISCOVER YOUR NETWORK
             </p>
           </div>
-        )}
+        </div>
+
+        {/* Bottom Button Action */}
+        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent pt-12">
+          <button 
+            onClick={() => {
+              localStorage.setItem(`loop_complete_${user.id}`, 'true');
+              setHasClickedContinue(true);
+            }}
+
+            disabled={connectionCount < 5}
+            className={`w-full py-5 rounded-full text-[13px] font-black uppercase tracking-[0.2em] transition-all active:scale-[0.95] ${
+              connectionCount >= 5 
+              ? 'bg-[#E5FF66] text-black shadow-lg shadow-[#E5FF66]/20' 
+              : 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50'
+            }`}
+          >
+            {connectionCount >= 5 ? "Enter the Feed" : "Go to Feed"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // STANDARD FEED VIEW
+  return (
+    <div className="min-h-screen bg-white dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans overflow-hidden transition-colors">
+      <Toast message={toast.message} type={toast.type} isVisible={toast.isVisible} onClose={() => setToast({ ...toast, isVisible: false })} />
+      <TopNavigation />
+      
+      <main className="px-5 py-2">
+        <StoriesBar />
+        <div className="mt-6 flex flex-col gap-4">
+          {isLoadingPosts ? (
+            <div className="flex flex-col gap-6">
+              <FeedCardSkeleton /><FeedCardSkeleton />
+            </div>
+          ) : posts.length > 0 ? (
+            posts.map((post: any) => (
+              <FeedCard key={post.id} id={post.id} authorId={post.user_id} currentUserId={user?.id} authorName={post.profiles?.full_name || post.profiles?.username || "Anonymous"} authorImage={post.profiles?.avatar_url || null} timePosted={formatRelativeTime(new Date(post.created_at))} postImage={post.image_url || null} likes={post.likes_count || 0} comments={post.comments_count || 0} description={post.content} isLiked={post.isLiked} isBookmarked={post.isBookmarked} isReposted={post.isReposted} onLike={handleLike} onComment={handleCommentClick} onDelete={openDeleteModal} onShare={handleShare} onBookmark={handleBookmark} onRepost={handleRepost} />
+
+            ))
+          ) : null}
+
+        </div>
       </main>
 
       <BottomNavigation />
 
-      {/* Global Modals for Comment/Share are now handled in layout.tsx via window events */}
-      <DeleteConfirmationModal 
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={confirmDeletePost}
-        isLoading={isDeleting}
-      />
+      <DeleteConfirmationModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={confirmDeletePost} isLoading={isDeleting} />
     </div>
   );
 }

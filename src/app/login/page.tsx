@@ -54,6 +54,35 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { error: googleError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'select_account',
+          }
+        },
+      });
+
+      if (googleError) {
+        if (googleError.message.includes("Account already exists")) {
+          setError("This email is already registered. Please log in with your password.");
+        } else {
+          setError(googleError.message);
+        }
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      console.error("Google login error:", err);
+      setError("Failed to initialize Google login.");
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-black text-zinc-900 dark:text-white font-sans px-6 py-12 transition-colors">
       {/* App Bar */}
@@ -141,7 +170,12 @@ export default function LoginPage() {
 
         {/* Social Buttons */}
         <div className="flex flex-col gap-4 mb-12">
-          <button className="flex items-center justify-center gap-3 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors rounded-2xl py-4.5 text-[14px] font-black text-zinc-700 dark:text-zinc-300 w-full uppercase tracking-widest border border-transparent dark:border-zinc-800">
+          <button 
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-3 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors rounded-2xl py-4.5 text-[14px] font-black text-zinc-700 dark:text-zinc-300 w-full uppercase tracking-widest border border-transparent dark:border-zinc-800 disabled:opacity-50"
+          >
             <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
               <path
                 d="M12.0003 4.75C13.7703 4.75 15.3553 5.36 16.6053 6.54998L20.0303 3.125C17.9503 1.19 15.2353 0 12.0003 0C7.31028 0 3.25528 2.69 1.28027 6.60998L5.27028 9.70498C6.21528 6.86 8.87028 4.75 12.0003 4.75Z"

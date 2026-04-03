@@ -2,11 +2,14 @@
 
 ## Phase 1 — Foundation Setup
 
-- [ ] Project Initialization
+- [x] Project Initialization
   - [x] Initialize Next.js project
   - [x] Setup Supabase project and client
   - [x] Configure environment variables (Supabase, AI API keys)
-  - [ ] Setup Vercel deployment
+  - [x] Setup Vercel deployment
+  - [x] Identify official logo file (`icon-192x192.jpg`)
+  - [x] Update `AuthLogo.tsx` to use the image logo and restore brand text
+  - [x] Verify the change across different pages (Feed, Login)
 - [x] Database Design & Setup
   - [x] Core tables (`users`, `universities`, `departments`, `profiles`, `posts`, `messages`, `groups`, `group_members`, `reports`)
   - [x] Seed `universities` and `departments` (prevent duplicates)

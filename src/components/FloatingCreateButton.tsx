@@ -7,8 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function FloatingCreateButton() {
   const pathname = usePathname();
-  const showOnPaths = ["/", "/profile"];
+  const showOnPaths = ["/profile"]; // Removed "/" from global show. We will handle it on the pages directly if needed, or refine.
   const shouldShow = showOnPaths.includes(pathname);
+
 
   return (
     <AnimatePresence>
