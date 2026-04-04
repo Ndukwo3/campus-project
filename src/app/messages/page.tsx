@@ -82,18 +82,17 @@ export default function MessagesPage() {
           processedPartnerIds.add(pId);
           
           const msg = partnerRaw.msg;
+          if (!msg) continue; // Skip empty conversations per user request
           
           builtChats.push({
             id: cId,
             partner_id: pId,
             name: partnerData?.full_name || partnerData?.username || "Unknown Student",
             avatar: partnerData?.avatar_url,
-            lastMessage: msg 
-                         ? (msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
+            lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
                          : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
-                         : msg.content) 
-                         : "Start a conversation",
-            time: msg ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+                         : msg.content,
+            time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             unread: unreadCounts[cId] || 0,
             online: true, 
             sortTime: partnerRaw.sortTime,
