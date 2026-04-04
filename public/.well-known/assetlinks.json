@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "app.vercel.uni_city.twa",
+    "package_name": "app.univas.twa",
     "sha256_cert_fingerprints": [
       "92:50:0A:B0:80:A8:E2:E9:30:3B:F1:36:E3:96:62:CB:BC:1D:1B:D3:17:5F:00:96:FF:8D:F5:2E:69:6A:9C:15"
     ]
