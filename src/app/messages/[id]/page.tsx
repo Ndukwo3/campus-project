@@ -292,7 +292,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const commonEmojis = ['ðŸ˜‚', 'â¤ï¸', 'ðŸ”¥', 'ðŸ‘', 'ðŸ˜Š', 'ðŸ˜', 'ðŸ˜­', 'ðŸ¥º', 'ðŸ™', 'âœ¨', 'ðŸ’¯', 'ðŸ‘', 'ðŸ‘€', 'ðŸ™Œ', 'ðŸŽ‰'];
+  const commonEmojis = ['😂', '❤️', '🔥', '👍', '😊', '😍', '😭', '🥺', '🙏', '✨', '💯', '👏', '👀', '🙌', '🎉'];
   const [partner, setPartner] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
