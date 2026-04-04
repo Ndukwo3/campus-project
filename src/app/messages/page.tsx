@@ -65,19 +65,27 @@ export default function MessagesPage() {
       }
 
       const builtChats = [];
-      const processedIds = new Set();
+      const processedPartnerIds = new Set();
       
-      for (const partnerRaw of partnersResult.data) {
+      // Sort partners by their latest message or conversation ID to ensure deterministic order before deduping
+      const sortedPartners = [...partnersResult.data].map(p => {
+        const msg = latestMsgsResult.data?.find((m: any) => m.conversation_id === p.conversation_id);
+        return { ...p, msg, sortTime: msg ? new Date(msg.created_at).getTime() : 0 };
+      }).sort((a, b) => b.sortTime - a.sortTime);
+
+      for (const partnerRaw of sortedPartners) {
+        const partnerData = Array.isArray(partnerRaw.profiles) ? partnerRaw.profiles[0] : partnerRaw.profiles;
+        const pId = partnerData?.id;
         const cId = partnerRaw.conversation_id;
-        if (!processedIds.has(cId)) {
-          processedIds.add(cId);
-          const partnerData = Array.isArray(partnerRaw.profiles) ? partnerRaw.profiles[0] : partnerRaw.profiles;
+
+        if (pId && !processedPartnerIds.has(pId)) {
+          processedPartnerIds.add(pId);
           
-          const msg = latestMsgsResult.data?.find((m: any) => m.conversation_id === cId);
+          const msg = partnerRaw.msg;
           
           builtChats.push({
             id: cId,
-            partner_id: partnerData?.id,
+            partner_id: pId,
             name: partnerData?.full_name || partnerData?.username || "Unknown Student",
             avatar: partnerData?.avatar_url,
             lastMessage: msg 
@@ -88,12 +96,11 @@ export default function MessagesPage() {
             time: msg ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
             unread: unreadCounts[cId] || 0,
             online: true, 
-            sortTime: msg ? new Date(msg.created_at).getTime() : 0,
+            sortTime: partnerRaw.sortTime,
           });
         }
       }
       
-      builtChats.sort((a, b) => b.sortTime - a.sortTime);
       return builtChats;
     },
     staleTime: 5 * 1000,
@@ -182,16 +189,27 @@ export default function MessagesPage() {
         
       if (myConvos && myConvos.length > 0) {
         const convoIds = myConvos.map((c: any) => c.conversation_id);
-        const { data: sharedConvo } = await supabase
+        
+        // Find existing non-empty or most recent conversation
+        const { data: sharedConvos } = await supabase
           .from('conversation_participants')
           .select('conversation_id')
           .in('conversation_id', convoIds)
-          .eq('user_id', partnerId)
-          .limit(1)
-          .maybeSingle();
+          .eq('user_id', partnerId);
 
-        if (sharedConvo) {
-          router.push(`/messages/${sharedConvo.conversation_id}`);
+        if (sharedConvos && sharedConvos.length > 0) {
+          // If multiple exist (due to previous bugs), find the one with the latest message
+          const sharedIds = sharedConvos.map((c: any) => c.conversation_id);
+          const { data: latestMsg } = await supabase
+            .from('messages')
+            .select('conversation_id')
+            .in('conversation_id', sharedIds)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const targetConvoId = latestMsg?.conversation_id || sharedIds[0];
+          router.push(`/messages/${targetConvoId}`);
           return;
         }
       }

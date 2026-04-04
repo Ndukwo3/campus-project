@@ -252,18 +252,25 @@ export default function SearchPage() {
         
       if (myConvos && myConvos.length > 0) {
         const convoIds = myConvos.map((c: any) => c.conversation_id);
-        const { data: sharedConvo } = await supabase
+        const { data: sharedConvos } = await supabase
           .from('conversation_participants')
           .select('conversation_id')
           .in('conversation_id', convoIds)
-          .eq('user_id', studentId)
-          .limit(1)
-          .maybeSingle();
+          .eq('user_id', studentId);
 
-        if (sharedConvo) {
+        if (sharedConvos && sharedConvos.length > 0) {
+          const sharedIds = sharedConvos.map((c: any) => c.conversation_id);
+          const { data: latestMsg } = await supabase
+            .from('messages')
+            .select('conversation_id')
+            .in('conversation_id', sharedIds)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const targetConvoId = latestMsg?.conversation_id || sharedIds[0];
           setIsActionLoading(null);
-          router.push(`/messages/${sharedConvo.conversation_id}`);
-          return;
+          return router.push(`/messages/${targetConvoId}`);
         }
       }
 
