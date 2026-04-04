@@ -472,8 +472,38 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
 
     channelRef.current = channel;
 
+    // Safety fallback: Poll the database every 5 seconds in case Realtime WebSockets drop 
+    // or the 'supabase_realtime' table publication isn't properly configured yet.
+    const pollInterval = setInterval(async () => {
+      const { data: latestHistory } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (latestHistory) {
+        setMessages(prev => {
+           // Only update if there is a difference to avoid resetting scrolling unpredictably
+           if (prev.length !== latestHistory.length) {
+              const visibleHistory = latestHistory.filter((m: any) => {
+                 const deletedBy = m.deleted_by || [];
+                 return !deletedBy.includes(user.id);
+              });
+              
+              // Mark new arriving unread messages as read
+              const unreadIds = visibleHistory.filter((m: any) => !m.is_read && m.sender_id !== user.id).map((m: any) => m.id);
+              if (unreadIds.length > 0) supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
+              
+              return visibleHistory;
+           }
+           return prev;
+        });
+      }
+    }, 5000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
   }, [user, conversationId, supabase]);
 

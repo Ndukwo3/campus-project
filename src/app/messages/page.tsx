@@ -96,7 +96,8 @@ export default function MessagesPage() {
       builtChats.sort((a, b) => b.sortTime - a.sortTime);
       return builtChats;
     },
-    staleTime: 60 * 1000,
+    staleTime: 5 * 1000,
+    refetchInterval: 5000, // Explicit fallback polling every 5 seconds
   });
 
   const { data: activeUsers = [] } = useQuery({
