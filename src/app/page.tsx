@@ -266,6 +266,15 @@ export default function Home() {
 
       <BottomNavigation />
 
+      {/* Floating Action Button */}
+      <Link 
+        href="/create" 
+        className="fixed bottom-[92px] right-6 w-14 h-14 bg-[#E5FF66] text-black rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgb(229,255,102,0.4)] hover:shadow-[0_12px_40px_rgb(229,255,102,0.5)] active:scale-90 transition-all duration-300 z-[60] border-2 border-white dark:border-black group"
+      >
+        <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" strokeWidth={3} />
+        <div className="absolute -inset-0.5 bg-[#E5FF66] rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity" />
+      </Link>
+
       <DeleteConfirmationModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={confirmDeletePost} isLoading={isDeleting} />
     </div>
   );
