@@ -56,35 +56,44 @@ export default function MessagesPage() {
       if (!partnersResult.data || !latestMsgsResult.data) return [];
 
       const unreadCounts: Record<string, number> = {};
-      for (const msg of latestMsgsResult.data) {
-        if (!msg.is_read && msg.sender_id !== user.id) {
-          unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
+      if (latestMsgsResult.data) {
+        for (const msg of latestMsgsResult.data) {
+          if (!msg.is_read && msg.sender_id !== user.id) {
+            unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
+          }
         }
       }
 
       const builtChats = [];
       const processedIds = new Set();
       
-      for (const msg of latestMsgsResult.data) {
-        if (!processedIds.has(msg.conversation_id)) {
-          processedIds.add(msg.conversation_id);
-          const partner = partnersResult.data.find((p: any) => p.conversation_id === msg.conversation_id)?.profiles;
-          const partnerData = Array.isArray(partner) ? partner[0] : partner;
+      for (const partnerRaw of partnersResult.data) {
+        const cId = partnerRaw.conversation_id;
+        if (!processedIds.has(cId)) {
+          processedIds.add(cId);
+          const partnerData = Array.isArray(partnerRaw.profiles) ? partnerRaw.profiles[0] : partnerRaw.profiles;
+          
+          const msg = latestMsgsResult.data?.find((m: any) => m.conversation_id === cId);
           
           builtChats.push({
-            id: msg.conversation_id,
+            id: cId,
             partner_id: partnerData?.id,
             name: partnerData?.full_name || partnerData?.username || "Unknown Student",
             avatar: partnerData?.avatar_url,
-            lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
+            lastMessage: msg 
+                         ? (msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
                          : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
-                         : msg.content,
-            time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            unread: unreadCounts[msg.conversation_id] || 0,
+                         : msg.content) 
+                         : "Start a conversation",
+            time: msg ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+            unread: unreadCounts[cId] || 0,
             online: true, 
+            sortTime: msg ? new Date(msg.created_at).getTime() : 0,
           });
         }
       }
+      
+      builtChats.sort((a, b) => b.sortTime - a.sortTime);
       return builtChats;
     },
     staleTime: 60 * 1000,
@@ -187,13 +196,14 @@ export default function MessagesPage() {
       }
 
       // 2. Create new convo
-      const { data: newConvo } = await supabase.from('conversations').insert({}).select('id').single();
-      if (newConvo) {
+      const newConvoId = crypto.randomUUID();
+      const { error: convoError } = await supabase.from('conversations').insert({ id: newConvoId });
+      if (!convoError) {
         await supabase.from('conversation_participants').insert([
-          { conversation_id: newConvo.id, user_id: user.id },
-          { conversation_id: newConvo.id, user_id: partnerId }
+          { conversation_id: newConvoId, user_id: user.id },
+          { conversation_id: newConvoId, user_id: partnerId }
         ]);
-        router.push(`/messages/${newConvo.id}`);
+        router.push(`/messages/${newConvoId}`);
       }
     } catch (err: any) {
       console.error(err);

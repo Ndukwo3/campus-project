@@ -274,25 +274,28 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
           .maybeSingle();
 
         if (sharedConvo) {
+          setIsActionLoading(false);
           return router.push(`/messages/${sharedConvo.conversation_id}`);
         }
       }
 
       // 2. If no conversation exists, create one
-      const { data: newConvo, error: convoError } = await supabase
+      const newConvoId = crypto.randomUUID();
+      const { error: convoError } = await supabase
         .from('conversations')
-        .insert({})
-        .select('id')
-        .single();
+        .insert({ id: newConvoId });
         
-      if (newConvo && !convoError) {
+      if (!convoError) {
         // Create participants
         await supabase.from('conversation_participants').insert([
-          { conversation_id: newConvo.id, user_id: currentUser.id },
-          { conversation_id: newConvo.id, user_id: userId }
+          { conversation_id: newConvoId, user_id: currentUser.id },
+          { conversation_id: newConvoId, user_id: userId }
         ]);
         
-        router.push(`/messages/${newConvo.id}`);
+        setIsActionLoading(false);
+        router.push(`/messages/${newConvoId}`);
+      } else {
+        throw convoError;
       }
     } catch(err) {
       showToast("Could not start conversation", "error");

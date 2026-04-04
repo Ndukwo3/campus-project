@@ -261,24 +261,25 @@ export default function SearchPage() {
           .maybeSingle();
 
         if (sharedConvo) {
+          setIsActionLoading(null);
           router.push(`/messages/${sharedConvo.conversation_id}`);
           return;
         }
       }
 
       // 2. Create new conversation if none exists
-      const { data: newConvo, error: convoError } = await supabase
+      const newConvoId = crypto.randomUUID();
+      const { error: convoError } = await supabase
         .from('conversations')
-        .insert({})
-        .select('id')
-        .single();
+        .insert({ id: newConvoId });
         
-      if (newConvo && !convoError) {
+      if (!convoError) {
         await supabase.from('conversation_participants').insert([
-          { conversation_id: newConvo.id, user_id: currentUser.id },
-          { conversation_id: newConvo.id, user_id: studentId }
+          { conversation_id: newConvoId, user_id: currentUser.id },
+          { conversation_id: newConvoId, user_id: studentId }
         ]);
-        router.push(`/messages/${newConvo.id}`);
+        setIsActionLoading(null);
+        router.push(`/messages/${newConvoId}`);
       }
     } catch(err) {
       console.error("Could not start conversation:", err);
