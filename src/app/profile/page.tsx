@@ -1150,15 +1150,17 @@ export default function ProfilePage() {
       {/* Bottom Navigation */}
       <BottomNavigation />
       
-      {/* Floating Action Button */}
-      <div className="fixed bottom-[92px] left-1/2 -translate-x-1/2 w-full max-w-md pointer-events-none z-[60] px-6 flex justify-end">
-        <Link 
-          href="/create" 
-          className="w-14 h-14 bg-[#E5FF66] text-black rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgb(229,255,102,0.4)] hover:shadow-[0_12px_40px_rgb(229,255,102,0.5)] active:scale-90 transition-all duration-300 pointer-events-auto border-2 border-white dark:border-black group"
-        >
-          <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" strokeWidth={3} />
-          <div className="absolute -inset-0.5 bg-[#E5FF66] rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity" />
-        </Link>
+      {/* Floating Action Button - Enhanced Centering */}
+      <div className="fixed inset-x-0 bottom-[92px] flex justify-center pointer-events-none z-[70] px-6">
+        <div className="w-full max-w-md flex justify-end">
+          <Link 
+            href="/create" 
+            className="w-14 h-14 bg-[#E5FF66] text-black rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgb(229,255,102,0.4)] hover:shadow-[0_12px_40px_rgb(229,255,102,0.5)] active:scale-90 transition-all duration-300 pointer-events-auto border-2 border-white dark:border-black group relative"
+          >
+            <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" strokeWidth={3} />
+            <div className="absolute inset-0 bg-[#E5FF66] rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none" />
+          </Link>
+        </div>
       </div>
       
       <ConnectionsModal 
