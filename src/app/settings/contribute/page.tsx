@@ -19,7 +19,9 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 
-const LEVELS = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level"];
+const LEVELS = ["100 Level", "200 Level", "300 Level", "400 Level", "500 Level", "600 Level"];
+const UNIVERSITY_TYPES = ["Federal", "State", "Private"];
+const SEMESTERS = ["First Semester", "Second Semester"];
 
 export default function ContributePage() {
   const router = useRouter();
@@ -32,15 +34,23 @@ export default function ContributePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Lists
+  const [universitiesList, setUniversitiesList] = useState<any[]>([]);
+  const [divisionsList, setDivisionsList] = useState<any[]>([]); // faculties or colleges
+  const [isFetchingData, setIsFetchingData] = useState(false);
+
   // Form State
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [university, setUniversity] = useState("");
-  const [college, setCollege] = useState("");
+  const [uniType, setUniType] = useState("");
+  const [universityId, setUniversityId] = useState("");
+  const [universityName, setUniversityName] = useState("");
+  const [divisionType, setDivisionType] = useState<"Faculty" | "College">("Faculty");
+  const [selectedDivisionId, setSelectedDivisionId] = useState("");
+  const [selectedDivisionName, setSelectedDivisionName] = useState("");
   const [department, setDepartment] = useState("");
   const [level, setLevel] = useState("");
-  const [semester, setSemester] = useState<"First Semester" | "Second Semester">("First Semester");
+  const [semester, setSemester] = useState("");
 
   useEffect(() => {
     async function fetchUserAndUni() {
@@ -48,18 +58,71 @@ export default function ContributePage() {
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("*, universities(name)")
+          .select("*, universities(id, name, type)")
           .eq("id", user.id)
           .single();
         
         setUserProfile(profile);
-        if (profile?.universities?.name) {
-          setUniversity(profile.universities.name);
+        if (profile?.universities) {
+          setUniType(profile.universities.type || "Federal");
+          setUniversityId(profile.universities.id);
+          setUniversityName(profile.universities.name);
         }
       }
     }
     fetchUserAndUni();
   }, [supabase]);
+
+  // Fetch universities when type changes
+  useEffect(() => {
+    if (uniType) {
+      const fetchUnis = async () => {
+        setIsFetchingData(true);
+        const { data } = await supabase
+          .from("universities")
+          .select("id, name")
+          .eq("type", uniType)
+          .order("name");
+        
+        setUniversitiesList(data || []);
+        setIsFetchingData(false);
+      };
+      fetchUnis();
+    }
+  }, [uniType, supabase]);
+
+  // Fetch divisions (Faculties/Colleges) when university changes
+  useEffect(() => {
+    if (universityId) {
+      const fetchDivs = async () => {
+        setIsFetchingData(true);
+        
+        // Check for colleges first
+        const { data: colleges } = await supabase
+          .from("colleges")
+          .select("id, name")
+          .eq("university_id", universityId)
+          .order("name");
+        
+        if (colleges && colleges.length > 0) {
+          setDivisionType("College");
+          setDivisionsList(colleges);
+        } else {
+          // If no colleges, check for faculties
+          const { data: faculties } = await supabase
+            .from("faculties")
+            .select("id, name")
+            .eq("university_id", universityId)
+            .order("name");
+          
+          setDivisionType("Faculty");
+          setDivisionsList(faculties || []);
+        }
+        setIsFetchingData(false);
+      };
+      fetchDivs();
+    }
+  }, [universityId, supabase]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -68,8 +131,8 @@ export default function ContributePage() {
         setError("Only PDF files are allowed to be uploaded.");
         return;
       }
-      if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
-        setError("File size exceeds 10MB. Please upload a smaller file.");
+      if (selectedFile.size > 15 * 1024 * 1024) { // 15MB limit
+        setError("File size exceeds 15MB. Please upload a smaller file.");
         return;
       }
       setFile(selectedFile);
@@ -80,7 +143,7 @@ export default function ContributePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title || !university || !level || !college || !department) {
+    if (!file || !title || !universityName || !level || !semester || !department) {
       setError("Please fill in all mandatory fields (*) and select a file.");
       return;
     }
@@ -101,10 +164,7 @@ export default function ContributePage() {
         .from('resources')
         .upload(filePath, file);
 
-      if (uploadError) {
-        // If bucket doesn't exist, this might fail. We assume 'resources' exists or is handled.
-        throw new Error("Failed to upload file. Please try again later.");
-      }
+      if (uploadError) throw new Error("Failed to upload file. Please try again.");
 
       const { data: { publicUrl } } = supabase.storage
         .from('resources')
@@ -117,21 +177,22 @@ export default function ContributePage() {
           owner_id: user.id,
           title,
           file_url: publicUrl,
-          university_name: university,
-          college_name: college,
+          university_name: universityName,
+          college_name: selectedDivisionName,
           department_name: department,
           level,
           semester,
-          status: 'pending'
+          status: 'pending',
+          resource_type: 'Past Questions' // Default or extracted
         });
 
       if (dbError) throw dbError;
 
       setSuccess(true);
-      setTimeout(() => router.push("/settings"), 3000);
+      setTimeout(() => router.push("/library"), 3000);
     } catch (err: any) {
       console.error("Contribution error:", err);
-      setError(err.message || "An error occurred while submitting. Please try again.");
+      setError(err.message || "An error occurred while submitting.");
     } finally {
       setIsSubmitting(false);
     }
@@ -228,7 +289,7 @@ export default function ContributePage() {
           <div className="space-y-6 pt-4">
             {/* Title */}
             <div>
-              <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Resource Title *</label>
+              <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest leading-none">Resource Title *</label>
               <input 
                 type="text"
                 placeholder="e.g. CSC 201 Exam Questions 2023"
@@ -239,79 +300,122 @@ export default function ContributePage() {
               />
             </div>
 
-            {/* University */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* University Type */}
+              <div>
+                <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest leading-none">Institution Category *</label>
+                <div className="relative">
+                  <select 
+                    value={uniType}
+                    onChange={(e) => {
+                      setUniType(e.target.value);
+                      setUniversityId("");
+                      setUniversityName("");
+                    }}
+                    required
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[13px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>Select Type</option>
+                    {UNIVERSITY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* University Selection */}
+              <div>
+                <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest leading-none">Select University *</label>
+                <div className="relative">
+                  <select 
+                    value={universityId}
+                    onChange={(e) => {
+                      const selected = universitiesList.find(u => u.id === e.target.value);
+                      setUniversityId(e.target.value);
+                      setUniversityName(selected?.name || "");
+                      setSelectedDivisionId("");
+                      setSelectedDivisionName("");
+                    }}
+                    disabled={!uniType || isFetchingData}
+                    required
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[13px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all appearance-none cursor-pointer disabled:opacity-50"
+                  >
+                    <option value="" disabled>{isFetchingData ? "Loading..." : "Select University"}</option>
+                    {universitiesList.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                  </select>
+                  <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* Faculty / College Dropdown */}
             <div>
-              <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">University Name *</label>
-              <input 
-                type="text"
-                placeholder="e.g. Nnamdi Azikiwe University"
-                value={university}
-                onChange={(e) => setUniversity(e.target.value)}
-                required
-                className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
-              />
+              <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest leading-none">Select {divisionType} *</label>
+              <div className="relative">
+                <select 
+                  value={selectedDivisionId}
+                  onChange={(e) => {
+                    const selected = divisionsList.find(d => d.id === e.target.value);
+                    setSelectedDivisionId(e.target.value);
+                    setSelectedDivisionName(selected?.name || "");
+                  }}
+                  disabled={!universityId || isFetchingData}
+                  required
+                  className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[13px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all appearance-none cursor-pointer disabled:opacity-50"
+                >
+                  <option value="" disabled>{isFetchingData ? "Loading..." : `Select ${divisionType}`}</option>
+                  {divisionsList.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+                <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               {/* Level */}
               <div>
-                <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Level *</label>
+                <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest leading-none">Level *</label>
                 <div className="relative">
                   <select 
                     value={level}
                     onChange={(e) => setLevel(e.target.value)}
                     required
-                    className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all appearance-none cursor-pointer text-xs"
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[13px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all appearance-none cursor-pointer"
                   >
                     <option value="" disabled>Select Level</option>
                     {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
-                  <ChevronDown size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                  <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                 </div>
               </div>
 
-              {/* Semester Switcher */}
+              {/* Semester */}
               <div>
-                <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Semester *</label>
-                <div className="flex items-center gap-1 p-1 bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                  {(["First Semester", "Second Semester"] as const).map(s => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setSemester(s)}
-                      className={`flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-tighter transition-all ${semester === s ? "bg-white dark:bg-black text-zinc-900 dark:text-[#E2FF3D] shadow-sm" : "text-zinc-400"}`}
-                    >
-                      {s.split(' ')[0]}
-                    </button>
-                  ))}
+                <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest leading-none">Semester *</label>
+                <div className="relative">
+                  <select 
+                    value={semester}
+                    onChange={(e) => setSemester(e.target.value)}
+                    required
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[13px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>Select Semester</option>
+                    {SEMESTERS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                 </div>
               </div>
             </div>
 
-            {/* Faculty & Dept */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Faculty/College *</label>
-                <input 
-                  type="text"
-                  placeholder="e.g. Engineering"
-                  value={college}
-                  onChange={(e) => setCollege(e.target.value)}
-                  required
-                  className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest">Department *</label>
-                <input 
-                  type="text"
-                  placeholder="e.g. Mech Eng"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  required
-                  className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
-                />
-              </div>
+            {/* Department (Text Input per request) */}
+            <div>
+              <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest leading-none">Department *</label>
+              <input 
+                type="text"
+                placeholder="e.g. Mechanical Engineering"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                required
+                className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+              />
             </div>
           </div>
 

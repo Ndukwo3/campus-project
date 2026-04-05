@@ -5,6 +5,12 @@
 - [x] Project Initialization
   - [x] Initialize Next.js project
   - [x] Setup Supabase project and client
+  - [x] Contribute Page Overhaul
+    - [x] Implement dynamic hierarchy fetching (Universities, Colleges, Faculties)
+    - [x] Update form state with new dropdown options
+    - [x] Refactor UI to use dropdowns for all selection fields
+    - [x] Verify database submission logic
+    - [x] Test the full contribution flow
   - [x] Configure environment variables (Supabase, AI API keys)
   - [x] Setup Vercel deployment
   - [x] Identify official logo file (`icon-192x192.jpg`)
