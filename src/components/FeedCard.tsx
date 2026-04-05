@@ -27,6 +27,7 @@ interface FeedCardProps {
   onBookmark?: (id: string) => void;
   onRepost?: (id: string) => void;
   isReposted?: boolean;
+  onNotInterested?: (id: string) => void;
 }
 
 export default function FeedCard({
@@ -50,11 +51,13 @@ export default function FeedCard({
   onShare,
   onBookmark,
   onRepost,
+  onNotInterested,
 }: FeedCardProps) {
   const [localIsLiked, setLocalIsLiked] = useState(isLiked);
   const [localLikesCount, setLocalLikesCount] = useState(likes);
   const [localIsBookmarked, setLocalIsBookmarked] = useState(isBookmarked);
   const [localIsReposted, setLocalIsReposted] = useState(isReposted);
+  const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
     setLocalIsLiked(isLiked);
@@ -125,10 +128,14 @@ export default function FeedCard({
   const { onlineUsers } = usePresenceStore();
   const isOnline = onlineUsers.has(authorId);
 
+  if (isHidden) return null;
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
       className="bg-white dark:bg-zinc-900/40 p-5 rounded-[32px] border border-zinc-100/60 dark:border-zinc-800/40 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col gap-4 mb-4 hover:shadow-[0_15px_40px_rgb(0,0,0,0.04)] dark:hover:shadow-[0_15px_40px_rgb(0,0,0,0.2)] transition-all duration-500"
     >
       {/* User Header */}
@@ -169,7 +176,16 @@ export default function FeedCard({
           </button>
           
           {isMenuOpen && (
-            <div className="absolute right-0 top-12 w-48 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border border-zinc-100/50 dark:border-zinc-800/50 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute right-0 top-12 w-48 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border border-zinc-100/50 dark:border-zinc-800/50 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
+              <Link 
+                href={`/profile/${authorId}`}
+                className="w-full px-4 py-3 text-left text-[13px] font-bold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-3 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <User size={16} />
+                View Profile
+              </Link>
+
               {isOwner ? (
                 <button 
                   onClick={handleDelete}
@@ -191,8 +207,12 @@ export default function FeedCard({
                     Report Post
                   </button>
                   <button 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="w-full px-4 py-3 text-left text-[13px] font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-3 transition-colors"
+                    onClick={() => {
+                      setIsHidden(true);
+                      onNotInterested?.(id);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-3 text-left text-[13px] font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-3 transition-colors border-t border-zinc-100 dark:border-zinc-800"
                   >
                     <AlertTriangle size={16} />
                     Not Interested
