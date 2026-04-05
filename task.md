@@ -63,7 +63,11 @@
   - [x] Update `src/components/PdfViewer.tsx` with AI trigger and panel
   - [x] Verify AI assistant UI and "flow up" animation
   - [x] Integrate external AI API (using secure server-side env vars)
-  - [x] Interface for asking academic questions
+  - [x] Test AI response and content extraction
+  - [ ] Fix News Feed Auto-Refresh Issue
+    - [x] Remove random sorting from `src/app/page.tsx`
+    - [x] Implement optimistic cache updates for likes/bookmarks/reposts in `src/app/page.tsx`
+    - [x] Verify feed stability during interactions
   - [x] Support generating explanations, study summaries, and quick revision help
 
 ## Phase 7 — Multi‑University Scaling

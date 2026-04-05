@@ -99,7 +99,7 @@ export default function Home() {
         isLiked: likedPostIds.has(post.id),
         isBookmarked: bookmarkedPostIds.has(post.id),
         isReposted: repostedPostIds.has(post.id)
-      })).sort(() => Math.random() - 0.5);
+      }));
 
 
     },
@@ -119,13 +119,32 @@ export default function Home() {
 
   const posts = postsData || [];
 
+  const updatePostCache = (postId: string, updater: (post: any) => any) => {
+    queryClient.setQueryData(['posts', user?.id, userUniId], (old: any) => {
+      if (!old) return old;
+      return old.map((p: any) => p.id === postId ? updater(p) : p);
+    });
+  };
+
   const handleLike = async (postId: string) => {
     if (!user) return;
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-    if (post.isLiked) { await supabase.from('likes').delete().match({ post_id: postId, user_id: user.id }); } 
-    else { await supabase.from('likes').insert({ post_id: postId, user_id: user.id }); }
-    queryClient.invalidateQueries({ queryKey: ['posts'] });
+
+    const wasLiked = post.isLiked;
+    
+    // Optimistic Update
+    updatePostCache(postId, (p) => ({
+      ...p,
+      isLiked: !wasLiked,
+      likes_count: wasLiked ? Math.max(0, (p.likes_count || 0) - 1) : (p.likes_count || 0) + 1
+    }));
+
+    if (wasLiked) { 
+      await supabase.from('likes').delete().match({ post_id: postId, user_id: user.id }); 
+    } else { 
+      await supabase.from('likes').insert({ post_id: postId, user_id: user.id }); 
+    }
   };
   
   const handleCommentClick = (postId: string) => {
@@ -144,18 +163,40 @@ export default function Home() {
     if (!user) return;
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-    if (post.isBookmarked) { await supabase.from('bookmarks').delete().match({ post_id: postId, user_id: user.id }); }
-    else { await supabase.from('bookmarks').insert({ post_id: postId, user_id: user.id }); }
-    queryClient.invalidateQueries({ queryKey: ['posts'] });
+
+    const wasBookmarked = post.isBookmarked;
+
+    // Optimistic Update
+    updatePostCache(postId, (p) => ({
+      ...p,
+      isBookmarked: !wasBookmarked
+    }));
+
+    if (wasBookmarked) { 
+      await supabase.from('bookmarks').delete().match({ post_id: postId, user_id: user.id }); 
+    } else { 
+      await supabase.from('bookmarks').insert({ post_id: postId, user_id: user.id }); 
+    }
   };
 
   const handleRepost = async (postId: string) => {
     if (!user) return;
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-    if (post.isReposted) { await supabase.from('reposts').delete().match({ post_id: postId, user_id: user.id }); }
-    else { await supabase.from('reposts').insert({ post_id: postId, user_id: user.id }); }
-    queryClient.invalidateQueries({ queryKey: ['posts'] });
+
+    const wasReposted = post.isReposted;
+
+    // Optimistic Update
+    updatePostCache(postId, (p) => ({
+      ...p,
+      isReposted: !wasReposted
+    }));
+
+    if (wasReposted) { 
+      await supabase.from('reposts').delete().match({ post_id: postId, user_id: user.id }); 
+    } else { 
+      await supabase.from('reposts').insert({ post_id: postId, user_id: user.id }); 
+    }
   };
 
   const openDeleteModal = (postId: string) => { setSelectedPostForDelete(postId); setIsDeleteModalOpen(true); };
