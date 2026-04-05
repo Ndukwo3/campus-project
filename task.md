@@ -90,4 +90,13 @@
 - [ ] UX Improvements
   - [ ] Mobile responsiveness
   - [ ] Clean onboarding and navigation refinement
+## Phase 9 — Authentication Enhancements
+
+- [x] Implement Client-Side Google Auth (Google Identity Services)
+  - [x] Add `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to `.env.local`
+  - [x] Add Google SDK script to `src/app/layout.tsx`
+  - [x] Update `src/app/login/page.tsx` with `signInWithIdToken`
+  - [x] Update `src/app/signup/page.tsx` with `signInWithIdToken`
+  - [x] Verify the "continue to" domain display in Google Cloud Console
+
 - [x] Fix hydration mismatch in layout.tsx (suppressHydrationWarning)

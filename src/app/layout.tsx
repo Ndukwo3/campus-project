@@ -68,6 +68,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://*.supabase.co" />
         <link rel="dns-prefetch" href="https://*.supabase.co" />
         <Script
+          id="google-gsi"
+          src="https://accounts.google.com/gsi/client"
+          strategy="beforeInteractive"
+        />
+        <Script
           id="sw-register"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{

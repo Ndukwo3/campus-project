@@ -69,24 +69,45 @@ export default function SignupPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const { error: googleError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            prompt: 'select_account',
+      const { google } = window as any;
+      if (!google) {
+        throw new Error("Google Identity Services not loaded");
+      }
+
+      google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        callback: async (response: any) => {
+          try {
+            const { data, error: idTokenError } = await supabase.auth.signInWithIdToken({
+              provider: 'google',
+              token: response.credential,
+            });
+
+            if (idTokenError) throw idTokenError;
+
+            if (data.user) {
+               // Check if user has a COMPLETE profile
+               const { data: profile } = await supabase
+                .from('profiles')
+                .select('id, username, first_name')
+                .eq('id', data.user.id)
+                .single();
+
+              if (!profile || !profile.username || !profile.first_name) {
+                router.push("/onboarding");
+              } else {
+                router.push("/");
+              }
+            }
+          } catch (err: any) {
+            console.error("Google verify error:", err);
+            setError(err.message || "Failed to verify Google account.");
+            setIsLoading(false);
           }
         },
       });
 
-      if (googleError) {
-        if (googleError.message.includes("Account already exists")) {
-          setError("This email is already registered. Please log in with your password.");
-        } else {
-          setError(googleError.message);
-        }
-        setIsLoading(false);
-      }
+      google.accounts.id.prompt();
     } catch (err: any) {
       console.error("Google login error:", err);
       setError("Failed to initialize Google login.");
