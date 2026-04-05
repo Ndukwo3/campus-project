@@ -22,16 +22,20 @@ export default function BottomNavigation() {
       if (!user) return 0;
 
       // Fetch unread messages NOT from this user
+      // 🛡️ Note: RLS handles filtering to only show messages in user's conversations
       const { count, error } = await supabase
         .from('messages')
-        .select('id', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true })
         .eq('is_read', false)
         .neq('sender_id', user.id);
 
-      if (error) return 0;
+      if (error) {
+        console.error("Unread count error:", error);
+        return 0;
+      }
       return count || 0;
     },
-    refetchInterval: 30000, // Refresh every 30s as fallback
+    refetchInterval: 30000, 
   });
 
   // 🛰️ Real-time Listener for the badge
