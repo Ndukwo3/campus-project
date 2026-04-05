@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { 
   ArrowLeft, Grid, Bookmark, Tag, User, Camera, Edit3, CheckCircle2, 
   Loader2, LogOut, Package, Shield, Settings, Settings2, Trash2, Maximize2, 
-  Repeat2, ChevronRight, X, ImagePlus, Check 
+  Repeat2, ChevronRight, X, ImagePlus, Check, Plus 
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -1149,6 +1149,17 @@ export default function ProfilePage() {
 
       {/* Bottom Navigation */}
       <BottomNavigation />
+      
+      {/* Floating Action Button */}
+      <div className="fixed bottom-[92px] left-1/2 -translate-x-1/2 w-full max-w-md pointer-events-none z-[60] px-6 flex justify-end">
+        <Link 
+          href="/create" 
+          className="w-14 h-14 bg-[#E5FF66] text-black rounded-2xl flex items-center justify-center shadow-[0_8px_30px_rgb(229,255,102,0.4)] hover:shadow-[0_12px_40px_rgb(229,255,102,0.5)] active:scale-90 transition-all duration-300 pointer-events-auto border-2 border-white dark:border-black group"
+        >
+          <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" strokeWidth={3} />
+          <div className="absolute -inset-0.5 bg-[#E5FF66] rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity" />
+        </Link>
+      </div>
       
       <ConnectionsModal 
         isOpen={isConnectionsOpen}
