@@ -205,12 +205,11 @@ export default function FeedCard({
       </div>
 
       {/* Description */}
-      <p className="text-zinc-700 dark:text-zinc-300 text-[15.5px] leading-relaxed font-medium px-1 tracking-tight">
-        {description === "[[USER_PROFILE_UPDATE]]" 
-          ? (isOwner ? "You have updated your profile photo." : `${authorName} updated their profile photo.`)
-          : description
-        }
-      </p>
+      {description !== "[[USER_PROFILE_UPDATE]]" && (
+        <p className="text-zinc-700 dark:text-zinc-300 text-[15.5px] leading-relaxed font-medium px-1 tracking-tight">
+          {description}
+        </p>
+      )}
 
       {/* Image Content (Optional) */}
       {postImage && (

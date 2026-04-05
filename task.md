@@ -11,11 +11,12 @@
   - [x] Update `AuthLogo.tsx` to use the image logo and restore brand text
   - [x] Verify the change across different pages (Feed, Login)
 - [x] Database Design & Setup
+  - [x] Database Schema: Add `parent_id` to `comments` table
   - [x] Core tables (`users`, `universities`, `departments`, `profiles`, `posts`, `messages`, `groups`, `group_members`, `reports`)
   - [x] Seed `universities` and `departments` (prevent duplicates)
-  - [ ] Storage setup (profile avatars only, enforced size/type limits)
-  - [ ] Row Level Security (RLS) policies basics
-- [ ] Authentication
+  - [x] Storage setup (profile avatars only, enforced size/type limits)
+  - [x] Row Level Security (RLS) policies basics
+- [x] Authentication
   - [x] Email signup/login via Supabase Auth
   - [x] Basic onboarding flow (Select university, department, level)
   - [x] Profile creation
@@ -32,12 +33,12 @@
 
 ## Phase 3 — Social Feed
 
-- [ ] University Feed
+- [x] University Feed
   - [x] Create text-only posts
   - [x] Like and comment on posts
   - [x] Realtime updates via Supabase Realtime
-- [ ] Moderation System
-  - [ ] Basic reporting mechanism for MVP text feed
+- [x] Moderation System
+  - [x] Basic reporting mechanism for MVP text feed
 
 ## Phase 4 — Messaging System
 
@@ -58,6 +59,7 @@
 - [x] AI Integration
   - [x] Create `src/components/LibraryAiAssistant.tsx`
   - [x] Update `src/app/library/page.tsx` to pass `course_code`
+  - [x] Update `src/components/FeedCard.tsx`: Hide `[[USER_PROFILE_UPDATE]]` text
   - [x] Update `src/components/PdfViewer.tsx` with AI trigger and panel
   - [x] Verify AI assistant UI and "flow up" animation
   - [x] Integrate external AI API (using secure server-side env vars)
