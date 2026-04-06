@@ -22,6 +22,40 @@ export default function MessagesPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+
+  const handleMarkAllRead = async () => {
+    setIsMarkingAllRead(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+      const { data: convs } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+      
+      if (!convs || convs.length === 0) return;
+      const conversationIds = convs.map((c: any) => c.conversation_id);
+
+      const { error } = await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .in('conversation_id', conversationIds)
+        .neq('sender_id', user.id)
+        .eq('is_read', false);
+
+      if (!error) {
+        queryClient.invalidateQueries({ queryKey: ['inbox'] });
+        queryClient.invalidateQueries({ queryKey: ['unread-messages'] });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsMarkingAllRead(false);
+      setShowMoreMenu(false);
+    }
+  };
 
   // 🏛️ The "Instant-Inbox" Engine
   const { data: chats = [], isLoading } = useQuery({
@@ -296,8 +330,12 @@ export default function MessagesPage() {
                       exit={{ opacity: 0, scale: 0.95, y: 10 }}
                       className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 rounded-[24px] shadow-2xl border border-zinc-100 dark:border-zinc-800 overflow-hidden py-2"
                     >
-                      <button className="w-full px-5 py-3 text-left text-xs font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-                        Mark All Read
+                      <button 
+                        onClick={handleMarkAllRead}
+                        disabled={isMarkingAllRead}
+                        className="w-full px-5 py-3 text-left text-xs font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                      >
+                        {isMarkingAllRead ? "Marking..." : "Mark All Read"}
                       </button>
                       <button className="w-full px-5 py-3 text-left text-xs font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                         Archive All
@@ -370,7 +408,13 @@ export default function MessagesPage() {
       <div className="px-5 mt-2">
         <div className="flex items-center justify-between mb-5 px-1">
           <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-zinc-400 dark:text-zinc-600">Recent Chats</h2>
-          <button className="text-[11px] font-bold text-[#222] dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 px-3 py-1 rounded-full active:scale-95 transition-all">Mark Read</button>
+          <button 
+            onClick={handleMarkAllRead}
+            disabled={isMarkingAllRead}
+            className="text-[11px] font-bold text-[#222] dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 px-3 py-1 rounded-full active:scale-95 transition-all disabled:opacity-50"
+          >
+            {isMarkingAllRead ? "..." : "Mark Read"}
+          </button>
         </div>
         
         <div className="flex flex-col gap-1">

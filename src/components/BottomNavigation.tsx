@@ -32,14 +32,12 @@ export default function BottomNavigation() {
       const conversationIds = convs.map((c: any) => c.conversation_id);
 
       // Fetch unread messages NOT from this user within those conversations
-      // Also filter out messages the user has "deleted for me" (handling NULL values manually)
       const { count, error } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
         .in('conversation_id', conversationIds)
         .eq('is_read', false)
-        .neq('sender_id', user.id)
-        .or(`deleted_by.is.null,deleted_by.not.cs.{"${user.id}"}`);
+        .neq('sender_id', user.id);
 
       if (error) {
         console.error("Unread count error:", error);
