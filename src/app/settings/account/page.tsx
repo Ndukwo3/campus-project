@@ -24,7 +24,7 @@ export default function AccountSettingsPage() {
   const supabase = createClient();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-?
+
   // loading & saving states
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
