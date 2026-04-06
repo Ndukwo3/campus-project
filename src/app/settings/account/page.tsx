@@ -71,17 +71,31 @@ export default function AccountSettingsPage() {
   // Sync form state when data is loaded
   useEffect(() => {
     if (profile) {
-      setName(profile.full_name ?? "");
-      setUsername(profile.username ?? "");
-      setBio(profile.bio ?? "");
-      setLevel(profile.level ?? "100 Level");
-      setAvatarUrl(profile.avatar_url ?? null);
-      setDepartment(profile.departments?.name ?? "");
-      setUniversityName(profile.universities?.name ?? "");
-      setPhone(profile.phone ?? "");
-      setDob(profile.dob ?? "");
+      setName(profile.full_name || "");
+      setUsername(profile.username || "");
+      setBio(profile.bio || "");
+      setLevel(profile.level || "100 Level");
+      setAvatarUrl(profile.avatar_url || null);
+      
+      // Handle join data (supports both object and array structures)
+      const deptData = profile.departments;
+      const univData = profile.universities;
+      
+      setDepartment(
+        Array.isArray(deptData) ? (deptData[0]?.name || "") : (deptData?.name || "")
+      );
+      setUniversityName(
+        Array.isArray(univData) ? (univData[0]?.name || "") : (univData?.name || "")
+      );
+      
+      setPhone(profile.phone || "");
+      setDob(profile.dob || "");
+    } else if (!isLoading) {
+      // Fallback if profile is fully missing
+      setName("");
+      setUsername("");
     }
-  }, [profile]);
+  }, [profile, isLoading]);
 
   const handleSave = async () => {
     if (!userId) return;
