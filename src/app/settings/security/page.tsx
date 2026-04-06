@@ -260,9 +260,12 @@ export default function SecuritySettingsPage() {
       )}
 
       <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-[#F8F9FA]/80 dark:bg-black/80 backdrop-blur-md z-10 border-b border-zinc-100 dark:border-zinc-800/50">
-        <Link href="/settings" className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition shadow-sm shrink-0 border border-transparent dark:border-zinc-800">
+        <button 
+          onClick={() => router.back()}
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition shadow-sm shrink-0 border border-transparent dark:border-zinc-800"
+        >
           <ArrowLeft size={20} className="text-black dark:text-white" />
-        </Link>
+        </button>
         <span className="font-bold text-[14px] uppercase tracking-[0.2em] text-black dark:text-white">Security</span>
         <div className="w-10 h-10" />
       </div>
