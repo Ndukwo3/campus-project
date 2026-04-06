@@ -50,6 +50,7 @@ export const viewport: Viewport = {
 import GlobalStateLoader from "@/components/GlobalStateLoader";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalModals } from "@/components/GlobalModals";
+import SessionTracker from "@/components/SessionTracker";
 import FloatingCreateButton from "@/components/FloatingCreateButton";
 import Script from "next/script";
 import Providers from "@/components/Providers";
@@ -99,6 +100,7 @@ export default function RootLayout({
           >
             <ThemeColorUpdater />
             <GlobalStateLoader />
+            <SessionTracker />
             {children}
             <GlobalModals />
 

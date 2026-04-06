@@ -168,57 +168,46 @@ export default function SecuritySettingsPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [deviceInfo, setDeviceInfo] = useState({ name: "Syncing device...", icon: Smartphone });
-  const [location, setLocation] = useState("Nigeria");
-  const [isSyncingLocation, setIsSyncingLocation] = useState(false);
+  
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    // 🛡️ Precision Device Detection
-    const ua = navigator.userAgent;
-    const platform = (navigator as any).platform || "";
-    
-    if (/iPhone/i.test(ua)) {
-      setDeviceInfo({ name: "iPhone 14 Pro", icon: Smartphone });
-    } else if (/Android/i.test(ua)) {
-      setDeviceInfo({ name: "Android Device", icon: Smartphone });
-    } else if (/Mac/i.test(platform) || /Macintosh/i.test(ua)) {
-      setDeviceInfo({ name: "MacBook Pro", icon: Monitor });
-    } else if (/Win/i.test(platform) || /Windows/i.test(ua)) {
-      setDeviceInfo({ name: "Windows PC", icon: Monitor });
-    } else {
-      setDeviceInfo({ name: "Desktop Device", icon: Monitor });
-    }
+    setCurrentSessionId(localStorage.getItem("univas_session_id"));
 
-    // 🛰️ Geolocation
-    const fetchCity = async (lat: number, lon: number) => {
-      setIsSyncingLocation(true);
-      try {
-        const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
-        const data = await res.json();
-        if (data.city || data.locality) {
-          setLocation(`${data.city || data.locality}, Nigeria`);
-        }
-      } catch (err) {
-        console.error("Geocoding error:", err);
-      } finally {
-        setIsSyncingLocation(false);
-      }
+    const fetchSessions = async () => {
+      const { data } = await supabase.from("user_sessions").select("*").order("last_active", { ascending: false });
+      if (data) setSessions(data);
     };
 
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => fetchCity(position.coords.latitude, position.coords.longitude),
-        (err) => {
-          console.warn("Location error:", err);
-          setLocation("Lagos, Nigeria");
-        }
-      );
-    }
-  }, []);
+    fetchSessions();
+
+    // ⚡️ Real-time subscription
+    const channel = supabase
+      .channel("user_sessions_changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_sessions" }, () => {
+        fetchSessions();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleRemoteLogout = async (sessionId: string) => {
+    try {
+      const { error } = await supabase.from("user_sessions").delete().eq("session_id", sessionId);
+      if (error) throw error;
+      showToast("✅ Device signed out remotely.");
+    } catch (err) {
+      showToast("❌ Failed to sign out device.");
+    }
   };
 
   const handleGlobalLogout = async () => {
@@ -289,23 +278,46 @@ export default function SecuritySettingsPage() {
           <h3 className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] mb-3 px-4">
             Where you're logged in
           </h3>
-          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
-            <div className="flex items-start gap-4 px-4 py-5">
-              <deviceInfo.icon size={24} className="text-emerald-500 mt-1 shrink-0" />
-              <div className="flex flex-col">
-                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">{deviceInfo.name}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] text-zinc-500 dark:text-zinc-500">
-                    {isSyncingLocation ? "Finding location..." : location} • Active now
-                  </span>
-                  {isSyncingLocation && <Loader2 size={12} className="animate-spin text-zinc-400" />}
+          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-800/50">
+            {sessions.map((session) => {
+              const isCurrent = session.session_id === currentSessionId;
+              const Icon = session.device_name.includes("MacBook") || session.device_name.includes("PC") ? Monitor : Smartphone;
+
+              return (
+                <div key={session.id} className="flex items-start justify-between p-5 group">
+                  <div className="flex gap-4">
+                    <Icon size={24} className={isCurrent ? "text-emerald-500" : "text-zinc-400 dark:text-zinc-600"} />
+                    <div className="flex flex-col">
+                      <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">{session.device_name}</span>
+                      <span className="text-[13px] text-zinc-500 dark:text-zinc-500">
+                        {session.city}, {session.country} • {isCurrent ? "Active now" : "Last seen " + new Date(session.last_active).toLocaleDateString()}
+                      </span>
+                      {isCurrent && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                           <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Current Device</span>
+                         </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {!isCurrent && (
+                    <button 
+                      onClick={() => handleRemoteLogout(session.session_id)}
+                      className="text-[10px] font-black uppercase tracking-widest text-red-600/60 hover:text-red-600 transition p-2 opacity-0 group-hover:opacity-100"
+                    >
+                      Sign Out
+                    </button>
+                  )}
                 </div>
-                <div className="flex items-center gap-1.5 mt-2">
-                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Current Device</span>
-                 </div>
+              );
+            })}
+            
+            {sessions.length === 0 && (
+              <div className="p-10 text-center text-[12px] font-bold text-zinc-400 uppercase tracking-widest">
+                No active sessions found
               </div>
-            </div>
+            )}
           </div>
         </section>
 
