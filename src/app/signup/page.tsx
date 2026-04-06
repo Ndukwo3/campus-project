@@ -96,15 +96,19 @@ export default function SignupPage() {
           if (idTokenError) throw idTokenError;
 
           if (data.user) {
+            // Check if user has a COMPLETE profile (First Name, Last Name, University)
             const { data: profile } = await supabase
               .from('profiles')
-              .select('id, username, first_name')
+              .select('id, username, first_name, last_name, university_id')
               .eq('id', data.user.id)
               .single();
 
-            if (!profile || !profile.username || !profile.first_name) {
+            // Logic Victor requested: If missing ANY key info, send to onboarding
+            if (!profile || !profile.username || !profile.first_name || !profile.last_name || !profile.university_id) {
+              console.log("Profile incomplete, redirecting to onboarding...");
               router.push("/onboarding");
             } else {
+              console.log("Profile complete, welcome back!");
               router.push("/");
             }
           }

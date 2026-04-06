@@ -86,15 +86,19 @@ export default function LoginPage() {
           if (idTokenError) throw idTokenError;
 
           if (data.user) {
+            // Check if user has a COMPLETE profile (First Name, Last Name, University)
             const { data: profile } = await supabase
               .from('profiles')
-              .select('id, username, first_name')
+              .select('id, username, first_name, last_name, university_id')
               .eq('id', data.user.id)
               .single();
 
-            if (!profile || !profile.username || !profile.first_name) {
+            // Logic Victor requested: If missing ANY key info, send to onboarding
+            if (!profile || !profile.username || !profile.first_name || !profile.last_name || !profile.university_id) {
+              console.log("Profile incomplete, redirecting to onboarding...");
               router.push("/onboarding");
             } else {
+              console.log("Profile complete, welcome back!");
               router.push("/");
             }
           }
@@ -216,6 +220,15 @@ export default function LoginPage() {
             Or login with
           </div>
         </div>
+
+        {/* Post Preview (Sticky-ish) */}
+        {postContent && (
+          <div className="px-6 py-4 bg-zinc-50/50 border-b border-zinc-100/50">
+            <p className="text-zinc-600 text-[14px] line-clamp-2 italic leading-relaxed">
+              "{postContent}"
+            </p>
+          </div>
+        )}
 
         {/* Social Buttons */}
         <div className="flex flex-col gap-4 mb-12">
