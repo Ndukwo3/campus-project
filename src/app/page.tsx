@@ -104,6 +104,7 @@ export default function Home() {
 
     },
     enabled: !!user?.id,
+    refetchOnWindowFocus: false, // 🚫 Prevent accidental jumps during interactions
   });
 
   const userLoading = isLoadingPosts || !user;

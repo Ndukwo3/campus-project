@@ -105,6 +105,20 @@ export default function CommentModal({
   const handleLikeComment = async (commentId: string, isLiked: boolean) => {
     if (!currentUser) return;
 
+    // 🚀 Optimistic local update
+    setComments(prev => 
+      prev.map(c => 
+        c.id === commentId 
+          ? { 
+              ...c, 
+              comment_likes: isLiked 
+                ? c.comment_likes?.filter((l: any) => l.user_id !== currentUser.id) 
+                : [...(c.comment_likes || []), { user_id: currentUser.id }] 
+            } 
+          : c
+      )
+    );
+
     if (isLiked) {
       await supabase
         .from("comment_likes")
@@ -115,7 +129,8 @@ export default function CommentModal({
         .from("comment_likes")
         .insert({ comment_id: commentId, user_id: currentUser.id });
     }
-    fetchComments(); // Refresh local state
+    // Deep sync eventually (optional since user has optimistic state)
+    // fetchComments(); 
   };
 
   if (!isOpen) return null;
