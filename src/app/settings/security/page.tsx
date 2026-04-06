@@ -3,6 +3,7 @@
 import { ArrowLeft, Key, ShieldCheck, Smartphone, Monitor, X, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
