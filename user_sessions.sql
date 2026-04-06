@@ -33,6 +33,7 @@ DROP POLICY IF EXISTS "Users can manage own session identity" ON public.user_ses
 CREATE POLICY "Users can manage own session identity" ON public.user_sessions FOR INSERT 
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own session pulse" ON public.user_sessions;
 CREATE POLICY "Users can update own session pulse" ON public.user_sessions FOR UPDATE
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
