@@ -24,26 +24,27 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [profile, setProfile] = useState<any>(null);
-
-  useEffect(() => {
-    async function fetchProfile() {
+  const { data: profile } = useQuery({
+    queryKey: ['profile-settings'],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('full_name, username, avatar_url')
-          .eq('id', user.id)
-          .single();
-        setProfile(data);
-      }
-    }
-    fetchProfile();
-  }, [supabase]);
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, username, avatar_url')
+        .eq('id', user.id)
+        .single();
+      return data;
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true
+  });
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

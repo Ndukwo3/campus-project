@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
 
 function Toast({ message }: { message: string }) {
   return (
@@ -21,6 +22,7 @@ function Toast({ message }: { message: string }) {
 export default function AccountSettingsPage() {
   const router = useRouter();
   const supabase = createClient();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Loading & saving states
@@ -100,6 +102,7 @@ export default function AccountSettingsPage() {
     if (error) {
       showToast("❌ Failed to save. Please try again.");
     } else {
+      queryClient.invalidateQueries({ queryKey: ['profile-settings'] });
       showToast("Profile saved successfully!");
     }
   };
@@ -132,6 +135,7 @@ export default function AccountSettingsPage() {
       if (updateError) throw updateError;
 
       setAvatarUrl(publicUrl);
+      queryClient.invalidateQueries({ queryKey: ['profile-settings'] });
       showToast("Profile photo updated!");
     } catch (err: any) {
       showToast("❌ Upload failed. Check your storage bucket.");
