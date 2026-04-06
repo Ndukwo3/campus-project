@@ -65,54 +65,74 @@ export default function SignupPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const [nonce, setNonce] = useState<string | null>(null);
+
+  // 🛡️ Initialize Google GSI on Mount for speed and reliability
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const { google } = window as any;
+    if (!google) return;
+
+    // Generate a secure random nonce once
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    const rawNonce = Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+    setNonce(rawNonce);
+
+    google.accounts.id.initialize({
+      client_id: clientId,
+      nonce: rawNonce,
+      callback: async (response: any) => {
+        try {
+          setIsLoading(true);
+          const { data, error: idTokenError } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: response.credential,
+            nonce: rawNonce,
+          });
+
+          if (idTokenError) throw idTokenError;
+
+          if (data.user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id, username, first_name')
+              .eq('id', data.user.id)
+              .single();
+
+            if (!profile || !profile.username || !profile.first_name) {
+              router.push("/onboarding");
+            } else {
+              router.push("/");
+            }
+          }
+        } catch (err: any) {
+          console.error("Google verify error:", err);
+          setError(err.message || "Failed to verify Google account.");
+          setIsLoading(false);
+        }
+      },
+    });
+  }, [supabase, router]);
+
+  const handleGoogleLogin = () => {
     setIsLoading(true);
     setError(null);
-    try {
-      const { google } = window as any;
-      if (!google) {
-        throw new Error("Google Identity Services not loaded");
-      }
-
-      google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        callback: async (response: any) => {
-          try {
-            const { data, error: idTokenError } = await supabase.auth.signInWithIdToken({
-              provider: 'google',
-              token: response.credential,
-            });
-
-            if (idTokenError) throw idTokenError;
-
-            if (data.user) {
-               // Check if user has a COMPLETE profile
-               const { data: profile } = await supabase
-                .from('profiles')
-                .select('id, username, first_name')
-                .eq('id', data.user.id)
-                .single();
-
-              if (!profile || !profile.username || !profile.first_name) {
-                router.push("/onboarding");
-              } else {
-                router.push("/");
-              }
-            }
-          } catch (err: any) {
-            console.error("Google verify error:", err);
-            setError(err.message || "Failed to verify Google account.");
-            setIsLoading(false);
-          }
-        },
-      });
-
-      google.accounts.id.prompt();
-    } catch (err: any) {
-      console.error("Google login error:", err);
-      setError("Failed to initialize Google login.");
+    const { google } = window as any;
+    
+    if (!google || !nonce) {
+      setError("Google Login is still loading. Please try again in a moment.");
       setIsLoading(false);
+      return;
     }
+
+    google.accounts.id.prompt((notification: any) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        setIsLoading(false);
+      }
+    });
   };
 
   return (
