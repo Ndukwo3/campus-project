@@ -21,13 +21,25 @@ export default function BottomNavigation() {
       const user = session?.user;
       if (!user) return 0;
 
-      // Fetch unread messages NOT from this user
-      // 🛡️ Note: RLS handles filtering to only show messages in user's conversations
+      // 🛡️ Proactive Filter: only count messages from user's own conversations
+      // This prevents "ghost" badges for new users from unconfigured RLS
+      const { data: convs } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+      
+      if (!convs || convs.length === 0) return 0;
+      const conversationIds = convs.map((c: any) => c.conversation_id);
+
+      // Fetch unread messages NOT from this user within those conversations
+      // Also filter out messages the user has "deleted for me" (handling NULL values manually)
       const { count, error } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
+        .in('conversation_id', conversationIds)
         .eq('is_read', false)
-        .neq('sender_id', user.id);
+        .neq('sender_id', user.id)
+        .or(`deleted_by.is.null,deleted_by.not.cs.{"${user.id}"}`);
 
       if (error) {
         console.error("Unread count error:", error);
