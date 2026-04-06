@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 function Toast({ message }: { message: string }) {
   return (
@@ -24,9 +24,8 @@ export default function AccountSettingsPage() {
   const supabase = createClient();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Loading & saving states
-  const [isLoading, setIsLoading] = useState(true);
+?
+  // loading & saving states
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -49,34 +48,40 @@ export default function AccountSettingsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Fetch real profile on mount
-  useEffect(() => {
-    async function fetchProfile() {
+  // Real-time Query Sync
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['profile-account'],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/login"); return; }
-
+      if (!user) { router.push("/login"); return null; }
+      
       setUserId(user.id);
       setEmail(user.email ?? "");
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("*, universities(name), departments(name)")
         .eq("id", user.id)
         .single();
-
-      if (data) {
-        setName(data.full_name ?? "");
-        setUsername(data.username ?? "");
-        setBio(data.bio ?? "");
-        setLevel(data.level ?? "100 Level");
-        setAvatarUrl(data.avatar_url ?? null);
-        setDepartment(data.departments?.name ?? "");
-        setUniversityName(data.universities?.name ?? "");
-      }
-      setIsLoading(false);
+      
+      return data;
     }
-    fetchProfile();
-  }, []);
+  });
+
+  // Sync form state when data is loaded
+  useEffect(() => {
+    if (profile) {
+      setName(profile.full_name ?? "");
+      setUsername(profile.username ?? "");
+      setBio(profile.bio ?? "");
+      setLevel(profile.level ?? "100 Level");
+      setAvatarUrl(profile.avatar_url ?? null);
+      setDepartment(profile.departments?.name ?? "");
+      setUniversityName(profile.universities?.name ?? "");
+      setPhone(profile.phone ?? "");
+      setDob(profile.dob ?? "");
+    }
+  }, [profile]);
 
   const handleSave = async () => {
     if (!userId) return;
@@ -95,6 +100,8 @@ export default function AccountSettingsPage() {
         username: username.trim(),
         bio: bio.trim(),
         level,
+        phone: phone.trim(),
+        dob: dob,
       })
       .eq("id", userId);
 
@@ -102,6 +109,7 @@ export default function AccountSettingsPage() {
     if (error) {
       showToast("❌ Failed to save. Please try again.");
     } else {
+      queryClient.invalidateQueries({ queryKey: ['profile-account'] });
       queryClient.invalidateQueries({ queryKey: ['profile-settings'] });
       showToast("Profile saved successfully!");
     }
@@ -135,6 +143,7 @@ export default function AccountSettingsPage() {
       if (updateError) throw updateError;
 
       setAvatarUrl(publicUrl);
+      queryClient.invalidateQueries({ queryKey: ['profile-account'] });
       queryClient.invalidateQueries({ queryKey: ['profile-settings'] });
       showToast("Profile photo updated!");
     } catch (err: any) {
