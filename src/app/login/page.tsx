@@ -54,83 +54,82 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-      
-      if (!clientId) {
-        console.error("Google Client ID is missing.");
-        setError("Configuration Error: Google Client ID is missing.");
-        setIsLoading(false);
-        return;
-      }
+  const [nonce, setNonce] = useState<string | null>(null);
 
-      const { google } = window as any;
-      if (!google) {
-        throw new Error("Google Identity Services not loaded yet. Please refresh.");
-      }
+  // 🛡️ Initialize Google GSI on Mount for speed and reliability
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
 
-      // 🛡️ Generate a secure random nonce for Supabase verification
-      const array = new Uint8Array(16);
-      crypto.getRandomValues(array);
-      const rawNonce = Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+    const { google } = window as any;
+    if (!google) return;
 
-      google.accounts.id.initialize({
-        client_id: clientId,
-        nonce: rawNonce, // Pass raw nonce to Google
-        callback: async (response: any) => {
-          try {
-            console.log("Google response received, verifying with Supabase...");
-            const { data, error: idTokenError } = await supabase.auth.signInWithIdToken({
-              provider: 'google',
-              token: response.credential,
-              nonce: rawNonce, // Pass same raw nonce to Supabase
-            });
+    // Generate a secure random nonce once
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    const rawNonce = Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+    setNonce(rawNonce);
 
-            if (idTokenError) throw idTokenError;
+    google.accounts.id.initialize({
+      client_id: clientId,
+      nonce: rawNonce,
+      callback: async (response: any) => {
+        try {
+          setIsLoading(true);
+          console.log("Google response received, verifying...");
+          const { data, error: idTokenError } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: response.credential,
+            nonce: rawNonce,
+          });
 
-            if (data.user) {
-               // Check if user has a COMPLETE profile
-               const { data: profile } = await supabase
-                .from('profiles')
-                .select('id, username, first_name')
-                .eq('id', data.user.id)
-                .single();
+          if (idTokenError) throw idTokenError;
 
-              if (!profile || !profile.username || !profile.first_name) {
-                router.push("/onboarding");
-              } else {
-                router.push("/");
-              }
+          if (data.user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id, username, first_name')
+              .eq('id', data.user.id)
+              .single();
+
+            if (!profile || !profile.username || !profile.first_name) {
+              router.push("/onboarding");
+            } else {
+              router.push("/");
             }
-          } catch (err: any) {
-            console.error("Google verify error:", err);
-            setError(err.message || "Failed to verify Google account.");
-            setIsLoading(false);
           }
-        },
-      });
-
-      google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed()) {
-          const reason = notification.getNotDisplayedReason();
-          console.log("One Tap not displayed:", reason);
-          if (reason === "unregistered_origin") {
-            setError("Security Error: This domain is not authorized in Google Cloud Console.");
-            setIsLoading(false);
-          }
-        } else if (notification.isSkippedMoment()) {
-          console.log("One Tap skipped:", notification.getSkippedReason());
+        } catch (err: any) {
+          console.error("Google verify error:", err);
+          setError(err.message || "Failed to verify Google account.");
           setIsLoading(false);
         }
-      });
-    } catch (err: any) {
-      console.error("Google login error:", err);
-      setError("Failed to initialize Google login.");
+      },
+    });
+  }, [supabase, router]);
+
+  const handleGoogleLogin = () => {
+    setIsLoading(true);
+    setError(null);
+    const { google } = window as any;
+    
+    if (!google || !nonce) {
+      setError("Google Login is still loading. Please try again in a moment.");
       setIsLoading(false);
+      return;
     }
+
+    google.accounts.id.prompt((notification: any) => {
+      if (notification.isNotDisplayed()) {
+        console.log("One Tap not displayed:", notification.getNotDisplayedReason());
+        // If it's a security/origin error, show it to the user
+        if (notification.getNotDisplayedReason() === "unregistered_origin") {
+          setError("Security Error: This domain is not authorized in Google Console.");
+        }
+        setIsLoading(false);
+      } else if (notification.isSkippedMoment()) {
+        setIsLoading(false);
+      }
+    });
   };
 
   return (
