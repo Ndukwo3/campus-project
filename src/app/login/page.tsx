@@ -72,14 +72,22 @@ export default function LoginPage() {
         throw new Error("Google Identity Services not loaded yet. Please refresh.");
       }
 
+      // 🛡️ Generate a secure random nonce for Supabase verification
+      const rawNonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const array = new Uint8Array(16);
+      crypto.getRandomValues(array);
+      const rawNonce = Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+
       google.accounts.id.initialize({
         client_id: clientId,
+        nonce: rawNonce, // Pass raw nonce to Google
         callback: async (response: any) => {
           try {
             console.log("Google response received, verifying with Supabase...");
             const { data, error: idTokenError } = await supabase.auth.signInWithIdToken({
               provider: 'google',
               token: response.credential,
+              nonce: rawNonce, // Pass same raw nonce to Supabase
             });
 
             if (idTokenError) throw idTokenError;
@@ -121,7 +129,7 @@ export default function LoginPage() {
       });
     } catch (err: any) {
       console.error("Google login error:", err);
-      setError("Failed to initialize Google login: " + err.message);
+      setError("Failed to initialize Google login.");
       setIsLoading(false);
     }
   };
