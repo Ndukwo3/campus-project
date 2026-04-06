@@ -58,15 +58,25 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     try {
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      
+      if (!clientId) {
+        console.error("Google Client ID is missing.");
+        setError("Configuration Error: Google Client ID is missing.");
+        setIsLoading(false);
+        return;
+      }
+
       const { google } = window as any;
       if (!google) {
-        throw new Error("Google Identity Services not loaded");
+        throw new Error("Google Identity Services not loaded yet. Please refresh.");
       }
 
       google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        client_id: clientId,
         callback: async (response: any) => {
           try {
+            console.log("Google response received, verifying with Supabase...");
             const { data, error: idTokenError } = await supabase.auth.signInWithIdToken({
               provider: 'google',
               token: response.credential,
@@ -76,7 +86,6 @@ export default function LoginPage() {
 
             if (data.user) {
                // Check if user has a COMPLETE profile
-               // (Mirroring callback logic for consistency)
                const { data: profile } = await supabase
                 .from('profiles')
                 .select('id, username, first_name')
@@ -98,14 +107,21 @@ export default function LoginPage() {
       });
 
       google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          console.log("One Tap suppressed, checking why:", notification.getNotDisplayedReason());
-          // If suppressed (e.g. user closed it), we can try again or show a manual button
+        if (notification.isNotDisplayed()) {
+          const reason = notification.getNotDisplayedReason();
+          console.log("One Tap not displayed:", reason);
+          if (reason === "unregistered_origin") {
+            setError("Security Error: This domain is not authorized in Google Cloud Console.");
+            setIsLoading(false);
+          }
+        } else if (notification.isSkippedMoment()) {
+          console.log("One Tap skipped:", notification.getSkippedReason());
+          setIsLoading(false);
         }
       });
     } catch (err: any) {
       console.error("Google login error:", err);
-      setError("Failed to initialize Google login.");
+      setError("Failed to initialize Google login: " + err.message);
       setIsLoading(false);
     }
   };
