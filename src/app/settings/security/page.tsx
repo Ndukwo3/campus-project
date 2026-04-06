@@ -290,7 +290,7 @@ export default function SecuritySettingsPage() {
             Where you're logged in
           </h3>
           <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
-            <div className="flex items-start gap-4 px-4 py-5 border-b border-zinc-100 dark:border-zinc-800/50">
+            <div className="flex items-start gap-4 px-4 py-5">
               <deviceInfo.icon size={24} className="text-emerald-500 mt-1 shrink-0" />
               <div className="flex flex-col">
                 <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">{deviceInfo.name}</span>
@@ -304,14 +304,6 @@ export default function SecuritySettingsPage() {
                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Current Device</span>
                  </div>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 px-4 py-5 opacity-60">
-              <Monitor size={24} className="text-zinc-400 dark:text-zinc-600 mt-1 shrink-0" />
-              <div className="flex flex-col flex-1">
-                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Chrome on Windows</span>
-                <span className="text-[13px] text-zinc-500 dark:text-zinc-500">Abuja, Nigeria • Yesterday</span>
               </div>
             </div>
           </div>
