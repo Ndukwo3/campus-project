@@ -2,7 +2,8 @@
 
 import { ArrowLeft, Key, ShieldCheck, Smartphone, Monitor, X, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase";
 
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   return (
@@ -20,40 +21,59 @@ function ChangePasswordModal({ onClose, onSuccess }: { onClose: () => void; onSu
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const supabase = createClient();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setError("");
     if (!current) return setError("Please enter your current password.");
     if (newPass.length < 8) return setError("New password must be at least 8 characters.");
     if (newPass !== confirm) return setError("Passwords do not match.");
-    onSuccess();
-    onClose();
+
+    setIsUpdating(true);
+    try {
+      // Supabase's updatePassword will verify the session
+      const { error: updateError } = await supabase.auth.updateUser({ 
+        password: newPass 
+      });
+
+      if (updateError) throw updateError;
+      
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      console.error("Password update error:", err);
+      setError(err.message || "Failed to update password. Ensure you are signed in.");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-white rounded-t-[32px] w-full max-w-md p-6 pb-10 space-y-5"
+        className="bg-white dark:bg-zinc-900 rounded-t-[32px] w-full max-w-md p-6 pb-10 space-y-5"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="font-black text-xl text-black">Change Password</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition">
-            <X size={16} />
+          <h2 className="font-black text-xl text-black dark:text-white">Change Password</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 transition">
+            <X size={16} className="text-black dark:text-white" />
           </button>
         </div>
 
         {error && (
-          <p className="text-[13px] font-bold text-red-600 bg-red-50 rounded-xl px-4 py-2">{error}</p>
+          <p className="text-[13px] font-bold text-red-600 bg-red-50 dark:bg-red-500/10 rounded-xl px-4 py-2">{error}</p>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-3 font-sans">
           <div className="relative">
             <input
               type={showCurrent ? "text" : "password"}
               placeholder="Current password"
               value={current}
               onChange={e => setCurrent(e.target.value)}
-              className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl py-3.5 px-4 text-[15px] font-medium text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent pr-12"
+              className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl py-3.5 px-4 text-[15px] font-medium text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 focus:border-transparent pr-12"
             />
             <button onClick={() => setShowCurrent(!showCurrent)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400">
               {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -66,7 +86,7 @@ function ChangePasswordModal({ onClose, onSuccess }: { onClose: () => void; onSu
               placeholder="New password (min. 8 chars)"
               value={newPass}
               onChange={e => setNewPass(e.target.value)}
-              className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl py-3.5 px-4 text-[15px] font-medium text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent pr-12"
+              className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl py-3.5 px-4 text-[15px] font-medium text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 focus:border-transparent pr-12 font-sans"
             />
             <button onClick={() => setShowNew(!showNew)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400">
               {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -79,7 +99,7 @@ function ChangePasswordModal({ onClose, onSuccess }: { onClose: () => void; onSu
               placeholder="Confirm new password"
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
-              className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl py-3.5 px-4 text-[15px] font-medium text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent pr-12"
+              className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl py-3.5 px-4 text-[15px] font-medium text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E2FF3D]/50 focus:border-transparent pr-12"
             />
             <button onClick={() => setShowConfirm(!showConfirm)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400">
               {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -89,9 +109,10 @@ function ChangePasswordModal({ onClose, onSuccess }: { onClose: () => void; onSu
 
         <button
           onClick={handleSubmit}
-          className="w-full bg-black text-white rounded-2xl py-4 font-bold text-[15px] hover:bg-zinc-800 transition-colors active:scale-95"
+          disabled={isUpdating}
+          className="w-full bg-black dark:bg-[#E2FF3D] text-white dark:text-black rounded-2xl py-4 font-black text-[15px] hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50 uppercase tracking-widest flex items-center justify-center gap-2"
         >
-          Update Password
+          {isUpdating ? "Checking..." : "Update Password"}
         </button>
       </div>
     </div>
@@ -104,32 +125,35 @@ function ConfirmModal({
   confirmLabel,
   onConfirm,
   onClose,
+  isLoading = false
 }: {
   title: string;
   description: string;
   confirmLabel: string;
   onConfirm: () => void;
   onClose: () => void;
+  isLoading?: boolean;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-6" onClick={onClose}>
-      <div className="bg-white rounded-[28px] w-full max-w-sm p-6 space-y-4" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-zinc-900 rounded-[28px] w-full max-w-sm p-6 space-y-4" onClick={e => e.stopPropagation()}>
         <div className="flex flex-col items-center text-center gap-2">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-1">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center mb-1">
             <AlertTriangle size={22} className="text-red-600" />
           </div>
-          <h2 className="font-black text-xl text-black">{title}</h2>
-          <p className="text-[14px] text-zinc-500">{description}</p>
+          <h2 className="font-black text-xl text-black dark:text-white">{title}</h2>
+          <p className="text-[14px] text-zinc-500 dark:text-zinc-400">{description}</p>
         </div>
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 bg-zinc-100 text-zinc-700 rounded-2xl py-3.5 font-bold text-[15px] hover:bg-zinc-200 transition">
+          <button onClick={onClose} className="flex-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-2xl py-3.5 font-bold text-[15px] hover:bg-zinc-200 transition">
             Cancel
           </button>
           <button
-            onClick={() => { onConfirm(); onClose(); }}
-            className="flex-1 bg-red-600 text-white rounded-2xl py-3.5 font-bold text-[15px] hover:bg-red-700 transition active:scale-95"
+            onClick={() => onConfirm()}
+            disabled={isLoading}
+            className="flex-1 bg-red-600 text-white rounded-2xl py-3.5 font-bold text-[15px] hover:bg-red-700 transition active:scale-95 disabled:opacity-50 flex items-center justify-center"
           >
-            {confirmLabel}
+            {isLoading ? "Signing out..." : confirmLabel}
           </button>
         </div>
       </div>
@@ -138,14 +162,46 @@ function ConfirmModal({
 }
 
 export default function SecuritySettingsPage() {
+  const router = useRouter();
+  const supabase = createClient();
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [deviceInfo, setDeviceInfo] = useState({ name: "Unknown Device", icon: Smartphone });
+
+  useEffect(() => {
+    // Basic Device Detection
+    const ua = navigator.userAgent;
+    if (/iPhone/i.test(ua)) {
+      setDeviceInfo({ name: "iPhone 14 Pro", icon: Smartphone });
+    } else if (/Android/i.test(ua)) {
+      setDeviceInfo({ name: "Android Device", icon: Smartphone });
+    } else {
+      setDeviceInfo({ name: "Chrome on Windows", icon: Monitor });
+    }
+  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleGlobalLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (error) throw error;
+      showToast("✅ Logged out of all devices.");
+      setShowLogoutConfirm(false);
+      // Optional: Refresh or redirect
+      router.push("/welcome");
+    } catch (err: any) {
+      console.error("Logout error:", err);
+      showToast("❌ Failed to log out of all devices.");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -160,10 +216,11 @@ export default function SecuritySettingsPage() {
       {showLogoutConfirm && (
         <ConfirmModal
           title="Log out everywhere?"
-          description="You'll be signed out of all other devices. This device won't be affected."
+          description="You'll be signed out of all other devices including this one. You'll need to log back in."
           confirmLabel="Log Out"
-          onConfirm={() => showToast("✅ Logged out of all other devices.")}
+          onConfirm={handleGlobalLogout}
           onClose={() => setShowLogoutConfirm(false)}
+          isLoading={isLoggingOut}
         />
       )}
 
@@ -183,7 +240,7 @@ export default function SecuritySettingsPage() {
 
             <button
               onClick={() => setShowChangePassword(true)}
-              className="flex items-center justify-between w-full px-4 py-5 border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              className="flex items-center justify-between w-full px-4 py-5 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-black flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
@@ -196,27 +253,6 @@ export default function SecuritySettingsPage() {
               </div>
             </button>
 
-            <button
-              onClick={() => {
-                setTwoFAEnabled(!twoFAEnabled);
-                showToast(twoFAEnabled ? "Two-Factor Auth disabled." : "✅ Two-Factor Auth enabled!");
-              }}
-              className="flex items-center justify-between w-full px-4 py-5 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-black flex items-center justify-center border border-zinc-100 dark:border-zinc-800">
-                  <ShieldCheck size={16} className={twoFAEnabled ? "text-emerald-500" : "text-zinc-600 dark:text-zinc-400"} />
-                </div>
-                <div className="flex flex-col items-start">
-                  <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Two-Factor Auth</span>
-                  <span className="text-[12px] text-zinc-500 dark:text-zinc-500">Add an extra layer of security</span>
-                </div>
-              </div>
-              <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${twoFAEnabled ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10" : "text-zinc-400 bg-zinc-100 dark:bg-black border border-zinc-200 dark:border-zinc-800"}`}>
-                {twoFAEnabled ? "Active" : "Off"}
-              </span>
-            </button>
-
           </div>
         </section>
 
@@ -225,17 +261,17 @@ export default function SecuritySettingsPage() {
           <h3 className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.2em] mb-3 px-4 shadow-none">
             Where you're logged in
           </h3>
-          <div className="bg-white dark:bg-zinc-900 rounded-[24px) shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
 
             <div className="flex items-start gap-4 px-4 py-5 border-b border-zinc-100 dark:border-zinc-800/50">
-              <Smartphone size={24} className="text-emerald-500 mt-1 shrink-0" />
+              <deviceInfo.icon size={24} className="text-emerald-500 mt-1 shrink-0" />
               <div className="flex flex-col">
-                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">iPhone 14 Pro</span>
+                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">{deviceInfo.name}</span>
                 <span className="text-[13px] text-zinc-500 dark:text-zinc-500">Lagos, Nigeria • Active now</span>
                 <div className="flex items-center gap-1.5 mt-2">
                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Current Device</span>
-                </div>
+                 </div>
               </div>
             </div>
 
@@ -250,7 +286,7 @@ export default function SecuritySettingsPage() {
           </div>
         </section>
 
-        <section className="px-2">
+        <section className="px-2 pb-6">
           <button
             onClick={() => setShowLogoutConfirm(true)}
             className="w-full bg-red-50 dark:bg-red-500/5 text-red-600 rounded-2xl py-4 font-black text-[15px] border border-red-100/50 dark:border-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/10 transition-all active:scale-[0.98]"
