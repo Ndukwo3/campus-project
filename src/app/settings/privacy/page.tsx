@@ -2,7 +2,10 @@
 
 import { ArrowLeft, Globe, Users, Navigation, Eye, Hash, ShieldAlert, X, AlertTriangle, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 function Toast({ message }: { message: string }) {
   return (
@@ -13,49 +16,78 @@ function Toast({ message }: { message: string }) {
   );
 }
 
-function BlockedUsersModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-t-[32px] w-full max-w-md p-6 pb-10 space-y-4" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h2 className="font-black text-xl text-black">Blocked Users</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition">
-            <X size={16} />
-          </button>
-        </div>
-        <div className="flex flex-col items-center py-8 gap-2 text-center">
-          <ShieldAlert size={40} className="text-zinc-300 mb-2" />
-          <p className="font-bold text-zinc-500">No blocked users</p>
-          <p className="text-[13px] text-zinc-400">Users you block will appear here.</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function PrivacySettingsPage() {
   const router = useRouter();
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+  
   const [postVisibility, setPostVisibility] = useState("My Univas Only");
   const [profileVisibility, setProfileVisibility] = useState("Univas Only");
   const [followerVisibility, setFollowerVisibility] = useState("Everyone");
   const [canMessage, setCanMessage] = useState("Everyone");
   const [canTag, setCanTag] = useState("Everyone");
-  const [showBlocked, setShowBlocked] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['privacy-settings'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('post_visibility, profile_visibility, follower_visibility, can_message, can_tag')
+        .eq('id', user.id)
+        .single();
+      return data;
+    }
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setPostVisibility(profile.post_visibility || "My Univas Only");
+      setProfileVisibility(profile.profile_visibility || "Univas Only");
+      setFollowerVisibility(profile.follower_visibility || "Everyone");
+      setCanMessage(profile.can_message || "Everyone");
+      setCanTag(profile.can_tag || "Everyone");
+    }
+  }, [profile]);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleSave = () => {
-    showToast("Privacy settings saved!");
+  const handleSave = async () => {
+    setIsSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        post_visibility: postVisibility,
+        profile_visibility: profileVisibility,
+        follower_visibility: followerVisibility,
+        can_message: canMessage,
+        can_tag: canTag
+      })
+      .eq('id', user.id);
+
+    setIsSaving(false);
+    if (error) {
+      showToast("❌ Failed to save! Try again.");
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['privacy-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['profile-settings'] });
+      showToast("Privacy settings saved!");
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans transition-colors">
       {toast && <Toast message={toast} />}
-      {showBlocked && <BlockedUsersModal onClose={() => setShowBlocked(false)} />}
 
       <div className="flex items-center justify-between px-6 py-4 sticky top-0 bg-[#F8F9FA]/80 dark:bg-black/80 backdrop-blur-md z-10 border-b border-zinc-100 dark:border-zinc-800/50">
         <button 
@@ -168,32 +200,16 @@ export default function PrivacySettingsPage() {
           </div>
         </section>
 
-        {/* Blocking */}
-        <section>
-          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden">
-            <button
-              onClick={() => setShowBlocked(true)}
-              className="flex items-center justify-between w-full px-4 py-5 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <ShieldAlert size={18} className="text-red-500" />
-                <span className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100">Blocked Users</span>
-              </div>
-              <span className="text-[13px] font-black text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-black px-3 py-1 rounded-full">0</span>
-            </button>
-          </div>
-          <p className="text-[12px] text-zinc-400 dark:text-zinc-600 mt-4 px-4 text-center font-medium leading-relaxed">
-            Blocked users cannot see your profile, posts, or send you messages.
-          </p>
-        </section>
 
         {/* Save */}
         <div className="pt-2 pb-8 px-2">
           <button
             onClick={handleSave}
-            className="w-full bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black rounded-2xl py-4 font-black text-[15px] shadow-lg shadow-zinc-200 dark:shadow-none hover:opacity-90 transition-all active:scale-[0.98]"
+            disabled={isSaving || isLoading}
+            className="w-full bg-zinc-900 dark:bg-[#E5FF66] text-white dark:text-black rounded-2xl py-4 font-black text-[15px] shadow-lg shadow-zinc-200 dark:shadow-none hover:opacity-90 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
           >
-            Save Privacy Settings
+            {isSaving && <Loader2 className="animate-spin" size={18} />}
+            {isSaving ? "Saving Visibility..." : "Save Privacy Settings"}
           </button>
         </div>
       </main>
