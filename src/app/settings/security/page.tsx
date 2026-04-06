@@ -33,6 +33,19 @@ function ChangePasswordModal({ onClose, onSuccess }: { onClose: () => void; onSu
 
     setIsUpdating(true);
     try {
+      // 1. Get current user's email
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error("Could not find user email.");
+
+      // 2. Re-authenticate to verify the current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: current
+      });
+
+      if (signInError) throw new Error("Incorrect current password.");
+
+      // 3. If verified, update the password
       const { error: updateError } = await supabase.auth.updateUser({ 
         password: newPass 
       });
@@ -43,7 +56,7 @@ function ChangePasswordModal({ onClose, onSuccess }: { onClose: () => void; onSu
       onClose();
     } catch (err: any) {
       console.error("Password update error:", err);
-      setError(err.message || "Failed to update password. Ensure you are signed in.");
+      setError(err.message || "Failed to update password.");
     } finally {
       setIsUpdating(false);
     }
