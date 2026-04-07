@@ -72,14 +72,14 @@ export default function AccountSettingsPage() {
   // sync form state when data is loaded
   useEffect(() => {
     if (profile) {
-      // 1. Initial Name values: Try first/last name first, fallback to splitting full_name
+      // 1. Name values: Use split fields if available, otherwise fallback to splitting full_name
       if (profile.first_name) setFirstName(profile.first_name);
       if (profile.last_name) setLastName(profile.last_name);
       
       if (!profile.first_name && !profile.last_name && profile.full_name) {
-        const parts = profile.full_name.split(' ');
+        const parts = profile.full_name.trim().split(/\s+/);
         setFirstName(parts[0] || "");
-        setLastName(parts.slice(1).join(' ') || "");
+        setLastName(parts.length > 1 ? parts.slice(1).join(' ') : "");
       }
 
       setUsername(profile.username || "");
@@ -87,10 +87,16 @@ export default function AccountSettingsPage() {
       setLevel(profile.level || "100 Level");
       setAvatarUrl(profile.avatar_url || null);
       
-      // Handle join data (Universities and Departments)
-      // Next.js/Supabase sometimes returns an object or an array depending on the query
-      setUniversityName(profile.universities?.name || profile.universityName || "");
-      setDepartment(profile.departments?.name || profile.departmentName || "");
+      // Robust handling for relationship joins (Universities and Departments)
+      // Supabase can return these as objects or arrays depending on the schema relationship type.
+      const getJoinedDataName = (data: any) => {
+        if (!data) return "";
+        if (Array.isArray(data)) return data[0]?.name || "";
+        return data.name || "";
+      };
+
+      setUniversityName(getJoinedDataName(profile.universities));
+      setDepartment(getJoinedDataName(profile.departments));
       
       setPhone(profile.phone || "");
       setDob(profile.dob || "");
