@@ -32,7 +32,8 @@ export default function AccountSettingsPage() {
 
   // Profile data
   const [userId, setUserId] = useState<string>("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [phone, setPhone] = useState("");
@@ -68,49 +69,46 @@ export default function AccountSettingsPage() {
     }
   });
 
-  // Sync form state when data is loaded
+  // sync form state when data is loaded
   useEffect(() => {
     if (profile) {
-      setName(profile.full_name || "");
+      // 1. Initial Name values: Try first/last name first, fallback to splitting full_name
+      if (profile.first_name) setFirstName(profile.first_name);
+      if (profile.last_name) setLastName(profile.last_name);
+      
+      if (!profile.first_name && !profile.last_name && profile.full_name) {
+        const parts = profile.full_name.split(' ');
+        setFirstName(parts[0] || "");
+        setLastName(parts.slice(1).join(' ') || "");
+      }
+
       setUsername(profile.username || "");
       setBio(profile.bio || "");
       setLevel(profile.level || "100 Level");
       setAvatarUrl(profile.avatar_url || null);
       
-      // Handle join data (supports both object and array structures)
-      const deptData = profile.departments;
-      const univData = profile.universities;
-      
-      setDepartment(
-        Array.isArray(deptData) ? (deptData[0]?.name || "") : (deptData?.name || "")
-      );
-      setUniversityName(
-        Array.isArray(univData) ? (univData[0]?.name || "") : (univData?.name || "")
-      );
+      // Handle join data (Universities and Departments)
+      // Next.js/Supabase sometimes returns an object or an array depending on the query
+      setUniversityName(profile.universities?.name || profile.universityName || "");
+      setDepartment(profile.departments?.name || profile.departmentName || "");
       
       setPhone(profile.phone || "");
       setDob(profile.dob || "");
-    } else if (!isLoading) {
-      // Fallback if profile is fully missing
-      setName("");
-      setUsername("");
     }
-  }, [profile, isLoading]);
+  }, [profile]);
 
   const handleSave = async () => {
     if (!userId) return;
     setIsSaving(true);
 
-    const nameParts = name.trim().split(" ");
-    const first_name = nameParts[0] ?? "";
-    const last_name = nameParts.slice(1).join(" ");
+    const combinedFullName = `${firstName.trim()} ${lastName.trim()}`.trim() || "New Student";
 
     const { error } = await supabase
       .from("profiles")
       .update({
-        full_name: name.trim() || "New Student",
-        first_name,
-        last_name,
+        full_name: combinedFullName,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         username: username.trim(),
         bio: bio.trim(),
         level,
@@ -222,16 +220,30 @@ export default function AccountSettingsPage() {
         <section className="space-y-4">
           <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Basic Information</h3>
           <div className="space-y-4">
-            <div>
-              <label className="block text-[13px] font-bold text-zinc-600 mb-1 ml-1">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full bg-white border border-zinc-200 rounded-2xl py-3.5 pl-11 pr-4 text-[15px] font-medium text-black focus:outline-none focus:ring-2 focus:ring-[#E5FF66] focus:border-transparent transition-all"
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[13px] font-bold text-zinc-600 mb-1 ml-1">First Name</label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={e => setFirstName(e.target.value)}
+                    className="w-full bg-white border border-zinc-200 rounded-2xl py-3.5 pl-11 pr-4 text-[15px] font-medium text-black focus:outline-none focus:ring-2 focus:ring-[#E5FF66] focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[13px] font-bold text-zinc-600 mb-1 ml-1">Last Name</label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={e => setLastName(e.target.value)}
+                    className="w-full bg-white border border-zinc-200 rounded-2xl py-3.5 pl-11 pr-4 text-[15px] font-medium text-black focus:outline-none focus:ring-2 focus:ring-[#E5FF66] focus:border-transparent transition-all"
+                  />
+                </div>
               </div>
             </div>
 
