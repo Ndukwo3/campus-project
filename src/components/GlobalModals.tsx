@@ -25,20 +25,53 @@ export function GlobalModals() {
   const [shareModal, setShareModal] = useState<{isOpen: boolean, post?: any}>({isOpen: false});
 
   useEffect(() => {
-    const handleOpenComment = (e: any) => setCommentModal({isOpen: true, post: e.detail});
-    const handleOpenShare = (e: any) => setShareModal({isOpen: true, post: e.detail});
+    const handleOpenComment = (e: any) => {
+      setCommentModal({isOpen: true, post: e.detail});
+      window.history.pushState({ modal: 'comment' }, '');
+    };
+    const handleOpenShare = (e: any) => {
+      setShareModal({isOpen: true, post: e.detail});
+      window.history.pushState({ modal: 'share' }, '');
+    };
     const handleToast = (e: any) => showToast(e.detail.message, e.detail.type);
+
+    const handlePopState = (e: PopStateEvent) => {
+      // If we navigate back, close any open modals
+      setCommentModal(prev => prev.isOpen ? { ...prev, isOpen: false } : prev);
+      setShareModal(prev => prev.isOpen ? { ...prev, isOpen: false } : prev);
+    };
 
     window.addEventListener('open-comment', handleOpenComment);
     window.addEventListener('open-share', handleOpenShare);
     window.addEventListener('show-toast', handleToast);
+    window.addEventListener('popstate', handlePopState);
 
     return () => {
       window.removeEventListener('open-comment', handleOpenComment);
       window.removeEventListener('open-share', handleOpenShare);
       window.removeEventListener('show-toast', handleToast);
+      window.removeEventListener('popstate', handlePopState);
     };
   }, []);
+
+  const closeCommentModal = () => {
+    if (commentModal.isOpen) {
+      setCommentModal({ ...commentModal, isOpen: false });
+      // If the current history state is our modal, go back to clean it up
+      if (window.history.state?.modal === 'comment') {
+        window.history.back();
+      }
+    }
+  };
+
+  const closeShareModal = () => {
+    if (shareModal.isOpen) {
+      setShareModal({ ...shareModal, isOpen: false });
+      if (window.history.state?.modal === 'share') {
+        window.history.back();
+      }
+    }
+  };
 
   return (
     <>
@@ -51,7 +84,7 @@ export function GlobalModals() {
       {commentModal.isOpen && commentModal.post && (
         <CommentModal 
           isOpen={commentModal.isOpen}
-          onClose={() => setCommentModal({isOpen: false})}
+          onClose={closeCommentModal}
           postId={commentModal.post.id}
           postAuthor={commentModal.post.authorName}
           postContent={commentModal.post.description}
@@ -60,7 +93,7 @@ export function GlobalModals() {
       {shareModal.isOpen && shareModal.post && (
         <ShareModal 
           isOpen={shareModal.isOpen}
-          onClose={() => setShareModal({isOpen: false})}
+          onClose={closeShareModal}
           postId={shareModal.post.id}
           postContent={shareModal.post.description}
           onShowToast={showToast}
