@@ -37,7 +37,9 @@ export default function ContributePage() {
   // Lists
   const [universitiesList, setUniversitiesList] = useState<any[]>([]);
   const [divisionsList, setDivisionsList] = useState<any[]>([]); // faculties or colleges
+  const [departmentsList, setDepartmentsList] = useState<any[]>([]);
   const [isFetchingData, setIsFetchingData] = useState(false);
+  const [isFetchingDepts, setIsFetchingDepts] = useState(false);
 
   // Form State
   const [file, setFile] = useState<File | null>(null);
@@ -49,6 +51,8 @@ export default function ContributePage() {
   const [selectedDivisionId, setSelectedDivisionId] = useState("");
   const [selectedDivisionName, setSelectedDivisionName] = useState("");
   const [department, setDepartment] = useState("");
+  const [isOtherDept, setIsOtherDept] = useState(false);
+  const [manualDept, setManualDept] = useState("");
   const [level, setLevel] = useState("");
   const [semester, setSemester] = useState("");
 
@@ -124,6 +128,30 @@ export default function ContributePage() {
     }
   }, [universityId, supabase]);
 
+  // Fetch departments when faculty/college changes
+  useEffect(() => {
+    if (selectedDivisionId) {
+      const fetchDepts = async () => {
+        setIsFetchingDepts(true);
+        const { data } = await supabase
+          .from("departments")
+          .select("id, name")
+          .or(`faculty_id.eq.${selectedDivisionId},college_id.eq.${selectedDivisionId}`)
+          .order("name");
+        
+        setDepartmentsList(data || []);
+        setIsFetchingDepts(false);
+      };
+      fetchDepts();
+    } else {
+      setDepartmentsList([]);
+    }
+    // Always reset department selection when faculty/college changes
+    setDepartment("");
+    setIsOtherDept(false);
+    setManualDept("");
+  }, [selectedDivisionId, supabase]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -143,7 +171,8 @@ export default function ContributePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title || !universityName || !level || !semester || !department) {
+    const finalDept = isOtherDept ? manualDept : department;
+    if (!file || !title || !universityName || !level || !semester || !finalDept) {
       setError("Please fill in all mandatory fields (*) and select a file.");
       return;
     }
@@ -179,7 +208,7 @@ export default function ContributePage() {
           file_url: publicUrl,
           university_name: universityName,
           college_name: selectedDivisionName,
-          department_name: department,
+          department_name: finalDept,
           level,
           semester,
           status: 'pending',
@@ -405,17 +434,53 @@ export default function ContributePage() {
               </div>
             </div>
 
-            {/* Department (Text Input per request) */}
+            {/* Department Dropdown */}
             <div>
               <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-600 mb-2 px-1 uppercase tracking-widest leading-none">Department *</label>
-              <input 
-                type="text"
-                placeholder="e.g. Mechanical Engineering"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                required
-                className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
-              />
+              <div className="space-y-3">
+                <div className="relative">
+                  <select 
+                    value={isOtherDept ? "other" : department}
+                    onChange={(e) => {
+                      if (e.target.value === "other") {
+                        setIsOtherDept(true);
+                        setDepartment("");
+                      } else {
+                        setIsOtherDept(false);
+                        setDepartment(e.target.value);
+                      }
+                    }}
+                    disabled={!selectedDivisionId || isFetchingDepts}
+                    required
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[13px] font-bold text-zinc-900 dark:text-white outline-none border border-transparent dark:border-zinc-800 focus:border-[#E5FF66]/30 transition-all appearance-none cursor-pointer disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      {isFetchingDepts ? "Loading Departments..." : 
+                       !selectedDivisionId ? "Select Faculty First" :
+                       departmentsList.length === 0 ? "No Departments Listed" : "Select Department"}
+                    </option>
+                    {departmentsList.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                    <option value="other">{departmentsList.length === 0 ? "+ Add My Department" : "+ Other"}</option>
+                  </select>
+                  <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                </div>
+
+                {isOtherDept && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <input 
+                      type="text"
+                      placeholder="Type your department name..."
+                      value={manualDept}
+                      onChange={(e) => setManualDept(e.target.value)}
+                      required
+                      className="w-full bg-zinc-50 dark:bg-zinc-900 rounded-2xl px-5 py-4 text-[15px] font-bold text-zinc-900 dark:text-white outline-none border-2 border-[#E5FF66]/50 transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                    />
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
 

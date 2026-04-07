@@ -11,6 +11,16 @@
     - [x] Refactor UI to use dropdowns for all selection fields
     - [x] Verify database submission logic
     - [x] Test the full contribution flow
+  - [x] Implement "Mark All Read" in `MessagesPage.tsx`.
+  - [x] Add `handleMarkAllRead` function.
+  - [x] Link function to the "Mark Read" UI button.
+  - [x] Ensure database update for `is_read = true` across all user conversations.
+  - [x] Refine `BottomNavigation.tsx` unread count.
+  - [x] Simplify the query for better reliability.
+  - [x] Ensure it invalidates properly after "Mark All Read".
+  - [x] Aggregate counts in `MessagesPage.tsx`.
+  - [x] Ensure that even if conversations are deduped, the unread count is calculated correctly.
+  - [x] Verify fix and create walkthrough.
   - [x] Configure environment variables (Supabase, AI API keys)
   - [x] Setup Vercel deployment
   - [x] Identify official logo file (`icon-192x192.jpg`)
