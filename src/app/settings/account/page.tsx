@@ -69,7 +69,7 @@ export default function AccountSettingsPage() {
         .eq("id", user.id)
         .single();
       
-      return data;
+      return { ...data, metadata: user.user_metadata };
     }
   });
 
@@ -89,7 +89,10 @@ export default function AccountSettingsPage() {
       setUsername(profile.username || "");
       setBio(profile.bio || "");
       setLevel(profile.level || "100 Level");
-      setAvatarUrl(profile.avatar_url || null);
+      
+      // Fallback for avatar: Profile photo -> Metadata photo (e.g. Google) -> null
+      const fallbackAvatar = profile.metadata?.picture || profile.metadata?.avatar_url || null;
+      setAvatarUrl(profile.avatar_url || fallbackAvatar);
       
       // Robust handling for relationship joins (Universities and Departments)
       // Supabase can return these as objects or arrays depending on the schema relationship type.
