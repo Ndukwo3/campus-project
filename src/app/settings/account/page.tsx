@@ -61,7 +61,11 @@ export default function AccountSettingsPage() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("*, universities(name), departments(name)")
+        .select(`
+          *,
+          universities!university_id(name),
+          departments!department_id(name)
+        `)
         .eq("id", user.id)
         .single();
       
