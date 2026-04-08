@@ -59,17 +59,26 @@ export default function AccountSettingsPage() {
       setUserId(user.id);
       setEmail(user.email ?? "");
 
-      const { data } = await supabase
+      // 1. Fetch Profile first (Robustly)
+      const { data: profileData, error } = await supabase
         .from("profiles")
-        .select(`
-          *,
-          universities!university_id(name),
-          departments!department_id(name)
-        `)
+        .select("*")
         .eq("id", user.id)
         .single();
       
-      return { ...data, metadata: user.user_metadata };
+      if (error || !profileData) return null;
+
+      // 2. Fetch relations separately to avoid complex join failures
+      if (profileData.university_id) {
+        const { data: uni } = await supabase.from("universities").select("name").eq("id", profileData.university_id).maybeSingle();
+        if (uni) profileData.university_name = uni.name;
+      }
+      if (profileData.department_id) {
+        const { data: dept } = await supabase.from("departments").select("name").eq("id", profileData.department_id).maybeSingle();
+        if (dept) profileData.department_name = dept.name;
+      }
+      
+      return profileData;
     }
   });
 
@@ -90,20 +99,8 @@ export default function AccountSettingsPage() {
       setBio(profile.bio || "");
       setLevel(profile.level || "100 Level");
       
-      // Fallback for avatar: Profile photo -> Metadata photo (e.g. Google) -> null
-      const fallbackAvatar = profile.metadata?.picture || profile.metadata?.avatar_url || null;
-      setAvatarUrl(profile.avatar_url || fallbackAvatar);
-      
-      // Robust handling for relationship joins (Universities and Departments)
-      // Supabase can return these as objects or arrays depending on the schema relationship type.
-      const getJoinedDataName = (data: any) => {
-        if (!data) return "";
-        if (Array.isArray(data)) return data[0]?.name || "";
-        return data.name || "";
-      };
-
-      setUniversityName(getJoinedDataName(profile.universities));
-      setDepartment(getJoinedDataName(profile.departments));
+      setUniversityName(profile.university_name || "");
+      setDepartment(profile.department_name || "");
       
       setPhone(profile.phone || "");
       setDob(profile.dob || "");
