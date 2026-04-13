@@ -186,13 +186,17 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
               }`}
             >
               {isSending ? (
-                <Loader2 size={12} className="animate-spin" />
+                <div className="flex gap-0.5">
+                  <div className="w-1 h-1 bg-current rounded-full animate-bounce" />
+                  <div className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-1 h-1 bg-current rounded-full animate-bounce [animation-delay:0.4s]" />
+                </div>
               ) : isAlreadySent ? (
                 <Check size={12} />
               ) : (
                 <UserPlus size={12} />
               )}
-              {isSending ? "Sending..." : isAlreadySent ? "Request Sent" : "Connect"}
+              {isSending ? "Sending" : isAlreadySent ? "Request Sent" : "Connect"}
             </button>
           </div>
           );
