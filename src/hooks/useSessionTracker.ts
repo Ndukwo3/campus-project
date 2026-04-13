@@ -35,6 +35,35 @@ export function useSessionTracker() {
       localStorage.setItem("univas_session_id", sessionId);
     }
 
+    const fallbackToIP = async () => {
+      try {
+        const ipRes = await fetch('https://ipapi.co/json/');
+        const ipData = await ipRes.json();
+        
+        if (ipData.city) {
+          setLocationStatus("granted"); // Soft grant via IP
+          setIsLocationMandatory(false);
+          setErrorMsg(null);
+
+          await supabase.from("user_sessions").upsert({
+            user_id: user.id,
+            session_id: sessionId,
+            device_name: deviceName,
+            city: ipData.city || "Unknown City",
+            country: ipData.country_name || "Nigeria",
+            last_active: new Date().toISOString()
+          }, { onConflict: "session_id" });
+        } else {
+          throw new Error("IP Geolocation failed");
+        }
+      } catch (err) {
+        console.error("IP Fallback failed:", err);
+        setLocationStatus("denied");
+        setIsLocationMandatory(true);
+        setErrorMsg("Location could not be determined. Please enable location or check your connection.");
+      }
+    };
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         setLocationStatus("granted");
@@ -58,28 +87,14 @@ export function useSessionTracker() {
 
         } catch (err) {
           console.error("Session sync error:", err);
+          fallbackToIP(); // Try IP if geocoding fails
         }
       },
       (error) => {
-        console.error("Location error:", error);
-        setLocationStatus("denied");
-        setIsLocationMandatory(true);
-        
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            setErrorMsg("Permission denied. Please enable location in your browser/device settings.");
-            break;
-          case error.POSITION_UNAVAILABLE:
-            setErrorMsg("Location information is unavailable on this device.");
-            break;
-          case error.TIMEOUT:
-            setErrorMsg("Request timed out. Please try again.");
-            break;
-          default:
-            setErrorMsg("An unknown error occurred while accessing location.");
-        }
+        console.warn("GPS denied/failed, trying IP fallback...", error);
+        fallbackToIP();
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
     );
   }, [supabase]);
 
