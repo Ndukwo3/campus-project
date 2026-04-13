@@ -32,7 +32,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
   const [reposts, setReposts] = useState<any[]>([]);
   const [isConnectionsOpen, setIsConnectionsOpen] = useState(false);
 
-  // Toast State
+  const [hasStories, setHasStories] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
     message: "",
     type: "success",
@@ -119,6 +119,16 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
         .or(`user_id1.eq.${userId},user_id2.eq.${userId}`);
       
       setConnectionCount(connections || 0);
+
+      // Fetch active stories count
+      const now = new Date().toISOString();
+      const { count: storiesCount } = await supabase
+        .from('stories')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gt('expires_at', now);
+      
+      setHasStories(!!storiesCount && storiesCount > 0);
 
       // Fetch user's likes and bookmarks for interaction states
       if (authUser) {
@@ -348,7 +358,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
           <div className="relative">
             <div 
               onClick={() => profile?.avatar_url && setShowImageViewer(true)}
-              className={`w-28 h-28 rounded-full ring-4 ${profile?.avatar_url ? "ring-[#E5FF66] cursor-pointer" : "ring-zinc-200 dark:ring-zinc-800"} ring-offset-4 ring-offset-white dark:ring-offset-black overflow-hidden mb-4 shadow-lg transition-all flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 relative group`}
+              className={`w-28 h-28 rounded-full ring-4 ${hasStories ? "ring-[#E5FF66] cursor-pointer" : "ring-zinc-200 dark:ring-zinc-800"} ring-offset-4 ring-offset-white dark:ring-offset-black overflow-hidden mb-4 shadow-lg transition-all flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 relative group`}
             >
               {profile?.avatar_url ? (
                 <>
