@@ -415,6 +415,7 @@ export default function ProfilePage() {
           <div className="absolute w-16 h-16 bg-[#E5FF66]/20 rounded-full animate-ping" />
           <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(229,255,102,0.15)] animate-pulse relative z-10">
             <span className="text-[#E5FF66] font-black text-3xl italic tracking-tighter">U</span>
+            <span className="text-white font-black text-3xl italic tracking-tighter">-v</span>
           </div>
         </div>
       </div>
