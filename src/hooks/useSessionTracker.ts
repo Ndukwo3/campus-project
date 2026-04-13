@@ -109,19 +109,30 @@ export function useSessionTracker() {
     const initTracker = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      const isVerified = localStorage.getItem("univas_location_verified") === "true";
       
-      // Try to check permission state if supported
       if (typeof navigator !== "undefined" && "permissions" in navigator) {
         try {
           const status = await navigator.permissions.query({ name: "geolocation" as any });
+          
           if (status.state === "granted") {
             requestLocation();
           } else if (status.state === "denied") {
-            setLocationStatus("denied");
-            setIsLocationMandatory(true);
+            // If denied but previously verified, just try to update silently
+            if (isVerified) {
+              requestLocation(); // This will trigger fallbackToIP silently
+            } else {
+              // Not verified and denied -> Trigger fallback immediately
+              requestLocation(); 
+            }
           } else {
+            // "prompt" state
             setLocationStatus("prompt");
-            requestLocation(); // Still try once to trigger browser native prompt
+            if (!isVerified) {
+              // Still trigger once to show native prompt
+              requestLocation();
+            }
           }
           
           status.onchange = () => {
