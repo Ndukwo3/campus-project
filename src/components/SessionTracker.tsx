@@ -15,8 +15,7 @@ export default function SessionTracker() {
   const handleRetry = async () => {
     setIsRetrying(true);
     await requestLocation();
-    // Small delay to show animation
-    setTimeout(() => setIsRetrying(false), 1000);
+    setIsRetrying(false);
   };
 
   const handleLogout = async () => {
@@ -55,7 +54,7 @@ export default function SessionTracker() {
             className="w-full bg-black dark:bg-[#E2FF3D] text-white dark:text-black h-14 rounded-2xl font-black text-[13px] uppercase tracking-[0.2em] shadow-lg shadow-black/10 active:scale-95 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
           >
             <RefreshCw size={16} className={`${isRetrying ? 'animate-pulse scale-110' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-            {isRetrying ? 'Checking Status...' : 'Enable Location'}
+            {isRetrying ? 'Synchronizing...' : 'Allow Location Access'}
           </button>
 
           <button 
