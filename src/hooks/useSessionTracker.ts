@@ -41,9 +41,10 @@ export function useSessionTracker() {
         const ipData = await ipRes.json();
         
         if (ipData.city) {
-          setLocationStatus("granted"); // Soft grant via IP
+          setLocationStatus("granted");
           setIsLocationMandatory(false);
           setErrorMsg(null);
+          localStorage.setItem("univas_location_verified", "true");
 
           await supabase.from("user_sessions").upsert({
             user_id: user.id,
@@ -59,8 +60,13 @@ export function useSessionTracker() {
       } catch (err) {
         console.error("IP Fallback failed:", err);
         setLocationStatus("denied");
-        setIsLocationMandatory(true);
-        setErrorMsg("Location could not be determined. Please enable location or check your connection.");
+        
+        // ONLY block if they haven't been verified before
+        const isPreviouslyVerified = localStorage.getItem("univas_location_verified") === "true";
+        if (!isPreviouslyVerified) {
+          setIsLocationMandatory(true);
+          setErrorMsg("Location could not be determined. Please enable location or check your connection.");
+        }
       }
     };
 
@@ -69,6 +75,7 @@ export function useSessionTracker() {
         setLocationStatus("granted");
         setErrorMsg(null);
         setIsLocationMandatory(false);
+        localStorage.setItem("univas_location_verified", "true");
         const { latitude, longitude } = position.coords;
 
         try {
@@ -87,11 +94,11 @@ export function useSessionTracker() {
 
         } catch (err) {
           console.error("Session sync error:", err);
-          fallbackToIP(); // Try IP if geocoding fails
+          fallbackToIP();
         }
       },
       (error) => {
-        console.warn("GPS denied/failed, trying IP fallback...", error);
+        console.warn("GPS failed, trying IP fallback...", error);
         fallbackToIP();
       },
       { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
