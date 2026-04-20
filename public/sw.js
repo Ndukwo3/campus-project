@@ -55,3 +55,59 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
+// ─── Push Notifications ───────────────────────────────────────────────────────
+
+// Fired when the server sends a push message to the browser
+self.addEventListener('push', (event) => {
+    let payload = { title: 'Univas', body: 'You have a new notification', url: '/', icon: '/icon-192x192.png' };
+
+    try {
+        if (event.data) {
+            payload = { ...payload, ...JSON.parse(event.data.text()) };
+        }
+    } catch (e) {
+        // Fallback to default payload
+    }
+
+    const options = {
+        body: payload.body,
+        icon: payload.icon || '/icon-192x192.png',
+        badge: '/icon-192x192.png',
+        vibrate: [100, 50, 100],
+        data: { url: payload.url || '/' },
+        actions: [
+            { action: 'open', title: 'Open App' },
+            { action: 'dismiss', title: 'Dismiss' }
+        ]
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(payload.title, options)
+    );
+});
+
+// Fired when the user clicks the notification
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    if (event.action === 'dismiss') return;
+
+    const targetUrl = event.notification.data?.url || '/';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            // If the app is already open, navigate to the target URL
+            for (const client of windowClients) {
+                if (client.url.includes(self.location.origin) && 'focus' in client) {
+                    client.navigate(targetUrl);
+                    return client.focus();
+                }
+            }
+            // Otherwise, open a new window
+            if (clients.openWindow) {
+                return clients.openWindow(targetUrl);
+            }
+        })
+    );
+});

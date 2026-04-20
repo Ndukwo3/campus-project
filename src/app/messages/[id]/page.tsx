@@ -800,6 +800,23 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
     } else if (data) {
       // Replace optimistic message with real data
       setMessages((prev) => prev.map(m => m.id === tempId ? data : m));
+
+      // 🔔 Push notification to the partner
+      if (partner?.id) {
+        const senderName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Someone';
+        fetch('/api/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: partner.id,
+            title: `✉️ ${senderName}`,
+            body: newMessage.content.startsWith('[IMAGE]') ? '📷 Sent you a photo' 
+                  : newMessage.content.startsWith('[VOICE_NOTE]') ? '🎤 Sent you a voice note'
+                  : newMessage.content,
+            url: `/messages/${conversationId}`,
+          }),
+        }).catch(() => {}); // Fire-and-forget
+      }
     }
   };
 
