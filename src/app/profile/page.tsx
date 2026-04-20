@@ -163,6 +163,11 @@ export default function ProfilePage() {
       const { data: repostsData } = await supabase.from('reposts').select('post_id').eq('user_id', user.id);
       if (repostsData) setCurrentUserReposts(new Set(repostsData.map((r: any) => r.post_id)));
       
+      const { count: connections } = await supabase
+        .from('friends')
+        .select('*', { count: 'exact', head: true })
+        .or(`user_id1.eq.${user.id},user_id2.eq.${user.id}`);
+      
       setConnectionCount(connections || 0);
       
       // Fetch active stories count
