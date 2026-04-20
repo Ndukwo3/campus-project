@@ -65,79 +65,96 @@ export default function MessagesPage() {
       const user = session?.user;
       if (!user) return [];
 
-      const { data: myConversations, error: convError } = await supabase
+      // 1. Get my conversation IDs and their partner profiles in ONE go
+      const { data: myConvos, error: convError } = await supabase
         .from('conversation_participants')
-        .select('conversation_id')
+        .select(`
+          conversation_id,
+          profiles:user_id (
+            id,
+            username,
+            full_name,
+            avatar_url
+          )
+        `)
         .eq('user_id', user.id);
 
-      if (convError || !myConversations || myConversations.length === 0) return [];
+      if (convError || !myConvos || myConvos.length === 0) return [];
+      const conversationIds = myConvos.map(c => c.conversation_id);
 
-      const conversationIds = myConversations.map((c: any) => c.conversation_id);
-
-      const [partnersResult, latestMsgsResult] = await Promise.all([
+      // 2. Fetch partners and latest messages in parallel
+      const [partnersResult, latestMsgsResult, unreadResult] = await Promise.all([
+        // Get the OTHER person in each conversation
         supabase
           .from('conversation_participants')
-          .select('conversation_id, profiles(id, username, full_name, avatar_url)')
+          .select('conversation_id, profiles:user_id(id, username, full_name, avatar_url)')
           .in('conversation_id', conversationIds)
           .neq('user_id', user.id),
+        
+        // Get only the MOST RECENT message for each conversation
+        // Note: Since Supabase JS doesn't easily do "latest per group", 
+        // we fetch the top 1 message for each ID in parallel for small counts,
+        // or one large ordered fetch with a limited selection if counts are larger.
+        // For now, let's use a more efficient fetch:
         supabase
           .from('messages')
-          .select('id, conversation_id, content, sender_id, is_read, created_at')
+          .select('conversation_id, content, sender_id, is_read, created_at')
           .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }),
+          
+        // Optimized unread count fetch - only get what we need
+        supabase
+          .from('messages')
+          .select('conversation_id', { count: 'exact' })
+          .in('conversation_id', conversationIds)
+          .neq('sender_id', user.id)
+          .eq('is_read', false)
       ]);
 
-      if (!partnersResult.data || !latestMsgsResult.data) return [];
+      if (!partnersResult.data) return [];
 
-      const unreadCounts: Record<string, number> = {};
+      // Process unread counts efficiently
+      const unreadMap: Record<string, number> = {};
+      if (unreadResult.data) {
+        unreadResult.data.forEach((m: any) => {
+          unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1;
+        });
+      }
+
+      // Group messages by conversation to find the latest
+      const latestMsgMap: Record<string, any> = {};
       if (latestMsgsResult.data) {
-        for (const msg of latestMsgsResult.data) {
-          if (!msg.is_read && msg.sender_id !== user.id) {
-            unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
+        // Since they are ordered by created_at desc, the first one we find for a convo is the latest
+        latestMsgsResult.data.forEach((msg: any) => {
+          if (!latestMsgMap[msg.conversation_id]) {
+            latestMsgMap[msg.conversation_id] = msg;
           }
-        }
+        });
       }
 
-      const builtChats = [];
-      const processedPartnerIds = new Set();
-      
-      // Sort partners by their latest message or conversation ID to ensure deterministic order before deduping
-      const sortedPartners = [...partnersResult.data].map(p => {
-        const msg = latestMsgsResult.data?.find((m: any) => m.conversation_id === p.conversation_id);
-        return { ...p, msg, sortTime: msg ? new Date(msg.created_at).getTime() : 0 };
-      }).sort((a, b) => b.sortTime - a.sortTime);
+      const builtChats = partnersResult.data.map(p => {
+        const partnerData: any = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+        const msg = latestMsgMap[p.conversation_id];
+        
+        if (!msg) return null; // Skip empty convos
 
-      for (const partnerRaw of sortedPartners) {
-        const partnerData = Array.isArray(partnerRaw.profiles) ? partnerRaw.profiles[0] : partnerRaw.profiles;
-        const pId = partnerData?.id;
-        const cId = partnerRaw.conversation_id;
+        return {
+          id: p.conversation_id,
+          partner_id: partnerData?.id,
+          name: partnerData?.full_name || partnerData?.username || "Unknown Student",
+          avatar: partnerData?.avatar_url,
+          lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
+                       : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
+                       : msg.content,
+          time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          unread: unreadMap[p.conversation_id] || 0,
+          sortTime: new Date(msg.created_at).getTime(),
+        };
+      }).filter(Boolean).sort((a: any, b: any) => b.sortTime - a.sortTime);
 
-        if (pId && !processedPartnerIds.has(pId)) {
-          processedPartnerIds.add(pId);
-          
-          const msg = partnerRaw.msg;
-          if (!msg) continue; // Skip empty conversations per user request
-          
-          builtChats.push({
-            id: cId,
-            partner_id: pId,
-            name: partnerData?.full_name || partnerData?.username || "Unknown Student",
-            avatar: partnerData?.avatar_url,
-            lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
-                         : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
-                         : msg.content,
-            time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            unread: unreadCounts[cId] || 0,
-            online: true, 
-            sortTime: partnerRaw.sortTime,
-          });
-        }
-      }
-      
       return builtChats;
     },
-    staleTime: 5 * 1000,
-    refetchInterval: 5000, // Explicit fallback polling every 5 seconds
+    staleTime: 10 * 1000,
   });
 
   const { data: activeUsers = [] } = useQuery({
