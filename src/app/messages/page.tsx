@@ -80,7 +80,7 @@ export default function MessagesPage() {
         .eq('user_id', user.id);
 
       if (convError || !myConvos || myConvos.length === 0) return [];
-      const conversationIds = myConvos.map(c => c.conversation_id);
+      const conversationIds = myConvos.map((c: any) => c.conversation_id);
 
       // 2. Fetch partners and latest messages in parallel
       const [partnersResult, latestMsgsResult, unreadResult] = await Promise.all([
@@ -132,7 +132,7 @@ export default function MessagesPage() {
         });
       }
 
-      const builtChats = partnersResult.data.map(p => {
+      const builtChats = partnersResult.data.map((p: any) => {
         const partnerData: any = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
         const msg = latestMsgMap[p.conversation_id];
         
@@ -220,7 +220,7 @@ export default function MessagesPage() {
     };
   }, [supabase, queryClient]);
 
-  const filteredChats = chats.filter(c => 
+  const filteredChats = chats.filter((c: any) => 
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -438,7 +438,7 @@ export default function MessagesPage() {
           {isLoading ? (
             <ChatListSkeleton />
           ) : filteredChats.length > 0 ? (
-            filteredChats.map((chat) => {
+            filteredChats.map((chat: any) => {
               const isActive = onlineUsers.includes(chat.partner_id);
               return (
               <Link 
