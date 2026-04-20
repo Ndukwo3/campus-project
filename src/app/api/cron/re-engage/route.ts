@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendPushNotification } from '@/lib/webpush';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 // This route is called by Vercel Cron (see vercel.json)
 // Vercel passes a secret header to prevent unauthorized calls
 export async function GET(req: NextRequest) {
@@ -14,6 +9,12 @@ export async function GET(req: NextRequest) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Initialize inside handler so it only runs at request time, not build time
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   try {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
       if (success) {
         sentCount++;
       } else {
-        staleIds.push(user.id); // Track for cleanup
+        staleIds.push(user.id);
       }
     }
 
