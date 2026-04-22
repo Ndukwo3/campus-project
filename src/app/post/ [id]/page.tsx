@@ -10,6 +10,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import BottomNavigation from "@/components/BottomNavigation";
 import CommentModal from "@/components/CommentModal";
 import { motion, AnimatePresence } from "framer-motion";
+import Toast from "@/components/Toast";
 
 export default function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: postId } = use(params);
@@ -23,6 +24,15 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showCommentModal, setShowCommentModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning"; isVisible: boolean }>({
+    message: "",
+    type: "success",
+    isVisible: false,
+  });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ message, type, isVisible: true });
+  };
 
   useEffect(() => {
     async function fetchPostDetail() {
@@ -103,7 +113,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
     if (existingRepost) {
       await supabase.from('reposts').delete().eq('id', existingRepost.id);
-      showToast?.("Repost removed");
+      showToast("Repost removed");
     } else {
       await supabase.from('reposts').insert({ user_id: currentUser.id, post_id: postId });
       
@@ -117,7 +127,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
           is_read: false
         });
       }
-      showToast?.("Post reposted!");
+      showToast("Post reposted!");
     }
   };
 
@@ -263,9 +273,17 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
             postAuthor={post.profiles.full_name}
             postAuthorId={post.user_id}
             postContent={post.content}
+            showToast={showToast}
           />
         )}
       </AnimatePresence>
+
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        isVisible={toast.isVisible} 
+        onClose={() => setToast({ ...toast, isVisible: false })} 
+      />
 
       <BottomNavigation />
     </div>
