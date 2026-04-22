@@ -14,6 +14,7 @@ interface CommentModalProps {
   onClose: () => void;
   postId: string;
   postAuthor: string;
+  postAuthorId: string;
   postContent: string;
 }
 
@@ -22,6 +23,7 @@ export default function CommentModal({
   onClose,
   postId,
   postAuthor,
+  postAuthorId,
   postContent,
 }: CommentModalProps) {
   const [comment, setComment] = useState("");
@@ -100,7 +102,18 @@ export default function CommentModal({
       });
 
       if (!error) {
-        // Parse mentions and send notifications
+        // 1. Notify the post author about the new comment
+        if (postAuthorId && postAuthorId !== currentUser.id) {
+          await supabase.from('notifications').insert({
+            user_id: postAuthorId,
+            sender_id: currentUser.id,
+            type: 'comment',
+            content: `commented on your post: "${comment.substring(0, 50)}${comment.length > 50 ? '...' : ''}"`,
+            is_read: false
+          });
+        }
+
+        // 2. Parse mentions and send notifications
         const mentions = comment.match(/@(\w+)/g);
         if (mentions) {
            const usernames = mentions.map(m => m.substring(1));

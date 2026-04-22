@@ -168,7 +168,7 @@ export default function Home() {
   const handleCommentClick = (postId: string) => {
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-    window.dispatchEvent(new CustomEvent('open-comment', { detail: { id: postId, authorName: post.profiles?.full_name || post.profiles?.username, authorImage: post.profiles?.avatar_url, description: post.content }}));
+    window.dispatchEvent(new CustomEvent('open-comment', { detail: { id: postId, authorName: post.profiles?.full_name || post.profiles?.username, authorId: post.user_id, authorImage: post.profiles?.avatar_url, description: post.content }}));
   };
 
   const handleShare = (postId: string) => {
@@ -214,6 +214,17 @@ export default function Home() {
       await supabase.from('reposts').delete().match({ post_id: postId, user_id: user.id }); 
     } else { 
       await supabase.from('reposts').insert({ post_id: postId, user_id: user.id }); 
+      
+      // Notify the post author
+      if (post.user_id !== user.id) {
+        await supabase.from('notifications').insert({
+          user_id: post.user_id,
+          sender_id: user.id,
+          type: 'repost',
+          content: `reposted your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+          is_read: false
+        });
+      }
     }
   };
 

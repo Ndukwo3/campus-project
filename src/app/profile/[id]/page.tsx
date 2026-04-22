@@ -170,10 +170,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
     fetchUserReposts();
   }, [activeTab, userId, supabase]);
 
-  const handleRepost = async (postId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return router.push("/login");
-
     if (currentUserReposts.has(postId)) {
       await supabase.from('reposts').delete().match({ user_id: user.id, post_id: postId });
       setCurrentUserReposts(prev => {
@@ -189,6 +185,17 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
         next.add(postId);
         return next;
       });
+
+      // Notify the post author
+      if (userId !== user.id) {
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          sender_id: user.id,
+          type: 'repost',
+          content: `reposted your post.`,
+          is_read: false
+        });
+      }
       showToast("Post reposted!");
     }
   };
@@ -559,15 +566,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
                       showToast("Post bookmarked!");
                     }
                   }}
-                  onComment={(id: string) => {
                     const postData = {
                       id,
                       authorName: profile?.full_name || "User",
+                      authorId: userId,
                       authorImage: profile?.avatar_url,
                       description: post.content
                     };
                     window.dispatchEvent(new CustomEvent('open-comment', { detail: postData }));
-                  }}
                   onShare={(id: string) => {
                     const postData = {
                       id,

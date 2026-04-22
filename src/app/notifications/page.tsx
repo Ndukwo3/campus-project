@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, MoreVertical, Heart, MessageCircle, UserPlus, Bell, User, Check, Repeat2 } from "lucide-react";
+import { ArrowLeft, MoreVertical, Heart, MessageCircle, UserPlus, Bell, User, Check, Repeat2, AtSign } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -220,6 +220,7 @@ function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept
       case 'like': return { icon: <Heart size={10} fill="currentColor" />, color: 'bg-rose-500' };
       case 'comment': return { icon: <MessageCircle size={10} fill="currentColor" />, color: 'bg-sky-500' };
       case 'repost': return { icon: <Repeat2 size={10} strokeWidth={3} />, color: 'bg-emerald-500' };
+      case 'mention': return { icon: <AtSign size={10} strokeWidth={3} />, color: 'bg-indigo-500' };
       case 'connect_request': return { icon: <UserPlus size={10} />, color: 'bg-zinc-900 dark:bg-[#E5FF66] dark:text-black' };
       case 'connect_accepted': return { icon: <Check size={10} strokeWidth={3} />, color: 'bg-green-500' };
       default: return { icon: <Bell size={10} fill="currentColor" />, color: 'bg-[#E5FF66]' };

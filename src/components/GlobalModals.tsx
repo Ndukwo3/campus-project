@@ -87,6 +87,7 @@ export function GlobalModals() {
           onClose={closeCommentModal}
           postId={commentModal.post.id}
           postAuthor={commentModal.post.authorName}
+          postAuthorId={commentModal.post.authorId}
           postContent={commentModal.post.description}
         />
       )}

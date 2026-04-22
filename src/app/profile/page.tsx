@@ -84,11 +84,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleRepost = async (postId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    if (currentUserReposts.has(postId)) {
+    if (wasReposted) {
       await supabase.from('reposts').delete().match({ user_id: user.id, post_id: postId });
       setCurrentUserReposts(prev => {
         const next = new Set(prev);
@@ -103,6 +99,18 @@ export default function ProfilePage() {
         next.add(postId);
         return next;
       });
+
+      // Notify the post author
+      const { data: postData } = await supabase.from('posts').select('user_id, content').eq('id', postId).single();
+      if (postData && postData.user_id !== user.id) {
+        await supabase.from('notifications').insert({
+          user_id: postData.user_id,
+          sender_id: user.id,
+          type: 'repost',
+          content: `reposted your post: "${postData.content?.substring(0, 50)}${postData.content?.length > 50 ? '...' : ''}"`,
+          is_read: false
+        });
+      }
       showToast("Post reposted!");
     }
   };
@@ -713,6 +721,18 @@ export default function ProfilePage() {
                     if (!user) return;
                     await supabase.rpc('toggle_post_like', { post_id_input: id, user_id_input: user.id });
                     
+                    const isNowLiked = !currentUserLikes.has(id);
+                    // Send notification if liked
+                    if (isNowLiked && post.user_id !== user.id) {
+                      await supabase.from('notifications').insert({
+                        user_id: post.user_id,
+                        sender_id: user.id,
+                        type: 'like',
+                        content: `liked your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+                        is_read: false
+                      });
+                    }
+
                     // Update local state if needed (though FeedCard handles it optimistically)
                     setCurrentUserLikes(prev => {
                       const next = new Set(prev);
@@ -744,15 +764,14 @@ export default function ProfilePage() {
                       showToast("Post bookmarked!");
                     }
                   }}
-                  onComment={(id: string) => {
                     const postData = {
                       id,
                       authorName: profile?.full_name || "User",
+                      authorId: post.user_id,
                       authorImage: profile?.avatar_url,
                       description: post.content
                     };
                     window.dispatchEvent(new CustomEvent('open-comment', { detail: postData }));
-                  }}
                   onShare={(id: string) => {
                     const postData = {
                       id,

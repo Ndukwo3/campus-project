@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { ArrowLeft, Heart, MessageCircle, Share2, User, Bookmark, MoreVertical, Loader2 } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Share2, User, Bookmark, MoreVertical, Loader2, Repeat2 } from "lucide-react";
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -55,12 +55,12 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         setIsBookmarked(!!bookmark);
       }
 
-      // Fetch comments (if you have a comments table)
+      // Fetch comments
       const { data: commentsData } = await supabase
-        .from('post_comments')
+        .from('comments')
         .select(`
           *,
-          profiles (full_name, username, avatar_url)
+          profiles (id, full_name, username, avatar_url)
         `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
@@ -74,12 +74,14 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
   const handleLike = async () => {
     if (!currentUser) return;
-    setIsLiked(!isLiked);
-    setPost({ ...post, likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1 });
+    const wasLiked = isLiked;
+    setIsLiked(!wasLiked);
+    setPost({ ...post, likes_count: wasLiked ? Math.max(0, post.likes_count - 1) : post.likes_count + 1 });
+    
     await supabase.rpc('toggle_post_like', { post_id_input: postId, user_id_input: currentUser.id });
     
-    // Send notification if liked
-    if (!isLiked && post.user_id !== currentUser.id) {
+    // Send notification if now liked
+    if (!wasLiked && post.user_id !== currentUser.id) {
        await supabase.from('notifications').insert({
          user_id: post.user_id,
          sender_id: currentUser.id,
@@ -87,6 +89,35 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
          content: `liked your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
          is_read: false
        });
+    }
+  };
+
+  const handleRepost = async () => {
+    if (!currentUser) return;
+    
+    const { data: existingRepost } = await supabase
+      .from('reposts')
+      .select('id')
+      .match({ user_id: currentUser.id, post_id: postId })
+      .maybeSingle();
+
+    if (existingRepost) {
+      await supabase.from('reposts').delete().eq('id', existingRepost.id);
+      showToast?.("Repost removed");
+    } else {
+      await supabase.from('reposts').insert({ user_id: currentUser.id, post_id: postId });
+      
+      // Notify author
+      if (post.user_id !== currentUser.id) {
+        await supabase.from('notifications').insert({
+          user_id: post.user_id,
+          sender_id: currentUser.id,
+          type: 'repost',
+          content: `reposted your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+          is_read: false
+        });
+      }
+      showToast?.("Post reposted!");
     }
   };
 
@@ -182,6 +213,9 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
            <button onClick={() => setShowCommentModal(true)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors active:scale-95">
              <MessageCircle size={22} strokeWidth={2.5} />
            </button>
+           <button onClick={handleRepost} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors active:scale-95">
+             <Repeat2 size={22} strokeWidth={2.5} />
+           </button>
            <button onClick={() => setIsBookmarked(!isBookmarked)} className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-colors active:scale-95 ${isBookmarked ? 'bg-emerald-50 dark:bg-[#E5FF66]/10 text-emerald-500 dark:text-[#E2FF3D]' : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
              <Bookmark size={22} fill={isBookmarked ? "currentColor" : "none"} strokeWidth={isBookmarked ? 2 : 2.5} />
            </button>
@@ -227,6 +261,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
             onClose={() => setShowCommentModal(false)}
             postId={postId}
             postAuthor={post.profiles.full_name}
+            postAuthorId={post.user_id}
             postContent={post.content}
           />
         )}
