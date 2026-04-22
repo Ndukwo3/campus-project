@@ -109,32 +109,20 @@ export default function LoginPage() {
         }
       },
     });
-  }, [supabase, router]);
 
-  const handleGoogleLogin = () => {
-    setIsLoading(true);
-    setError(null);
-    const { google } = window as any;
-    
-    if (!google || !nonce) {
-      setError("Google Login is still loading. Please try again in a moment.");
-      setIsLoading(false);
-      return;
+    // Render the standard Google button to bypass One Tap suppression
+    const googleButtonDiv = document.getElementById("google-button-div");
+    if (googleButtonDiv) {
+      google.accounts.id.renderButton(googleButtonDiv, {
+        theme: "outline",
+        size: "large",
+        width: googleButtonDiv.offsetWidth || 350,
+        text: "continue_with",
+        shape: "pill",
+        logo_alignment: "center"
+      });
     }
-
-    google.accounts.id.prompt((notification: any) => {
-      if (notification.isNotDisplayed()) {
-        console.log("One Tap not displayed:", notification.getNotDisplayedReason());
-        // If it's a security/origin error, show it to the user
-        if (notification.getNotDisplayedReason() === "unregistered_origin") {
-          setError("Security Error: This domain is not authorized in Google Console.");
-        }
-        setIsLoading(false);
-      } else if (notification.isSkippedMoment()) {
-        setIsLoading(false);
-      }
-    });
-  };
+  }, [supabase, router]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-black text-zinc-900 dark:text-white font-sans px-6 py-12 transition-colors">
@@ -223,32 +211,13 @@ export default function LoginPage() {
 
         {/* Social Buttons */}
         <div className="flex flex-col gap-4 mb-12">
-          <button 
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-            className="flex items-center justify-center gap-3 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors rounded-2xl py-4.5 text-[14px] font-black text-zinc-700 dark:text-zinc-300 w-full uppercase tracking-widest border border-transparent dark:border-zinc-800 disabled:opacity-50"
+          <div 
+            id="google-button-div" 
+            className="w-full flex justify-center overflow-hidden" 
+            style={{ height: '50px' }}
           >
-            <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
-              <path
-                d="M12.0003 4.75C13.7703 4.75 15.3553 5.36 16.6053 6.54998L20.0303 3.125C17.9503 1.19 15.2353 0 12.0003 0C7.31028 0 3.25528 2.69 1.28027 6.60998L5.27028 9.70498C6.21528 6.86 8.87028 4.75 12.0003 4.75Z"
-                fill="#EA4335"
-              />
-              <path
-                d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z"
-                fill="#4285F4"
-              />
-              <path
-                d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.8704 19.245 6.21538 17.135 5.26538 14.29L1.27539 17.385C3.25539 21.31 7.3104 24.0001 12.0004 24.0001Z"
-                fill="#34A853"
-              />
-            </svg>
-            Continue with Google
-          </button>
+            {/* Google GSI will render button here */}
+          </div>
         </div>
 
         <div className="mt-auto flex flex-col items-center gap-8">
