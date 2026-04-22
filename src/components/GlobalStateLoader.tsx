@@ -44,6 +44,7 @@ export default function GlobalStateLoader() {
         .on('postgres_changes', { 
           event: 'INSERT', schema: 'public', table: 'notifications', 
           filter: `user_id=eq.${user.id}` 
+        }, () => {
           // Only local state update is needed here for the unread badge
           setHasUnread(true);
         })
