@@ -770,6 +770,7 @@ export default function ProfilePage() {
                       showToast("Post bookmarked!");
                     }
                   }}
+                  onComment={(id: string) => {
                     const postData = {
                       id,
                       authorName: profile?.full_name || "User",
@@ -778,6 +779,7 @@ export default function ProfilePage() {
                       description: post.content
                     };
                     window.dispatchEvent(new CustomEvent('open-comment', { detail: postData }));
+                  }}
                   onShare={(id: string) => {
                     const postData = {
                       id,

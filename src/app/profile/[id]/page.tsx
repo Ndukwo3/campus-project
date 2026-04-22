@@ -570,6 +570,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
                       showToast("Post bookmarked!");
                     }
                   }}
+                  onComment={(id: string) => {
                     const postData = {
                       id,
                       authorName: profile?.full_name || "User",
@@ -578,6 +579,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
                       description: post.content
                     };
                     window.dispatchEvent(new CustomEvent('open-comment', { detail: postData }));
+                  }}
                   onShare={(id: string) => {
                     const postData = {
                       id,
