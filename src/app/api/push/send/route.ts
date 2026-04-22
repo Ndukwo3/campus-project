@@ -10,10 +10,62 @@ export async function POST(req: NextRequest) {
   );
 
   try {
-    const { userId, title, body, url, type } = await req.json();
+    const bodyPayload = await req.json();
+    
+    let userId, title, body, url, type;
+
+    // 1. Detect if this is a Supabase Webhook payload
+    if (bodyPayload.record && bodyPayload.table === 'notifications') {
+      const record = bodyPayload.record;
+      userId = record.user_id;
+      type = record.type;
+      const rawContent = record.content || '';
+
+      // Map Supabase notification types to user-friendly push titles
+      if (type === 'like') {
+        title = '❤️ Someone liked your post';
+        body = 'Check out who liked your content!';
+        url = '/';
+      } else if (type === 'comment') {
+        title = '💬 New comment';
+        body = rawContent || 'Someone commented on your post';
+        url = '/';
+      } else if (type === 'repost') {
+        title = '🔄 Post Reposted';
+        body = rawContent || 'Someone reposted your content';
+        url = '/';
+      } else if (type === 'mention') {
+        title = '🏷️ You were mentioned';
+        body = rawContent || 'Someone mentioned you in a post/comment';
+        url = '/';
+      } else if (type === 'connect_request') {
+        title = '🤝 New connection request';
+        body = 'Someone wants to connect with you on Campus!';
+        url = '/notifications';
+      } else if (type === 'connect_accepted') {
+        title = '✅ Connection accepted!';
+        body = 'You are now connected with a new student.';
+        url = '/notifications';
+      } else if (type === 'message') {
+        title = '✉️ New message';
+        body = rawContent || 'You have a new message.';
+        url = '/messages';
+      } else {
+        title = '🔔 New activity on Univas';
+        body = rawContent || 'You have a new notification.';
+        url = '/notifications';
+      }
+    } else {
+      // 2. Otherwise assume direct payload from GlobalStateLoader
+      userId = bodyPayload.userId;
+      title = bodyPayload.title;
+      body = bodyPayload.body;
+      url = bodyPayload.url;
+      type = bodyPayload.type;
+    }
 
     if (!userId || !title || !body) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing fields', received: bodyPayload }, { status: 400 });
     }
 
     // Fetch the user's stored push subscription and settings
@@ -24,8 +76,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error || !profile?.push_subscription) {
-      // User has no push subscription — silently skip
-      return NextResponse.json({ skipped: true });
+      return NextResponse.json({ skipped: true, reason: 'no_subscription' });
     }
 
     // Check notification settings

@@ -44,43 +44,8 @@ export default function GlobalStateLoader() {
         .on('postgres_changes', { 
           event: 'INSERT', schema: 'public', table: 'notifications', 
           filter: `user_id=eq.${user.id}` 
-        }, async (payload: any) => {
+          // Only local state update is needed here for the unread badge
           setHasUnread(true);
-
-          // Fire a push notification to the user's device
-          const type = payload.new?.type || '';
-          const content = payload.new?.content || '';
-
-          let title = '🔔 New Activity on Univas';
-          let notifBody = content;
-          let url = '/notifications';
-
-          if (type === 'like') {
-            title = '❤️ Someone liked your post';
-            url = '/';
-          } else if (type === 'comment') {
-            title = '💬 New comment on your post';
-            url = '/';
-          } else if (type === 'connect_request') {
-            title = '🤝 New connection request';
-            url = '/notifications';
-          } else if (type === 'connect_accepted') {
-            title = '✅ Connection accepted!';
-            url = '/notifications';
-          } else if (type === 'message') {
-            title = '✉️ New message';
-            url = '/messages';
-          }
-
-          try {
-            await fetch('/api/push/send', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: user.id, title, body: notifBody || title, url, type }),
-            });
-          } catch (e) {
-            // Silently fail — push is non-critical
-          }
         })
         .on('postgres_changes', {
           event: 'UPDATE', schema: 'public', table: 'notifications',
