@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useQuery } from '@tanstack/react-query';
 
-export function useMentions(textareaRef: React.RefObject<HTMLTextAreaElement | HTMLInputElement>) {
+export function useMentions(textareaRef: React.RefObject<HTMLTextAreaElement | HTMLInputElement | null>) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
