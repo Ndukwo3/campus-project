@@ -381,7 +381,7 @@ export default function ProfilePage() {
         .insert({
           user_id: user.id,
           university_id: profile?.university_id,
-          content: "[[USER_PROFILE_UPDATE]]",
+          content: "Just updated my profile photo!",
           image_url: publicUrl,
           likes_count: 0,
           comments_count: 0

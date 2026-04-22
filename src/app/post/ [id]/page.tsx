@@ -200,9 +200,11 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Content */}
         <div className="mb-6">
-          <p className="text-[17px] text-zinc-800 dark:text-zinc-200 leading-[1.6] font-medium mb-5 tracking-tight">
-            {post.content === "[[USER_PROFILE_UPDATE]]" ? "Just updated my profile photo!" : post.content}
-          </p>
+          {post.content && post.content !== "[[USER_PROFILE_UPDATE]]" && post.content !== "Just updated my profile photo!" && (
+            <p className="text-[17px] text-zinc-800 dark:text-zinc-200 leading-[1.6] font-medium mb-5 tracking-tight">
+              {post.content}
+            </p>
+          )}
           
           {post.image_url && (
             <div className="rounded-[32px] overflow-hidden border border-zinc-100/50 dark:border-zinc-800/50 shadow-sm bg-zinc-50 dark:bg-zinc-900 mb-5 relative">

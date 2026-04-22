@@ -211,7 +211,7 @@ export default function CommentModal({
         </div>
 
         {/* Post Preview (Sticky-ish) */}
-        {postContent && (
+        {postContent && postContent !== "[[USER_PROFILE_UPDATE]]" && postContent !== "Just updated my profile photo!" && (
           <div className="px-6 py-4 bg-zinc-50/50 border-b border-zinc-100/50">
             <p className="text-zinc-600 text-[14px] line-clamp-2 italic leading-relaxed">
               "{postContent}"

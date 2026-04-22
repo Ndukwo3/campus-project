@@ -226,7 +226,7 @@ export default function FeedCard({
       </div>
 
       {/* Description */}
-      {description !== "[[USER_PROFILE_UPDATE]]" && (
+      {description && description !== "[[USER_PROFILE_UPDATE]]" && description !== "Just updated my profile photo!" && (
         <ActiveText 
           text={description} 
           className="text-zinc-700 dark:text-zinc-300 text-[15.5px] leading-relaxed font-medium px-1 tracking-tight" 
