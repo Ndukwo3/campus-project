@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Smartphone, Mail, MessageSquare, AtSign, Users, Megaphone, Calendar, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Smartphone, MessageSquare, AtSign, Users, Megaphone, Calendar, CheckCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
@@ -75,7 +75,6 @@ export default function NotificationsSettingsPage() {
   // Local state for toggles
   const [settings, setSettings] = useState({
     push: true,
-    email: false,
     direct_messages: true,
     comments: true,
     mentions: true,
@@ -174,14 +173,6 @@ export default function NotificationsSettingsPage() {
               description="Receive alerts directly on your device."
               checked={settings.push}
               onChange={(val) => handleUpdateSetting('push', val)}
-              disabled={isLoading}
-            />
-            <ToggleSetting 
-              icon={Mail} 
-              title="Email Notifications" 
-              description="Receive daily summaries and important alerts via email."
-              checked={settings.email}
-              onChange={(val) => handleUpdateSetting('email', val)}
               disabled={isLoading}
             />
           </div>
