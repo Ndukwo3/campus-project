@@ -6,6 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import { useMentions } from "@/hooks/useMentions";
+import MentionSuggestions from "@/components/MentionSuggestions";
 
 function CreatePostInner() {
   const router = useRouter();
@@ -19,6 +21,7 @@ function CreatePostInner() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { showSuggestions, searchQuery, mentionPosition, handleInput, insertMention } = useMentions(textareaRef);
 
   useEffect(() => {
     async function fetchUser() {
@@ -44,8 +47,16 @@ function CreatePostInner() {
   };
 
   const insertText = (text: string) => {
-    setContent(prev => prev + text);
-    textareaRef.current?.focus();
+    const el = textareaRef.current;
+    if (!el) return;
+    const selectionStart = el.selectionStart || 0;
+    const before = content.substring(0, selectionStart);
+    const after = content.substring(selectionStart);
+    setContent(before + text + after);
+    setTimeout(() => {
+      el.focus();
+      el.selectionStart = el.selectionEnd = selectionStart + text.length;
+    }, 0);
   };
 
   const handlePost = async () => {
@@ -112,6 +123,29 @@ function CreatePostInner() {
 
         if (postError) {
           console.error("Full Post Error:", postError);
+        } else {
+          // Parse mentions and send notifications
+          const mentions = content.match(/@(\w+)/g);
+          if (mentions) {
+             const usernames = mentions.map(m => m.substring(1));
+             const { data: taggedUsers } = await supabase
+               .from('profiles')
+               .select('id')
+               .in('username', usernames);
+             
+             if (taggedUsers) {
+               for (const tagged of taggedUsers) {
+                 if (tagged.id === user.id) continue;
+                 await supabase.from('notifications').insert({
+                   user_id: tagged.id,
+                   sender_id: user.id,
+                   type: 'mention',
+                   content: `mentioned you in a post: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+                   is_read: false
+                 });
+               }
+             }
+          }
         }
       } catch (err) {
         console.error("Background task failed:", err);
@@ -171,10 +205,34 @@ function CreatePostInner() {
               ref={textareaRef}
               autoFocus
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value);
+                handleInput();
+              }}
+              onKeyUp={handleInput}
+              onMouseUp={handleInput}
               placeholder="What's happening on Univas?"
               className="w-full text-[17px] text-zinc-900 dark:text-white border-none outline-none resize-none min-h-[30vh] bg-transparent pt-1 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 font-medium leading-[1.6]"
             />
+
+            {showSuggestions && (
+              <div 
+                style={{ 
+                  position: 'absolute', 
+                  top: textareaRef.current ? (textareaRef.current.offsetTop + 100) : 0, 
+                  left: 0,
+                  zIndex: 100
+                }}
+              >
+                <MentionSuggestions 
+                  query={searchQuery} 
+                  onSelect={(username) => {
+                    const newText = insertMention(username);
+                    if (newText) setContent(newText);
+                  }} 
+                />
+              </div>
+            )}
 
             {imagePreview && (
               <div className="relative mt-4 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 group">

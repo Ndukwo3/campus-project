@@ -76,7 +76,7 @@ export default function GlobalStateLoader() {
             await fetch('/api/push/send', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: user.id, title, body: notifBody || title, url }),
+              body: JSON.stringify({ userId: user.id, title, body: notifBody || title, url, type }),
             });
           } catch (e) {
             // Silently fail — push is non-critical

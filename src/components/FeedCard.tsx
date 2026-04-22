@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { usePresenceStore } from "@/store/presenceStore";
 import { createClient } from "@/lib/supabase";
+import ActiveText from "./ActiveText";
 
 interface FeedCardProps {
   id: string;
@@ -226,9 +227,10 @@ export default function FeedCard({
 
       {/* Description */}
       {description !== "[[USER_PROFILE_UPDATE]]" && (
-        <p className="text-zinc-700 dark:text-zinc-300 text-[15.5px] leading-relaxed font-medium px-1 tracking-tight">
-          {description}
-        </p>
+        <ActiveText 
+          text={description} 
+          className="text-zinc-700 dark:text-zinc-300 text-[15.5px] leading-relaxed font-medium px-1 tracking-tight" 
+        />
       )}
 
       {/* Image Content (Optional) */}

@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { X, Send, User, Loader2, Heart, MessageCircle, CornerDownRight } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase";
+import { useMentions } from "@/hooks/useMentions";
+import MentionSuggestions from "@/components/MentionSuggestions";
+import ActiveText from "./ActiveText";
+import { useRef } from "react";
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -27,6 +31,8 @@ export default function CommentModal({
   const [replyingTo, setReplyingTo] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const supabase = createClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { showSuggestions, searchQuery, mentionPosition, handleInput, insertMention } = useMentions(inputRef);
 
   useEffect(() => {
     const getUser = async () => {
@@ -94,6 +100,28 @@ export default function CommentModal({
       });
 
       if (!error) {
+        // Parse mentions and send notifications
+        const mentions = comment.match(/@(\w+)/g);
+        if (mentions) {
+           const usernames = mentions.map(m => m.substring(1));
+           const { data: taggedUsers } = await supabase
+             .from('profiles')
+             .select('id')
+             .in('username', usernames);
+           
+           if (taggedUsers) {
+             for (const tagged of taggedUsers) {
+               if (tagged.id === currentUser.id) continue;
+               await supabase.from('notifications').insert({
+                 user_id: tagged.id,
+                 sender_id: currentUser.id,
+                 type: 'mention',
+                 content: `mentioned you in a comment: "${comment.substring(0, 50)}${comment.length > 50 ? '...' : ''}"`,
+                 is_read: false
+               });
+             }
+           }
+        }
         setComment("");
         setReplyingTo(null);
         // Realtime will pick up the change
@@ -203,7 +231,7 @@ export default function CommentModal({
                           </div>
                         </div>
                         <div className="bg-zinc-50 px-4 py-2.5 rounded-[22px] rounded-tl-none border border-zinc-100/50">
-                          <p className="text-zinc-700 text-[14px] leading-relaxed">{c.content}</p>
+                          <ActiveText text={c.content} className="text-zinc-700 text-[14px] leading-relaxed" />
                         </div>
                         <div className="flex items-center gap-4 px-1 mt-0.5">
                           <button 
@@ -257,7 +285,7 @@ export default function CommentModal({
                                   </span>
                                 </div>
                                 <div className="bg-zinc-50/80 px-3 py-2 rounded-[18px] rounded-tl-none border border-zinc-100/30">
-                                  <p className="text-zinc-700 text-[13px] leading-relaxed">{reply.content}</p>
+                                  <ActiveText text={reply.content} className="text-zinc-700 text-[13px] leading-relaxed" />
                                 </div>
                                 <div className="flex items-center gap-3 px-1 mt-0.5">
                                   <button 
@@ -310,12 +338,29 @@ export default function CommentModal({
           >
             <input
               id="comment-input"
+              ref={inputRef}
               type="text"
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              onChange={(e) => {
+                setComment(e.target.value);
+                handleInput();
+              }}
+              onKeyUp={handleInput}
+              onMouseUp={handleInput}
               placeholder={replyingTo ? "Write a reply..." : "Write a comment..."}
               className="flex-1 bg-transparent border-none outline-none px-4 py-2 text-[14px] text-zinc-900 placeholder:text-zinc-400 font-medium"
             />
+            {showSuggestions && (
+              <div className="absolute bottom-full left-4 mb-2">
+                <MentionSuggestions 
+                  query={searchQuery} 
+                  onSelect={(username) => {
+                    const newText = insertMention(username);
+                    if (newText) setComment(newText);
+                  }} 
+                />
+              </div>
+            )}
             <button
               type="submit"
               disabled={!comment.trim() || isSubmitting}

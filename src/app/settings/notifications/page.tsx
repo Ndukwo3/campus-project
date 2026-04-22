@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Smartphone, MessageSquare, AtSign, Users, Calendar, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Smartphone, MessageSquare, AtSign, Users, Calendar, CheckCircle, Loader2, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
@@ -78,6 +78,7 @@ export default function NotificationsSettingsPage() {
     direct_messages: true,
     comments: true,
     mentions: true,
+    likes: true,
     group_activity: true,
     events: true
   });
@@ -205,6 +206,14 @@ export default function NotificationsSettingsPage() {
               description="When someone mentions you in a post or comment."
               checked={settings.mentions}
               onChange={(val) => handleUpdateSetting('mentions', val)}
+              disabled={isLoading}
+            />
+            <ToggleSetting 
+              icon={Heart} 
+              title="Likes" 
+              description="When someone likes your post or comment."
+              checked={settings.likes}
+              onChange={(val) => handleUpdateSetting('likes', val)}
               disabled={isLoading}
             />
           </div>

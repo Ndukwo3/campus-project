@@ -10,22 +10,46 @@ export async function POST(req: NextRequest) {
   );
 
   try {
-    const { userId, title, body, url } = await req.json();
+    const { userId, title, body, url, type } = await req.json();
 
     if (!userId || !title || !body) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    // Fetch the user's stored push subscription
+    // Fetch the user's stored push subscription and settings
     const { data: profile, error } = await supabaseAdmin
       .from('profiles')
-      .select('push_subscription')
+      .select('push_subscription, notification_settings')
       .eq('id', userId)
       .single();
 
     if (error || !profile?.push_subscription) {
       // User has no push subscription — silently skip
       return NextResponse.json({ skipped: true });
+    }
+
+    // Check notification settings
+    const settings = profile.notification_settings as any;
+    if (settings) {
+      // 1. Global push toggle check
+      if (settings.push === false) {
+        return NextResponse.json({ skipped: 'user_global_push_disabled' });
+      }
+
+      // 2. Specific type check
+      if (type) {
+        let isEnabled = true;
+        if (type === 'message') isEnabled = settings.direct_messages !== false;
+        else if (type === 'comment') isEnabled = settings.comments !== false;
+        else if (type === 'mention') isEnabled = settings.mentions !== false;
+        else if (type === 'like') isEnabled = settings.likes !== false;
+        else if (type === 'connect_request' || type === 'connect_accepted') isEnabled = settings.group_activity !== false;
+        else if (type === 'event') isEnabled = settings.events !== false;
+
+        if (!isEnabled) {
+          return NextResponse.json({ skipped: `user_${type}_push_disabled` });
+        }
+      }
     }
 
     const payload: PushPayload = {
