@@ -16,6 +16,7 @@ interface CommentModalProps {
   postAuthor: string;
   postAuthorId: string;
   postContent: string;
+  showToast?: (message: string, type?: "success" | "error" | "info" | "warning") => void;
 }
 
 export default function CommentModal({
@@ -25,6 +26,7 @@ export default function CommentModal({
   postAuthor,
   postAuthorId,
   postContent,
+  showToast,
 }: CommentModalProps) {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

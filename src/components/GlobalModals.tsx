@@ -89,6 +89,7 @@ export function GlobalModals() {
           postAuthor={commentModal.post.authorName}
           postAuthorId={commentModal.post.authorId}
           postContent={commentModal.post.description}
+          showToast={showToast}
         />
       )}
       {shareModal.isOpen && shareModal.post && (
