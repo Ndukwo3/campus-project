@@ -131,16 +131,17 @@ export default function LoginPage() {
           const googleButtonDiv = document.getElementById("google-button-div");
           if (googleButtonDiv) {
             console.log("Rendering Google button into div");
+            const containerWidth = googleButtonDiv.offsetWidth || 400;
             google.accounts.id.renderButton(googleButtonDiv, {
               theme: "outline",
               size: "large",
-              width: 320, // Explicit width for consistency
+              width: containerWidth, 
               text: "continue_with",
               shape: "pill",
-              logo_alignment: "left"
+              logo_alignment: "center"
             });
           }
-        }, 100);
+        }, 150);
       } catch (err) {
         console.error("Error during Google init:", err);
       }
