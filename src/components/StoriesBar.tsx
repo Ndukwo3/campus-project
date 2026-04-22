@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import StoryViewer from "./StoryViewer";
 import Toast from "./Toast";
+import { capitalizeName } from "@/lib/utils";
 
 const COLORS = ["#E5FF66", "#FF6666", "#66B2FF", "#B266FF", "#FFB266", "#66FFB2"];
 
@@ -330,7 +331,7 @@ export default function StoriesBar() {
                 </div>
               </div>
               <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mt-1 max-w-[70px] truncate">
-                {student.full_name?.split(' ')[0] || student.username?.replace('@', '')}
+                {capitalizeName(student.full_name?.split(' ')[0] || student.username?.replace('@', ''))}
               </span>
             </motion.div>
           ))}

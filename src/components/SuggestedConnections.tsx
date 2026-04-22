@@ -5,6 +5,7 @@ import { UserPlus, Check, Loader2, User } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
+import { capitalizeName } from "@/lib/utils";
 
 interface SuggestedConnectionsProps {
   userId: string;
@@ -170,7 +171,7 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
             </div>
             
             <div className="flex-1 min-w-0">
-              <h4 className="text-[14px] font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight truncate leading-tight">{user.full_name}</h4>
+              <h4 className="text-[14px] font-black text-zinc-900 dark:text-zinc-100 tracking-tight truncate leading-tight">{capitalizeName(user.full_name)}</h4>
               <p className="text-[11px] font-bold text-[#E5FF66] uppercase tracking-widest mt-0.5">{user.username}</p>
             </div>
 

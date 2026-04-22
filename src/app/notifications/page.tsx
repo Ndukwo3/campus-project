@@ -10,6 +10,7 @@ import NotificationSkeleton from "@/components/skeletons/NotificationSkeleton";
 import { useNotificationStore } from "@/store/notificationStore";
 import { createClient } from "@/lib/supabase";
 import { formatDistanceToNow } from "date-fns";
+import { capitalizeName } from "@/lib/utils";
 
 export default function NotificationsPage() {
   const { setHasUnread } = useNotificationStore();
@@ -38,6 +39,7 @@ export default function NotificationsPage() {
           sender:profiles!sender_id (
             id,
             username,
+            full_name,
             avatar_url
           )
         `)
@@ -209,7 +211,7 @@ export default function NotificationsPage() {
 
 function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept: (id: string) => void, onDecline: (id: string) => void }) {
   const { type, sender, content, created_at, is_read, _handled } = notif;
-  const username = type === 'welcome' ? 'Univas Team' : (sender?.username || 'Someone');
+  const displayName = type === 'welcome' ? 'Univas Team' : capitalizeName(sender?.full_name || sender?.username || 'Someone');
   const avatar = type === 'welcome' ? '/logo.png' : sender?.avatar_url;
   const time = formatDistanceToNow(new Date(created_at), { addSuffix: true });
   const isUnread = !is_read;
@@ -244,7 +246,7 @@ function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept
         <div className="h-13 w-13 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center p-[2px] ring-4 ring-transparent group-hover:ring-[#E5FF66]/20 transition-all duration-500">
           <div className="w-full h-full rounded-2xl overflow-hidden bg-white dark:bg-zinc-950 border border-zinc-100/50 dark:border-zinc-800/50 shadow-inner">
             {avatar ? (
-              <Image src={avatar} alt={username} width={52} height={52} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+              <Image src={avatar} alt={displayName} width={52} height={52} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
                  <User size={24} className="text-zinc-300 dark:text-zinc-700" />
@@ -260,7 +262,7 @@ function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept
       {/* Text Content Area */}
       <div className="flex-1 min-w-0 pr-1 z-10">
         <p className="text-[13.5px] leading-snug text-zinc-500 dark:text-zinc-400 font-medium tracking-tight">
-          <Link href={sender?.id ? `/profile/${sender.id}` : '#'} className="font-bold text-zinc-950 dark:text-white hover:text-black dark:hover:text-[#E2FF3D] transition-colors">{username}</Link>
+          <Link href={sender?.id ? `/profile/${sender.id}` : '#'} className="font-bold text-zinc-950 dark:text-white hover:text-black dark:hover:text-[#E2FF3D] transition-colors">{displayName}</Link>
           {" "}
           {content.includes("commented:") ? (
             <>

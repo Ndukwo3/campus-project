@@ -7,6 +7,7 @@ import { memo, useState, useEffect, useRef, use, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import { capitalizeName } from "@/lib/utils";
 
 // Separate memoized component for each message to prevent unnecessary re-renders
 const MessageItem = memo(({ 
@@ -855,7 +856,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             </Link>
             <div>
               <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 leading-tight hover:underline cursor-pointer block">
-                {partner?.full_name || partner?.username || "Loading..."}
+                {capitalizeName(partner?.full_name || partner?.username) || "Loading..."}
               </Link>
               <p className={`text-[11px] font-medium transition-colors ${partnerIsTyping ? "text-primary" : (partnerIsOnline ? "text-[#4ADE80]" : "text-zinc-500 dark:text-zinc-500")}`}>
                 {partnerIsTyping ? "Typing..." : (partnerIsOnline ? "Online" : "Offline")}

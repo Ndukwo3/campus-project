@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase";
 import { User, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
+import { capitalizeName } from "@/lib/utils";
 
 interface MentionSuggestionsProps {
   query: string;
@@ -65,7 +66,7 @@ export default function MentionSuggestions({ query, onSelect }: MentionSuggestio
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-[13px] text-zinc-900 dark:text-zinc-100 group-hover:text-black truncate leading-none mb-0.5">
-                {user.full_name}
+                {capitalizeName(user.full_name)}
               </span>
               <span className="text-[11px] font-medium text-zinc-400 group-hover:text-black/60 truncate">
                 @{user.username}

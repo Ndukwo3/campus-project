@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime, capitalizeName } from "@/lib/utils";
 import TopNavigation from "@/components/TopNavigation";
 import StoriesBar from "@/components/StoriesBar";
 import FeedCard from "@/components/FeedCard";
@@ -168,13 +168,13 @@ export default function Home() {
   const handleCommentClick = (postId: string) => {
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-    window.dispatchEvent(new CustomEvent('open-comment', { detail: { id: postId, authorName: post.profiles?.full_name || post.profiles?.username, authorId: post.user_id, authorImage: post.profiles?.avatar_url, description: post.content }}));
+    window.dispatchEvent(new CustomEvent('open-comment', { detail: { id: postId, authorName: capitalizeName(post.profiles?.full_name || post.profiles?.username), authorId: post.user_id, authorImage: post.profiles?.avatar_url, description: post.content }}));
   };
 
   const handleShare = (postId: string) => {
     const post = posts.find((p: any) => p.id === postId);
     if (!post) return;
-    window.dispatchEvent(new CustomEvent('open-share', { detail: { id: postId, authorName: post.profiles?.full_name, description: post.content }}));
+    window.dispatchEvent(new CustomEvent('open-share', { detail: { id: postId, authorName: capitalizeName(post.profiles?.full_name), description: post.content }}));
   };
 
   const handleBookmark = async (postId: string) => {
@@ -326,7 +326,7 @@ export default function Home() {
             </div>
           ) : posts.length > 0 ? (
             posts.map((post: any) => (
-              <FeedCard key={post.id} id={post.id} authorId={post.user_id} currentUserId={user?.id} authorName={post.profiles?.full_name || post.profiles?.username || "Anonymous"} authorImage={post.profiles?.avatar_url || null} timePosted={formatRelativeTime(new Date(post.created_at))} postImage={post.image_url || null} likes={post.likes_count || 0} comments={post.comments_count || 0} description={post.content} isLiked={post.isLiked} isBookmarked={post.isBookmarked} isReposted={post.isReposted} onLike={handleLike} onComment={handleCommentClick} onDelete={openDeleteModal} onShare={handleShare} onBookmark={handleBookmark} onRepost={handleRepost} />
+              <FeedCard key={post.id} id={post.id} authorId={post.user_id} currentUserId={user?.id} authorName={capitalizeName(post.profiles?.full_name || post.profiles?.username || "Anonymous")} authorImage={post.profiles?.avatar_url || null} timePosted={formatRelativeTime(new Date(post.created_at))} postImage={post.image_url || null} likes={post.likes_count || 0} comments={post.comments_count || 0} description={post.content} isLiked={post.isLiked} isBookmarked={post.isBookmarked} isReposted={post.isReposted} onLike={handleLike} onComment={handleCommentClick} onDelete={openDeleteModal} onShare={handleShare} onBookmark={handleBookmark} onRepost={handleRepost} />
 
             ))
           ) : null}

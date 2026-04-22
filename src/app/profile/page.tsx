@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Toast from "@/components/Toast";
 import FeedCard from "@/components/FeedCard";
 import ConnectionsModal from "@/components/ConnectionsModal";
+import { capitalizeName } from "@/lib/utils";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -505,7 +506,7 @@ export default function ProfilePage() {
           </div>
           
           <div className="flex items-center justify-center gap-1.5 mb-1 w-full max-w-[280px] mx-auto">
-            <h2 className="text-2xl font-black text-black dark:text-white leading-tight truncate">{profile?.full_name || "New Student"}</h2>
+            <h2 className="text-2xl font-black text-black dark:text-white leading-tight truncate">{capitalizeName(profile?.full_name || "New Student")}</h2>
             {profile?.full_name !== "New Student" && <CheckCircle2 size={18} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />}
           </div>
           <p className="text-zinc-500 dark:text-zinc-400 text-[14px] font-medium mb-4">{profile?.username} • {profile?.level || "Undergraduate"}</p>
@@ -702,7 +703,7 @@ export default function ProfilePage() {
                 <FeedCard 
                   key={post.id}
                   id={post.id}
-                  authorName={profile?.full_name || "User"}
+                  authorName={capitalizeName(profile?.full_name || "User")}
                   authorImage={profile?.avatar_url}
                   timePosted={new Date(post.created_at).toLocaleDateString()}
                   postImage={post.image_url}
@@ -1209,7 +1210,7 @@ export default function ProfilePage() {
         isOpen={isConnectionsOpen}
         onClose={() => setIsConnectionsOpen(false)}
         userId={profile?.id}
-        userName={profile?.full_name || "User"}
+        userName={capitalizeName(profile?.full_name || "User")}
       />
       
       {/* Premium Crop Modal */}

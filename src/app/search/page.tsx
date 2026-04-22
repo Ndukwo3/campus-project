@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import BottomNavigation from "@/components/BottomNavigation";
 import SearchSkeleton from "@/components/skeletons/SearchSkeleton";
 import { createClient } from "@/lib/supabase";
+import { capitalizeName } from "@/lib/utils";
 
 const filters = ["All", "Students", "Groups", "Trending"];
 
@@ -437,7 +438,7 @@ export default function SearchPage() {
                                 href={`/profile/${student.id}`}
                                 className="flex-1 min-w-0"
                               >
-                                <h3 className="text-[15.5px] font-bold text-zinc-900 dark:text-zinc-100 truncate tracking-tight">{student.full_name || student.username}</h3>
+                                <h3 className="text-[15.5px] font-bold text-zinc-900 dark:text-zinc-100 truncate tracking-tight">{capitalizeName(student.full_name || student.username)}</h3>
                                 <p className="text-[12.5px] font-medium text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{student.universities?.name || "Lagos City, NG"}</p>
                               </Link>
                               {student.id !== currentUser?.id && (

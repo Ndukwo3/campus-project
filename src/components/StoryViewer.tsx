@@ -4,6 +4,7 @@ import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { capitalizeName } from "@/lib/utils";
 
 interface Story {
   id: string;
@@ -100,7 +101,7 @@ export default function StoryViewer({ user, stories, onClose }: StoryViewerProps
             )}
           </div>
           <div className="flex flex-col">
-            <span className="text-white font-bold text-sm tracking-tight">{user.full_name || user.username}</span>
+            <span className="text-white font-bold text-sm tracking-tight">{capitalizeName(user.full_name || user.username)}</span>
             <span className="text-white/60 text-[11px] font-medium">
               {new Date(currentStory.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>

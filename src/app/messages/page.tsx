@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import BottomNavigation from "@/components/BottomNavigation";
 import ChatListSkeleton from "@/components/skeletons/ChatListSkeleton";
 import { createClient } from "@/lib/supabase";
+import { capitalizeName } from "@/lib/utils";
 
 // Realtime handling will be done here
 
@@ -134,7 +135,7 @@ export default function MessagesPage() {
         return {
           id: p.conversation_id,
           partner_id: partnerData?.id,
-          name: partnerData?.full_name || partnerData?.username || "Unknown Student",
+          name: capitalizeName(partnerData?.full_name || partnerData?.username || "Unknown Student"),
           avatar: partnerData?.avatar_url,
           lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
                        : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
@@ -175,7 +176,7 @@ export default function MessagesPage() {
 
       return friendProfiles.map((p: any) => ({
         id: p.id,
-        name: p.full_name || p.username,
+        name: capitalizeName(p.full_name || p.username),
         avatar: p.avatar_url,
         online: p.last_seen ? (new Date().getTime() - new Date(p.last_seen).getTime() < 5 * 60 * 1000) : false
       }));

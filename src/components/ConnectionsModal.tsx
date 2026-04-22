@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { capitalizeName } from "@/lib/utils";
 
 interface ConnectionsModalProps {
   isOpen: boolean;
@@ -79,7 +80,7 @@ export default function ConnectionsModal({ isOpen, onClose, userId, userName }: 
             {/* Header */}
             <div className="px-6 pt-8 pb-4 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl z-10">
               <div className="flex flex-col">
-                <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight uppercase italic truncate max-w-[200px]">{userName}'s Loop</h2>
+                <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight italic truncate max-w-[200px]">{capitalizeName(userName)}'s Loop</h2>
                 <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-1">{connections.length} Connections</p>
               </div>
               <button 
@@ -131,7 +132,7 @@ export default function ConnectionsModal({ isOpen, onClose, userId, userName }: 
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight truncate">{user.full_name}</h4>
+                        <h4 className="text-sm font-black text-zinc-900 dark:text-zinc-100 tracking-tight truncate">{capitalizeName(user.full_name)}</h4>
                         <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate">{user.username}</p>
                       </div>
                       <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">

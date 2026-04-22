@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { usePresenceStore } from "@/store/presenceStore";
 import { createClient } from "@/lib/supabase";
 import ActiveText from "./ActiveText";
+import { capitalizeName } from "@/lib/utils";
 
 interface FeedCardProps {
   id: string;
@@ -163,7 +164,7 @@ export default function FeedCard({
               href={`/profile/${authorId}`}
               className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 tracking-tight leading-none hover:text-black dark:hover:text-white cursor-pointer"
             >
-              {authorName}
+              {capitalizeName(authorName)}
             </Link>
             <span className="text-[10px] font-black uppercase tracking-[0.05em] text-zinc-400 dark:text-zinc-500 opacity-80">{timePosted}</span>
           </div>

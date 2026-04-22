@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@/lib/supabase";
-import { formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime, capitalizeName } from "@/lib/utils";
 import BottomNavigation from "@/components/BottomNavigation";
 import CommentModal from "@/components/CommentModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -189,7 +189,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                )}
              </div>
              <div className="flex flex-col justify-center">
-               <p className="font-bold text-[16px] text-zinc-900 dark:text-white leading-tight tracking-tight group-hover:underline underline-offset-2">{post.profiles.full_name}</p>
+               <p className="font-bold text-[16px] text-zinc-900 dark:text-white leading-tight tracking-tight group-hover:underline underline-offset-2">{capitalizeName(post.profiles.full_name)}</p>
                <p className="text-[11px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.1em] mt-0.5">@{post.profiles.username}</p>
              </div>
           </Link>
@@ -274,7 +274,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                 </Link>
                 <div className="flex-1">
                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="font-bold text-[14px] text-zinc-900 dark:text-white leading-none">{comment.profiles?.full_name || 'Anonymous User'}</span>
+                      <span className="font-bold text-[14px] text-zinc-900 dark:text-white leading-none">{capitalizeName(comment.profiles?.full_name || 'Anonymous User')}</span>
                       <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.05em]">{formatRelativeTime(comment.created_at)}</span>
                    </div>
                    <p className="text-zinc-700 dark:text-zinc-300 text-[14.5px] font-medium leading-[1.5] mt-1.5">{comment.content}</p>
@@ -297,7 +297,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
             isOpen={true}
             onClose={() => setShowCommentModal(false)}
             postId={postId}
-            postAuthor={post.profiles.full_name}
+            postAuthor={capitalizeName(post.profiles.full_name)}
             postAuthorId={post.user_id}
             postContent={post.content}
             showToast={showToast}

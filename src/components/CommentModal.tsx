@@ -8,6 +8,7 @@ import { useMentions } from "@/hooks/useMentions";
 import MentionSuggestions from "@/components/MentionSuggestions";
 import ActiveText from "./ActiveText";
 import { useRef } from "react";
+import { capitalizeName } from "@/lib/utils";
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -200,7 +201,7 @@ export default function CommentModal({
         <div className="px-6 py-5 flex items-center justify-between border-b border-zinc-100/80">
           <div className="flex flex-col">
             <h3 className="font-extrabold text-[16px] text-zinc-900 leading-none mb-1">Comments</h3>
-            <p className="text-[12px] text-zinc-400 font-medium">Post by {postAuthor}</p>
+            <p className="text-[12px] text-zinc-400 font-medium">Post by {capitalizeName(postAuthor)}</p>
           </div>
           <button 
             onClick={onClose}
@@ -251,7 +252,7 @@ export default function CommentModal({
                       <div className="flex-1 flex flex-col gap-1.5">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-[13px] text-zinc-900">{c.profiles?.full_name || c.profiles?.username}</span>
+                            <span className="font-bold text-[13px] text-zinc-900">{capitalizeName(c.profiles?.full_name || c.profiles?.username)}</span>
                             <span className="text-[10px] text-zinc-400 font-medium">
                               {new Date(c.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
@@ -306,7 +307,7 @@ export default function CommentModal({
                               </div>
                               <div className="flex-1 flex flex-col gap-1">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-[12px] text-zinc-900">{reply.profiles?.full_name || reply.profiles?.username}</span>
+                                  <span className="font-bold text-[12px] text-zinc-900">{capitalizeName(reply.profiles?.full_name || reply.profiles?.username)}</span>
                                   <span className="text-[9px] text-zinc-400 font-medium">
                                     {new Date(reply.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                   </span>
@@ -349,7 +350,7 @@ export default function CommentModal({
             <div className="flex items-center justify-between px-4 py-2 bg-zinc-50 rounded-t-2xl border-x border-t border-zinc-100 mb-0 animate-in slide-in-from-bottom-2">
               <p className="text-[11px] font-bold text-zinc-500 flex items-center gap-1.5">
                 <CornerDownRight size={12} className="text-zinc-400" />
-                Replying to <span className="text-zinc-900">{replyingTo.profiles?.full_name || replyingTo.profiles?.username}</span>
+                Replying to <span className="text-zinc-900">{capitalizeName(replyingTo.profiles?.full_name || replyingTo.profiles?.username)}</span>
               </p>
               <button 
                 onClick={() => setReplyingTo(null)}
