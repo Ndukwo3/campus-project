@@ -58,96 +58,99 @@ export default function MessagesPage() {
   };
 
   // 🏛️ The "Instant-Inbox" Engine
-  const { data: chats = [], isLoading } = useQuery({
+  const { data: chatsData, isLoading, error: queryError } = useQuery({
     queryKey: ['inbox'],
     queryFn: async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const user = session?.user;
-        if (!user) return [];
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) return { chats: [], error: null };
 
-        // 1. Get my conversation IDs
-        const { data: myConvos, error: convError } = await supabase
-          .from('conversation_participants')
-          .select('conversation_id')
-          .eq('user_id', user.id);
+      // 1. Get my conversation IDs
+      const { data: myConvos, error: convError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
 
-        if (convError || !myConvos || myConvos.length === 0) return [];
-        const conversationIds = myConvos.map((c: any) => c.conversation_id);
-
-        // 2. Fetch partners and latest messages in parallel
-        const [partnersResult, latestMsgsResult, unreadResult] = await Promise.all([
-          // Get the OTHER person in each conversation
-          supabase
-            .from('conversation_participants')
-            .select('conversation_id, profiles(id, username, full_name, avatar_url)')
-            .in('conversation_id', conversationIds)
-            .neq('user_id', user.id),
-          
-          // Get only the MOST RECENT message for each conversation
-          supabase
-            .from('messages')
-            .select('conversation_id, content, sender_id, is_read, created_at')
-            .in('conversation_id', conversationIds)
-            .order('created_at', { ascending: false }),
-            
-          // Optimized unread count fetch
-          supabase
-            .from('messages')
-            .select('conversation_id', { count: 'exact' })
-            .in('conversation_id', conversationIds)
-            .neq('sender_id', user.id)
-            .eq('is_read', false)
-        ]);
-
-        if (!partnersResult.data) return [];
-
-        // Process unread counts efficiently
-        const unreadMap: Record<string, number> = {};
-        if (unreadResult.data) {
-          unreadResult.data.forEach((m: any) => {
-            unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1;
-          });
-        }
-
-        // Group messages by conversation to find the latest
-        const latestMsgMap: Record<string, any> = {};
-        if (latestMsgsResult.data) {
-          latestMsgsResult.data.forEach((msg: any) => {
-            if (!latestMsgMap[msg.conversation_id]) {
-              latestMsgMap[msg.conversation_id] = msg;
-            }
-          });
-        }
-
-        const builtChats = partnersResult.data.map((p: any) => {
-          const partnerData: any = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
-          const msg = latestMsgMap[p.conversation_id];
-          
-          if (!msg) return null; // Skip empty convos
-
-          return {
-            id: p.conversation_id,
-            partner_id: partnerData?.id,
-            name: partnerData?.full_name || partnerData?.username || "Unknown Student",
-            avatar: partnerData?.avatar_url,
-            lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
-                         : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
-                         : msg.content,
-            time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            unread: unreadMap[p.conversation_id] || 0,
-            sortTime: new Date(msg.created_at).getTime(),
-          };
-        }).filter(Boolean).sort((a: any, b: any) => b.sortTime - a.sortTime);
-
-        return builtChats;
-      } catch (e) {
-        console.error("Inbox query failure:", e);
-        return [];
+      if (convError) {
+        console.error("Inbox prep error:", convError);
+        throw new Error(convError.message);
       }
+      
+      if (!myConvos || myConvos.length === 0) return { chats: [], error: null };
+      const conversationIds = myConvos.map((c: any) => c.conversation_id);
+
+      // 2. Fetch partners and latest messages in parallel
+      const [partnersResult, latestMsgsResult, unreadResult] = await Promise.all([
+        // Get the OTHER person in each conversation
+        supabase
+          .from('conversation_participants')
+          .select('conversation_id, profiles(id, username, full_name, avatar_url)')
+          .in('conversation_id', conversationIds)
+          .neq('user_id', user.id),
+        
+        // Get only the MOST RECENT message for each conversation
+        supabase
+          .from('messages')
+          .select('conversation_id, content, sender_id, is_read, created_at')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: false }),
+          
+        // Optimized unread count fetch
+        supabase
+          .from('messages')
+          .select('conversation_id', { count: 'exact' })
+          .in('conversation_id', conversationIds)
+          .neq('sender_id', user.id)
+          .eq('is_read', false)
+      ]);
+
+      if (partnersResult.error) throw new Error(partnersResult.error.message);
+      if (!partnersResult.data) return { chats: [], error: null };
+
+      // Process unread counts efficiently
+      const unreadMap: Record<string, number> = {};
+      if (unreadResult.data) {
+        unreadResult.data.forEach((m: any) => {
+          unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1;
+        });
+      }
+
+      // Group messages by conversation to find the latest
+      const latestMsgMap: Record<string, any> = {};
+      if (latestMsgsResult.data) {
+        latestMsgsResult.data.forEach((msg: any) => {
+          if (!latestMsgMap[msg.conversation_id]) {
+            latestMsgMap[msg.conversation_id] = msg;
+          }
+        });
+      }
+
+      const builtChats = partnersResult.data.map((p: any) => {
+        const partnerData: any = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+        const msg = latestMsgMap[p.conversation_id];
+        
+        if (!msg) return null; // Skip empty convos
+
+        return {
+          id: p.conversation_id,
+          partner_id: partnerData?.id,
+          name: partnerData?.full_name || partnerData?.username || "Unknown Student",
+          avatar: partnerData?.avatar_url,
+          lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
+                       : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
+                       : msg.content,
+          time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          unread: unreadMap[p.conversation_id] || 0,
+          sortTime: new Date(msg.created_at).getTime(),
+        };
+      }).filter(Boolean).sort((a: any, b: any) => b.sortTime - a.sortTime);
+
+      return { chats: builtChats, error: null };
     },
     staleTime: 10 * 1000,
   });
+
+  const chats = chatsData?.chats || [];
 
   const { data: activeUsers = [] } = useQuery({
     queryKey: ['active-users'],
