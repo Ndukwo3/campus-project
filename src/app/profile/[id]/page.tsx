@@ -170,6 +170,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
     fetchUserReposts();
   }, [activeTab, userId, supabase]);
 
+  const handleRepost = async (postId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return router.push("/login");
+
     if (currentUserReposts.has(postId)) {
       await supabase.from('reposts').delete().match({ user_id: user.id, post_id: postId });
       setCurrentUserReposts(prev => {

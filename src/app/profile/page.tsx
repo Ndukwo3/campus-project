@@ -84,6 +84,12 @@ export default function ProfilePage() {
     }
   };
 
+  const handleRepost = async (postId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const wasReposted = currentUserReposts.has(postId);
+
     if (wasReposted) {
       await supabase.from('reposts').delete().match({ user_id: user.id, post_id: postId });
       setCurrentUserReposts(prev => {
