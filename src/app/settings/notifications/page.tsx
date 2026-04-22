@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Smartphone, MessageSquare, AtSign, Users, Megaphone, Calendar, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Smartphone, MessageSquare, AtSign, Users, Calendar, CheckCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
@@ -79,7 +79,6 @@ export default function NotificationsSettingsPage() {
     comments: true,
     mentions: true,
     group_activity: true,
-    announcements: true,
     events: true
   });
 
@@ -223,14 +222,6 @@ export default function NotificationsSettingsPage() {
               description="New posts or messages in study groups you joined."
               checked={settings.group_activity}
               onChange={(val) => handleUpdateSetting('group_activity', val)}
-              disabled={isLoading}
-            />
-            <ToggleSetting 
-              icon={Megaphone} 
-              title="Univas Announcements" 
-              description="Official news and alerts from your university."
-              checked={settings.announcements}
-              onChange={(val) => handleUpdateSetting('announcements', val)}
               disabled={isLoading}
             />
             <ToggleSetting 
