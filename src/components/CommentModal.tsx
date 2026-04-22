@@ -61,7 +61,7 @@ export default function CommentModal({
             filter: `post_id=eq.${postId}`,
           },
           () => {
-            fetchComments();
+            fetchComments(true); // Silent update
           }
         )
         .subscribe();
@@ -72,8 +72,8 @@ export default function CommentModal({
     }
   }, [isOpen, postId]);
 
-  const fetchComments = async () => {
-    setIsLoading(true);
+  const fetchComments = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     const { data, error } = await supabase
       .from("comments")
       .select(`

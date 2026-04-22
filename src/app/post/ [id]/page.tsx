@@ -34,6 +34,21 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
     setToast({ message, type, isVisible: true });
   };
 
+  const fetchComments = async (silent = false) => {
+    if (!silent) setIsLoading(true);
+    const { data } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        profiles (id, full_name, username, avatar_url)
+      `)
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+
+    setComments(data || []);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     async function fetchPostDetail() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -65,21 +80,31 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         setIsBookmarked(!!bookmark);
       }
 
-      // Fetch comments
-      const { data: commentsData } = await supabase
-        .from('comments')
-        .select(`
-          *,
-          profiles (id, full_name, username, avatar_url)
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-
-      setComments(commentsData || []);
-      setIsLoading(false);
+      await fetchComments();
     }
 
     fetchPostDetail();
+
+    // Subscribe to new comments
+    const channel = supabase
+      .channel(`detail-comments-${postId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "comments",
+          filter: `post_id=eq.${postId}`,
+        },
+        () => {
+          fetchComments(true); // Silent update
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [postId, supabase, router]);
 
   const handleLike = async () => {
