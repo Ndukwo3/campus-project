@@ -61,67 +61,92 @@ export default function LoginPage() {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) return;
 
-    const { google } = window as any;
-    if (!google) return;
+    let retryCount = 0;
+    const maxRetries = 10;
 
-    // Generate a secure random nonce once
-    const array = new Uint8Array(16);
-    crypto.getRandomValues(array);
-    const rawNonce = Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
-    setNonce(rawNonce);
-
-    google.accounts.id.initialize({
-      client_id: clientId,
-      nonce: rawNonce,
-      callback: async (response: any) => {
-        try {
-          setIsLoading(true);
-          console.log("Google response received, verifying...");
-          const { data, error: idTokenError } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: response.credential,
-            nonce: rawNonce,
-          });
-
-          if (idTokenError) throw idTokenError;
-
-          if (data.user) {
-            // Check if user has a COMPLETE profile (First Name, Last Name, University)
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('id, username, first_name, last_name, university_id')
-              .eq('id', data.user.id)
-              .single();
-
-            // Logic Victor requested: If missing ANY key info, send to onboarding
-            if (!profile || !profile.username || !profile.first_name || !profile.last_name || !profile.university_id) {
-              console.log("Profile incomplete, redirecting to onboarding...");
-              router.push("/onboarding");
-            } else {
-              console.log("Profile complete, welcome back!");
-              router.push("/");
-            }
-          }
-        } catch (err: any) {
-          console.error("Google verify error:", err);
-          setError(err.message || "Failed to verify Google account.");
-          setIsLoading(false);
+    const initGoogle = () => {
+      const { google } = window as any;
+      if (!google) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(initGoogle, 500);
+        } else {
+          console.error("Google GSI script not found after max retries");
         }
-      },
-    });
+        return;
+      }
 
-    // Render the standard Google button to bypass One Tap suppression
-    const googleButtonDiv = document.getElementById("google-button-div");
-    if (googleButtonDiv) {
-      google.accounts.id.renderButton(googleButtonDiv, {
-        theme: "outline",
-        size: "large",
-        width: googleButtonDiv.offsetWidth || 350,
-        text: "continue_with",
-        shape: "pill",
-        logo_alignment: "center"
-      });
-    }
+      console.log("Initializing Google with Client ID:", clientId);
+
+      // Stable nonce for this session
+      let rawNonce = sessionStorage.getItem('g_nonce');
+      if (!rawNonce) {
+        const array = new Uint8Array(16);
+        crypto.getRandomValues(array);
+        rawNonce = Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+        sessionStorage.setItem('g_nonce', rawNonce);
+      }
+      setNonce(rawNonce);
+
+      try {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          nonce: rawNonce,
+          ux_mode: "popup",
+          callback: async (response: any) => {
+            try {
+              setIsLoading(true);
+              console.log("Google callback triggered!");
+              const { data, error: idTokenError } = await supabase.auth.signInWithIdToken({
+                provider: 'google',
+                token: response.credential,
+                nonce: rawNonce!,
+              });
+
+              if (idTokenError) throw idTokenError;
+
+              if (data.user) {
+                const { data: profile } = await supabase
+                  .from('profiles')
+                  .select('id, username, first_name, last_name, university_id')
+                  .eq('id', data.user.id)
+                  .single();
+
+                if (!profile || !profile.username || !profile.first_name || !profile.last_name || !profile.university_id) {
+                  router.push("/onboarding");
+                } else {
+                  router.push("/");
+                }
+              }
+            } catch (err: any) {
+              console.error("Google verify error:", err);
+              setError(err.message || "Failed to verify Google account.");
+              setIsLoading(false);
+            }
+          },
+        });
+
+        // Use a small delay to ensure the DOM element is ready and has dimensions
+        setTimeout(() => {
+          const googleButtonDiv = document.getElementById("google-button-div");
+          if (googleButtonDiv) {
+            console.log("Rendering Google button into div");
+            google.accounts.id.renderButton(googleButtonDiv, {
+              theme: "outline",
+              size: "large",
+              width: 320, // Explicit width for consistency
+              text: "continue_with",
+              shape: "pill",
+              logo_alignment: "left"
+            });
+          }
+        }, 100);
+      } catch (err) {
+        console.error("Error during Google init:", err);
+      }
+    };
+
+    initGoogle();
   }, [supabase, router]);
 
   return (
