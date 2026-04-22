@@ -151,6 +151,17 @@ export default function Home() {
       await supabase.from('likes').delete().match({ post_id: postId, user_id: user.id }); 
     } else { 
       await supabase.from('likes').insert({ post_id: postId, user_id: user.id }); 
+      
+      // Send notification to post author
+      if (post.user_id !== user.id) {
+        await supabase.from('notifications').insert({
+          user_id: post.user_id,
+          sender_id: user.id,
+          type: 'like',
+          content: `liked your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+          is_read: false
+        });
+      }
     }
   };
   

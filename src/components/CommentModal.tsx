@@ -153,9 +153,21 @@ export default function CommentModal({
         .delete()
         .match({ comment_id: commentId, user_id: currentUser.id });
     } else {
+      const commentObj = comments.find(c => c.id === commentId);
       await supabase
         .from("comment_likes")
         .insert({ comment_id: commentId, user_id: currentUser.id });
+
+      // Send notification to comment author
+      if (commentObj && commentObj.user_id !== currentUser.id) {
+        await supabase.from('notifications').insert({
+          user_id: commentObj.user_id,
+          sender_id: currentUser.id,
+          type: 'like',
+          content: `liked your comment: "${commentObj.content?.substring(0, 50)}${commentObj.content?.length > 50 ? '...' : ''}"`,
+          is_read: false
+        });
+      }
     }
     // Deep sync eventually (optional since user has optimistic state)
     // fetchComments(); 

@@ -77,6 +77,17 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
     setIsLiked(!isLiked);
     setPost({ ...post, likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1 });
     await supabase.rpc('toggle_post_like', { post_id_input: postId, user_id_input: currentUser.id });
+    
+    // Send notification if liked
+    if (!isLiked && post.user_id !== currentUser.id) {
+       await supabase.from('notifications').insert({
+         user_id: post.user_id,
+         sender_id: currentUser.id,
+         type: 'like',
+         content: `liked your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+         is_read: false
+       });
+    }
   };
 
   if (isLoading) {
