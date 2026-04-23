@@ -114,17 +114,6 @@ export default function EventsPage() {
           </div>
         </div>
 
-        {/* Featured Event / Stats */}
-        <div className="bg-zinc-900 dark:bg-white rounded-[44px] p-8 relative overflow-hidden group shadow-2xl">
-           <div className="absolute top-0 right-0 p-8">
-              <Sparkles className="text-[#E5FF66] dark:text-zinc-900 animate-pulse" size={24} />
-           </div>
-           <div className="relative z-10 space-y-2">
-              <h2 className="text-[32px] font-black text-white dark:text-black uppercase italic leading-none tracking-tighter">Your Campus<br/>Is Alive.</h2>
-              <p className="text-[10px] font-black text-[#E5FF66] dark:text-zinc-500 uppercase tracking-[0.2em]">{filteredEvents.length} Upcoming Events Found</p>
-           </div>
-        </div>
-
         {/* Events Grid */}
         <div className="space-y-6">
           {isLoading ? (
