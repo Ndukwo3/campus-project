@@ -186,7 +186,7 @@ export default function MessagesPage() {
   });
 
   const { onlineUsers: globalOnlineUsers } = usePresenceStore();
-  const onlineUsers = Array.from(globalOnlineUsers);
+  const onlineUsers = Array.from(globalOnlineUsers.keys());
 
   useEffect(() => {
     const msgChannel = supabase.channel('inbox-updates')
