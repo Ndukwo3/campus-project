@@ -453,9 +453,15 @@ export default function MessagesPage() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center gap-2">
-                    <p className={`text-[13.5px] truncate flex-1 tracking-tight ${chat.unread > 0 ? "text-zinc-900 dark:text-zinc-300 font-semibold" : "text-zinc-500 dark:text-zinc-400 font-medium"}`}>
-                      {chat.lastMessage}
-                    </p>
+                    {globalOnlineUsers.get(chat.partner_id)?.isTyping ? (
+                      <p className="text-[13.5px] font-bold text-[#4ADE80] animate-pulse tracking-tight flex-1">
+                        Typing...
+                      </p>
+                    ) : (
+                      <p className={`text-[13.5px] truncate flex-1 tracking-tight ${chat.unread > 0 ? "text-zinc-900 dark:text-zinc-300 font-semibold" : "text-zinc-500 dark:text-zinc-400 font-medium"}`}>
+                        {chat.lastMessage}
+                      </p>
+                    )}
                     {chat.unread > 0 && (
                       <div className="min-w-[20px] h-5 px-1.5 bg-[#E5FF66] rounded-full flex items-center justify-center shrink-0 shadow-[0_2px_10px_rgba(229,255,102,0.4)]">
                         <span className="text-[10px] font-black text-black">{chat.unread}</span>

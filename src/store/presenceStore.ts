@@ -1,21 +1,22 @@
 import { create } from 'zustand';
 
+interface PresenceData {
+  isTyping?: boolean;
+  online_at?: string;
+}
+
 interface PresenceState {
-  onlineUsers: Set<string>;
-  setOnlineUsers: (users: Set<string>) => void;
-  addOnlineUser: (userId: string) => void;
-  removeOnlineUser: (userId: string) => void;
+  onlineUsers: Map<string, PresenceData>;
+  setOnlineUsers: (users: Map<string, PresenceData>) => void;
+  updateUserPresence: (userId: string, data: PresenceData) => void;
 }
 
 export const usePresenceStore = create<PresenceState>((set) => ({
-  onlineUsers: new Set(),
+  onlineUsers: new Map(),
   setOnlineUsers: (users) => set({ onlineUsers: users }),
-  addOnlineUser: (userId) => set((state) => ({ 
-    onlineUsers: new Set([...Array.from(state.onlineUsers), userId]) 
-  })),
-  removeOnlineUser: (userId) => set((state) => {
-    const next = new Set(state.onlineUsers);
-    next.delete(userId);
+  updateUserPresence: (userId, data) => set((state) => {
+    const next = new Map(state.onlineUsers);
+    next.set(userId, { ...next.get(userId), ...data });
     return { onlineUsers: next };
   }),
 }));

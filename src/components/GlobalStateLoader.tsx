@@ -61,17 +61,22 @@ export default function GlobalStateLoader() {
         })
         .on('presence', { event: 'sync' }, () => {
           const newState = channel.presenceState();
-          const onlineIds = new Set<string>();
+          const onlineUsersMap = new Map<string, { isTyping?: boolean; online_at?: string }>();
           Object.keys(newState).forEach((key) => {
-            onlineIds.add(key);
+            const presence = newState[key][0] as any;
+            onlineUsersMap.set(key, { 
+              isTyping: presence?.isTyping,
+              online_at: presence?.online_at 
+            });
           });
-          setOnlineUsers(onlineIds);
+          setOnlineUsers(onlineUsersMap);
         })
         .subscribe(async (status: string) => {
           if (status === 'SUBSCRIBED') {
             await channel.track({
+              user_id: user.id,
               online_at: new Date().toISOString(),
-              user_id: user.id
+              isTyping: false
             });
           }
         });
