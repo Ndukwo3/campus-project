@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { 
   ArrowLeft, Calendar, MapPin, Clock, 
-  Users, Share2, Bookmark, ChevronLeft,
+  Users, Share2, Bookmark, ChevronLeft, Plus,
   Info, Shield, User, Loader2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
