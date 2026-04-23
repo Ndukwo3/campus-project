@@ -186,9 +186,10 @@ export default function UnivasPage() {
 
             {/* Bottom Row: Events (Full Width) */}
             <motion.div
+              onClick={() => router.push("/univas/events")}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="col-span-2 mt-8 bg-[#E5FF66] dark:bg-[#E5FF66] rounded-[40px] p-7 flex items-center justify-between shadow-xl relative overflow-hidden group"
+              className="col-span-2 mt-8 bg-[#E5FF66] dark:bg-[#E5FF66] rounded-[40px] p-7 flex items-center justify-between shadow-xl relative overflow-hidden group cursor-pointer"
             >
               <div className="flex gap-6 items-center">
                 <div className="w-14 h-14 rounded-2xl bg-black/5 flex items-center justify-center text-black">
