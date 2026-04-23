@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { capitalizeName } from "@/lib/utils";
+import { usePresenceStore } from "@/store/presenceStore";
 
 // Separate memoized component for each message to prevent unnecessary re-renders
 const MessageItem = memo(({ 
@@ -311,22 +312,12 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
 
   const [partnerIsOnline, setPartnerIsOnline] = useState(false);
 
+  const { onlineUsers: globalOnlineUsers } = usePresenceStore();
+
   useEffect(() => {
     if (!partner) return;
-    const presenceChannel = supabase.channel('online-users');
-
-    presenceChannel
-      .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState();
-        const activeIds = Object.values(state).flat().map((p: any) => p.user_id);
-        setPartnerIsOnline(activeIds.includes(partner.id));
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(presenceChannel);
-    };
-  }, [supabase, partner]);
+    setPartnerIsOnline(globalOnlineUsers.has(partner.id));
+  }, [globalOnlineUsers, partner]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

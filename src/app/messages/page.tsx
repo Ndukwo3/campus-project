@@ -10,6 +10,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import ChatListSkeleton from "@/components/skeletons/ChatListSkeleton";
 import { createClient } from "@/lib/supabase";
 import { capitalizeName } from "@/lib/utils";
+import { usePresenceStore } from "@/store/presenceStore";
 
 // Realtime handling will be done here
 
@@ -184,26 +185,10 @@ export default function MessagesPage() {
     staleTime: 30 * 1000,
   });
 
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const { onlineUsers: globalOnlineUsers } = usePresenceStore();
+  const onlineUsers = Array.from(globalOnlineUsers);
 
   useEffect(() => {
-    const presenceChannel = supabase.channel('online-users');
-
-    presenceChannel
-      .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState();
-        const activeIds = Object.values(state).flat().map((p: any) => p.user_id);
-        setOnlineUsers(activeIds);
-      })
-      .subscribe(async (status: string) => {
-        if (status === 'SUBSCRIBED') {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await presenceChannel.track({ user_id: user.id });
-          }
-        }
-      });
-
     const msgChannel = supabase.channel('inbox-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
          queryClient.invalidateQueries({ queryKey: ['inbox'] });
@@ -211,7 +196,6 @@ export default function MessagesPage() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(presenceChannel);
       supabase.removeChannel(msgChannel);
     };
   }, [supabase, queryClient]);
