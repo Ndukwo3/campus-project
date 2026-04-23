@@ -139,6 +139,7 @@ export default function LibraryPage() {
   const fetchDepartments = async (uniId: string, collegeId?: string) => {
     setIsLoading(true);
     try {
+      console.log("Fetching departments for uni:", uniId, "college:", collegeId);
       let query = supabase
         .from('departments')
         .select('id, name, duration_years')
@@ -150,15 +151,20 @@ export default function LibraryPage() {
 
       const { data, error } = await query.order('name');
       
-      if (!error && data) {
+      if (error) throw error;
+
+      if (data && data.length > 0) {
         setDepartments(data);
       } else {
+        console.warn("No departments found for this query");
         setDepartments([]);
       }
     } catch (err) {
       console.error("Fetch departments failed:", err);
+      setDepartments([]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleNext = (next: Step) => setCurrentStep(next);
@@ -226,17 +232,21 @@ export default function LibraryPage() {
               onSelect={async (uni) => { 
                 setSelectedUni(uni); 
                 setIsLoading(true);
-                const { data } = await supabase
+                setSelectedCollege(null);
+                setSelectedDept(null);
+                
+                // Check if this uni has colleges
+                const { data, error } = await supabase
                   .from('colleges')
                   .select('id')
                   .eq('university_id', uni.id)
                   .limit(1);
                 
                 setIsLoading(false);
-                if (data && data.length > 0) {
+                if (!error && data && data.length > 0) {
                   handleNext("college");
                 } else {
-                  setSelectedCollege(null);
+                  // Skip college step if none exist
                   handleNext("department");
                 }
               }} 
@@ -256,7 +266,10 @@ export default function LibraryPage() {
               departments={departments} 
               isLoading={isLoading}
               selectedId={selectedDept?.id}
-              onSelect={(dept) => { setSelectedDept(dept); handleNext("level"); }} 
+              onSelect={(dept) => { 
+                setSelectedDept(dept); 
+                handleNext("level"); 
+              }} 
             />
           )}
           {currentStep === "level" && (
