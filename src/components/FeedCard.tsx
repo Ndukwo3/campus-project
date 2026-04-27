@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MoreVertical, Heart, MessageCircle, Share2, User, Flag, AlertTriangle, Trash2, Bookmark, BookmarkCheck, Repeat2 } from "lucide-react";
+import { MoreVertical, Heart, MessageCircle, Share2, User, Flag, AlertTriangle, Trash2, Bookmark, BookmarkCheck, Repeat2, CheckCircle2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { usePresenceStore } from "@/store/presenceStore";
@@ -29,6 +29,7 @@ interface FeedCardProps {
   onBookmark?: (id: string) => void;
   onRepost?: (id: string) => void;
   isReposted?: boolean;
+  isVerified?: boolean;
   onNotInterested?: (id: string) => void;
 }
 
@@ -53,6 +54,7 @@ export default function FeedCard({
   onShare,
   onBookmark,
   onRepost,
+  isVerified = false,
   onNotInterested,
 }: FeedCardProps) {
   const [localIsLiked, setLocalIsLiked] = useState(isLiked);
@@ -160,12 +162,25 @@ export default function FeedCard({
             )}
           </Link>
           <div className="flex flex-col space-y-1">
-            <Link 
-              href={`/profile/${authorId}`}
-              className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 tracking-tight leading-none hover:text-black dark:hover:text-white cursor-pointer"
-            >
-              {capitalizeName(authorName)}
-            </Link>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Link 
+                href={`/profile/${authorId}`}
+                className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 tracking-tight leading-none hover:text-black dark:hover:text-white cursor-pointer truncate"
+              >
+                {capitalizeName(authorName)}
+              </Link>
+              {isVerified && (
+                <div className="flex items-center justify-center shrink-0">
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                  >
+                    <CheckCircle2 size={14} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black" />
+                  </motion.div>
+                </div>
+              )}
+            </div>
             <span className="text-[10px] font-black uppercase tracking-[0.05em] text-zinc-400 dark:text-zinc-500 opacity-80">{timePosted}</span>
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserPlus, Check, Loader2, User } from "lucide-react";
+import { UserPlus, Check, Loader2, User, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
@@ -51,13 +51,13 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
 
       const { data: admins } = await supabase
         .from('profiles')
-        .select('id, full_name, username, avatar_url, role')
+        .select('id, full_name, username, avatar_url, role, is_verified')
         .eq('role', 'admin')
         .limit(5);
 
       const { data: sameUniStudents } = await supabase
         .from('profiles')
-        .select('id, full_name, username, avatar_url, role')
+        .select('id, full_name, username, avatar_url, role, is_verified')
         .eq('university_id', universityId)
         .neq('role', 'super_admin')
         .neq('role', 'admin')
@@ -67,7 +67,7 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
       if (studentList.length < 5) {
         const { data: globalUsers } = await supabase
           .from('profiles')
-          .select('id, full_name, username, avatar_url, role')
+          .select('id, full_name, username, avatar_url, role, is_verified')
           .neq('university_id', universityId) // Only users NOT in the same uni
           .neq('role', 'super_admin')
           .neq('role', 'admin')
@@ -171,7 +171,12 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
             </div>
             
             <div className="flex-1 min-w-0">
-              <h4 className="text-[14px] font-black text-zinc-900 dark:text-zinc-100 tracking-tight truncate leading-tight">{capitalizeName(user.full_name)}</h4>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <h4 className="text-[14px] font-black text-zinc-900 dark:text-zinc-100 tracking-tight truncate leading-tight">{capitalizeName(user.full_name)}</h4>
+                {user.is_verified && (
+                  <CheckCircle2 size={12} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
+                )}
+              </div>
               <p className="text-[11px] font-bold text-[#E5FF66] uppercase tracking-widest mt-0.5">{user.username}</p>
             </div>
 

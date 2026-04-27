@@ -70,7 +70,7 @@ export default function SearchPage() {
         // People you may know - Showing all users for now while base is small
         const { data: allUsers } = await supabase
           .from('profiles')
-          .select('*')
+          .select('*, is_verified')
           .neq('id', user.id)
           .limit(100); // High limit to show everyone while user base is small
           
@@ -83,7 +83,7 @@ export default function SearchPage() {
         fetchedStudents = Array.from(uniqueMap.values()).slice(0, 20); // Show up to 20 people instead of just 10
       } else {
         // Explicit Search
-        let searchQ = supabase.from('profiles').select('*').limit(30);
+        let searchQ = supabase.from('profiles').select('*, is_verified').limit(30);
         if (activeFilter === "All" || activeFilter === "Students") {
           searchQ = searchQ.or(`username.ilike.%${searchQuery}%,full_name.ilike.%${searchQuery}%`);
         }
@@ -438,7 +438,12 @@ export default function SearchPage() {
                                 href={`/profile/${student.id}`}
                                 className="flex-1 min-w-0"
                               >
-                                <h3 className="text-[15.5px] font-bold text-zinc-900 dark:text-zinc-100 truncate tracking-tight">{capitalizeName(student.full_name || student.username)}</h3>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <h3 className="text-[15.5px] font-bold text-zinc-900 dark:text-zinc-100 truncate tracking-tight">{capitalizeName(student.full_name || student.username)}</h3>
+                                  {student.is_verified && (
+                                    <CheckCircle2 size={14} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
+                                  )}
+                                </div>
                                 <p className="text-[12.5px] font-medium text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{student.universities?.name || "Lagos City, NG"}</p>
                               </Link>
                               {student.id !== currentUser?.id && (

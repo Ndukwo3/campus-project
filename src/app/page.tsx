@@ -77,7 +77,7 @@ export default function Home() {
         .from('posts')
         .select(`
           *,
-          profiles:user_id (username, full_name, avatar_url)
+          profiles:user_id (username, full_name, avatar_url, is_verified)
         `)
         .order('created_at', { ascending: false });
 
@@ -326,7 +326,7 @@ export default function Home() {
             </div>
           ) : posts.length > 0 ? (
             posts.map((post: any) => (
-              <FeedCard key={post.id} id={post.id} authorId={post.user_id} currentUserId={user?.id} authorName={capitalizeName(post.profiles?.full_name || post.profiles?.username || "Anonymous")} authorImage={post.profiles?.avatar_url || null} timePosted={formatRelativeTime(new Date(post.created_at))} postImage={post.image_url || null} likes={post.likes_count || 0} comments={post.comments_count || 0} description={post.content} isLiked={post.isLiked} isBookmarked={post.isBookmarked} isReposted={post.isReposted} onLike={handleLike} onComment={handleCommentClick} onDelete={openDeleteModal} onShare={handleShare} onBookmark={handleBookmark} onRepost={handleRepost} />
+              <FeedCard key={post.id} id={post.id} authorId={post.user_id} currentUserId={user?.id} authorName={capitalizeName(post.profiles?.full_name || post.profiles?.username || "Anonymous")} authorImage={post.profiles?.avatar_url || null} timePosted={formatRelativeTime(new Date(post.created_at))} postImage={post.image_url || null} likes={post.likes_count || 0} comments={post.comments_count || 0} description={post.content} isLiked={post.isLiked} isBookmarked={post.isBookmarked} isReposted={post.isReposted} isVerified={post.profiles?.is_verified} onLike={handleLike} onComment={handleCommentClick} onDelete={openDeleteModal} onShare={handleShare} onBookmark={handleBookmark} onRepost={handleRepost} />
 
             ))
           ) : null}
