@@ -5,6 +5,7 @@ import { UserPlus, Check, Loader2, User, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
+import Link from "next/link";
 import { capitalizeName } from "@/lib/utils";
 
 interface SuggestedConnectionsProps {
