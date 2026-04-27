@@ -1132,8 +1132,6 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
               </button>
             )}
           </div>
-        </form>
-          
           {pendingImage && (
             <button
                type="button"
