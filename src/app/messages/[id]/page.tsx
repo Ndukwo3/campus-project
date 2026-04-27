@@ -825,7 +825,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
       {/* Premium Chat Header */}
       <div className="sticky top-0 flex-none bg-white/90 dark:bg-black/90 backdrop-blur-xl border-b border-zinc-100/80 dark:border-zinc-800/50 px-4 py-4 flex items-center justify-between shadow-sm z-30">
         <div className="flex items-center gap-3">
-          <Link href="/messages" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+          <Link href="/messages" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors lg:hidden">
             <ChevronLeft size={24} className="text-zinc-800 dark:text-zinc-200" />
           </Link>
           <div className="flex items-center gap-3">
