@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ArrowLeft, X, Filter, Users, Hash, TrendingUp, ChevronRight, UserPlus, Loader2, User, MessageSquare, Check, Flame } from "lucide-react";
+import { Search, ArrowLeft, X, Filter, Users, Hash, TrendingUp, ChevronRight, UserPlus, Loader2, User, MessageSquare, Check, Flame, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
