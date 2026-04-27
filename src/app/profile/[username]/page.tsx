@@ -19,6 +19,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const supabase = createClient();
   
   const [profile, setProfile] = useState<any>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending_sent' | 'pending_received' | 'connected'>('none');
@@ -69,9 +70,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         return;
       }
 
-      const userId = profileData.id;
+      const fetchedUserId = profileData.id;
+      setUserId(fetchedUserId);
 
-      if (authUser && authUser.id === userId) {
+      if (authUser && authUser.id === fetchedUserId) {
         router.push("/profile");
         return;
       }
@@ -99,7 +101,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       const { data: postsData } = await supabase
         .from('posts')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', fetchedUserId)
         .order('created_at', { ascending: false });
       
       setPosts(postsData || []);
@@ -109,7 +111,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         const { data: friendData } = await supabase
           .from('friends')
           .select('*')
-          .or(`and(user_id1.eq.${authUser.id},user_id2.eq.${userId}),and(user_id1.eq.${userId},user_id2.eq.${authUser.id})`)
+          .or(`and(user_id1.eq.${authUser.id},user_id2.eq.${fetchedUserId}),and(user_id1.eq.${fetchedUserId},user_id2.eq.${authUser.id})`)
           .single();
         
         if (friendData) {
@@ -118,7 +120,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           const { data: reqData } = await supabase
             .from('friend_requests')
             .select('*')
-            .or(`and(sender_id.eq.${authUser.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${authUser.id})`)
+            .or(`and(sender_id.eq.${authUser.id},receiver_id.eq.${fetchedUserId}),and(sender_id.eq.${fetchedUserId},receiver_id.eq.${authUser.id})`)
             .eq('status', 'pending')
             .maybeSingle();
             
@@ -134,7 +136,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       const { count: connections } = await supabase
         .from('friends')
         .select('*', { count: 'exact', head: true })
-        .or(`user_id1.eq.${userId},user_id2.eq.${userId}`);
+        .or(`user_id1.eq.${fetchedUserId},user_id2.eq.${fetchedUserId}`);
       
       setConnectionCount(connections || 0);
 
@@ -143,7 +145,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       const { count: storiesCount } = await supabase
         .from('stories')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
+        .eq('user_id', fetchedUserId)
         .gt('expires_at', now);
       
       setHasStories(!!storiesCount && storiesCount > 0);
@@ -163,7 +165,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       setIsLoading(false);
     }
     fetchData();
-  }, [userId, router, supabase]);
+  }, [identifier, router, supabase]);
 
   useEffect(() => {
     async function fetchUserReposts() {
@@ -209,7 +211,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       });
 
       // Notify the post author
-      if (userId !== user.id) {
+      if (userId && userId !== user.id) {
         await supabase.from('notifications').insert({
           user_id: userId,
           sender_id: user.id,
@@ -736,7 +738,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       <ConnectionsModal 
         isOpen={isConnectionsOpen}
         onClose={() => setIsConnectionsOpen(false)}
-        userId={userId}
+        userId={userId || ""}
         userName={capitalizeName(profile?.full_name || "User")}
       />
 
