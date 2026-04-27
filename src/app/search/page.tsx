@@ -297,7 +297,7 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black pb-[110px] max-w-md mx-auto relative font-sans overflow-x-hidden transition-colors">
+    <div className="min-h-screen bg-white dark:bg-black pb-[100px] lg:pb-0 relative font-sans overflow-x-hidden transition-colors">
       {/* Search Header Container */}
       <div className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50">
         <div className="px-6 pt-10 pb-5">

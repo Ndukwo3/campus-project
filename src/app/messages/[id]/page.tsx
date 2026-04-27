@@ -821,7 +821,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-[#F8F9FA] dark:bg-black max-w-md mx-auto relative font-sans overflow-hidden overscroll-none transition-colors">
+    <div className="flex flex-col h-dvh bg-[#F8F9FA] dark:bg-black relative font-sans overflow-hidden overscroll-none transition-colors">
       {/* Premium Chat Header */}
       <div className="sticky top-0 flex-none bg-white/90 dark:bg-black/90 backdrop-blur-xl border-b border-zinc-100/80 dark:border-zinc-800/50 px-4 py-4 flex items-center justify-between shadow-sm z-30">
         <div className="flex items-center gap-3">

@@ -109,7 +109,7 @@ export default function UnivasPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-black max-w-md mx-auto relative font-sans transition-colors">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-black relative font-sans transition-colors">
        <Toast 
         message={toast.message} 
         type={toast.type} 

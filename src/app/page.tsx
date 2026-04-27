@@ -313,10 +313,21 @@ export default function Home() {
 
   // STANDARD FEED VIEW
   return (
-    <div className="min-h-screen bg-white dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans overflow-hidden transition-colors">
+    <div className="min-h-screen bg-white dark:bg-black pb-[100px] lg:pb-0 relative font-sans overflow-hidden transition-colors">
       <Toast message={toast.message} type={toast.type} isVisible={toast.isVisible} onClose={() => setToast({ ...toast, isVisible: false })} />
       <TopNavigation />
       
+      {/* Desktop Header */}
+      <div className="sticky top-0 z-40 hidden lg:block bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800">
+        <div className="px-5 py-4">
+          <h1 className="text-xl font-black tracking-tight">Home</h1>
+        </div>
+        <div className="flex border-b border-zinc-100 dark:border-zinc-800">
+          <button className="flex-1 py-4 text-sm font-black text-zinc-900 dark:text-zinc-100 border-b-4 border-[#E5FF66]">For you</button>
+          <button className="flex-1 py-4 text-sm font-bold text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">Following</button>
+        </div>
+      </div>
+
       <main className="px-5 py-2">
         <StoriesBar />
         <div className="mt-6 flex flex-col gap-4">
@@ -337,7 +348,7 @@ export default function Home() {
       <BottomNavigation />
 
       {/* Floating Action Button - Enhanced Centering */}
-      <div className="fixed inset-x-0 bottom-[92px] flex justify-center pointer-events-none z-[70] px-6">
+      <div className="fixed inset-x-0 bottom-[92px] flex justify-center pointer-events-none z-[70] px-6 lg:hidden">
         <div className="w-full max-w-md flex justify-end">
           <Link 
             href="/create" 

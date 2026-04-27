@@ -365,7 +365,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans overflow-x-hidden transition-colors">
+    <div className="min-h-screen bg-white dark:bg-black pb-[100px] lg:pb-0 relative font-sans overflow-x-hidden transition-colors">
       <Toast 
         message={toast.message} 
         type={toast.type} 

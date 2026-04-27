@@ -14,7 +14,7 @@ export default function FloatingCreateButton() {
   return (
     <AnimatePresence>
       {shouldShow && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md pointer-events-none z-[60] px-5 flex justify-end">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md pointer-events-none z-[60] px-5 flex justify-end lg:hidden">
           <motion.div
             initial={{ scale: 0, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}

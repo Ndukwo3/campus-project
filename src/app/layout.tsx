@@ -58,6 +58,8 @@ import ThemeColorUpdater from "@/components/ThemeColorUpdater";
 
 
 
+import ResponsiveLayout from "@/components/ResponsiveLayout";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -101,7 +103,9 @@ export default function RootLayout({
             <ThemeColorUpdater />
             <GlobalStateLoader />
             <SessionTracker />
-            {children}
+            <ResponsiveLayout>
+              {children}
+            </ResponsiveLayout>
             <GlobalModals />
 
           </ThemeProvider>

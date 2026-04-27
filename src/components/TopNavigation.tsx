@@ -7,7 +7,7 @@ export default function TopNavigation() {
   const { hasUnread } = useNotificationStore();
   
   return (
-    <div className="sticky top-0 z-40 w-full max-w-md mx-auto px-6 py-4 flex items-center justify-between bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 transition-colors">
+    <div className="sticky top-0 z-40 w-full max-w-md mx-auto px-6 py-4 flex items-center justify-between bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 transition-colors lg:hidden">
       <div className="flex items-center gap-2 group cursor-pointer transition-transform active:scale-95">
         <AuthLogo />
       </div>
