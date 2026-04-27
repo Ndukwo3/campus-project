@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, MoreVertical, Send, Mic, Smile, Plus, Loader2, User, Edit, ChevronDown, Trash2, Globe, Eye, Check } from "lucide-react";
+import { ChevronLeft, MoreVertical, Send, Mic, Smile, Plus, Loader2, User, Edit, ChevronDown, Trash2, Globe, Eye, Check, CheckCircle2, Phone, Video, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { memo, useState, useEffect, useRef, use, useMemo } from "react";
@@ -64,13 +64,13 @@ const MessageItem = memo(({
           zIndex: 10
         }}
         transition={{ type: "spring", damping: 20, stiffness: 350, mass: 0.5 }}
-        className={`max-w-[82%] rounded-[22px] relative touch-none select-none will-change-transform ${
-          isImage && !isViewOnce ? "shadow-md active:scale-[0.98] cursor-pointer" : "shadow-sm px-4 py-3"
+        className={`max-w-[82%] relative touch-none select-none will-change-transform ${
+          isImage && !isViewOnce ? "rounded-[18px] overflow-hidden" : "px-4 py-2.5"
         } ${
           isMe 
-            ? isImage && !isViewOnce ? "" : "bg-zinc-900 dark:bg-zinc-800 text-white rounded-br-none" 
-            : isImage && !isViewOnce ? "" : "bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-bl-none border border-zinc-100/50 dark:border-zinc-800"
-        } ${showMenu ? "shadow-2xl" : ""}`}
+            ? isImage && !isViewOnce ? "" : "bg-sky-500 text-white rounded-[20px] rounded-br-[4px]" 
+            : isImage && !isViewOnce ? "" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-[20px] rounded-bl-[4px]"
+        } ${showMenu ? "shadow-xl" : ""}`}
         onPointerDown={(e) => {
           const clientY = e.clientY;
           longPressTimeoutRef.current = setTimeout(() => {
@@ -243,29 +243,23 @@ const MessageItem = memo(({
             </div>
            )
         ) : (
-          <>
-            <p className="text-[14.5px] leading-relaxed font-medium pr-4">{msg.content}</p>
-            <div className="flex items-center justify-between gap-2 mt-1.5">
-              {msg.is_edited && <span className="text-[9px] font-bold italic text-white/40 dark:text-black/40">(edited)</span>}
-              <div className="flex items-center gap-1.5 ml-auto">
-                <span className={`block text-[9px] font-black uppercase tracking-widest ${isMe ? "text-white/40 dark:text-black/40" : "text-zinc-400 dark:text-zinc-600"}`}>
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <p className={`text-[15px] leading-relaxed pr-2 ${isMe ? "text-white" : "text-zinc-900 dark:text-zinc-100"}`}>{msg.content}</p>
+              <div className="flex items-center gap-1 mt-auto shrink-0">
+                <span className={`text-[10px] font-medium ${isMe ? "text-white/70" : "text-zinc-400 dark:text-zinc-500"}`}>
+                  {new Date(msg.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
                 </span>
                 {isMe && (
                   <div className="flex items-center">
                     {msg.is_read ? (
-                      <div className="flex -space-x-1.5">
-                        <Check size={10} className="text-[#E5FF66]" strokeWidth={4} />
-                        <Check size={10} className="text-[#E5FF66]" strokeWidth={4} />
-                      </div>
+                      <CheckCircle2 size={12} className="text-white" />
                     ) : (
-                      <Check size={10} className="text-white/30 dark:text-black/20" strokeWidth={4} />
+                      <Check size={12} className="text-white/60" strokeWidth={3} />
                     )}
                   </div>
                 )}
               </div>
             </div>
-          </>
         )}
       </motion.div>
     </div>
@@ -829,46 +823,39 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             <ChevronLeft size={24} className="text-zinc-800 dark:text-zinc-200" />
           </Link>
           <div className="flex items-center gap-3">
-            <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="relative cursor-pointer transition active:scale-95 block">
-              <div className={`w-11 h-11 rounded-full overflow-hidden border-2 transition-colors ${partnerIsOnline ? 'border-[#E5FF66]' : 'border-transparent'} bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center`}>
-                {partner?.avatar_url ? (
-                  <Image 
-                    src={partner.avatar_url} 
-                    alt={partner.full_name || "User"} 
-                    width={44} 
-                    height={44} 
-                    className={`object-cover w-full h-full transition-opacity ${partnerIsOnline ? 'opacity-100' : 'opacity-80'}`} 
-                  />
-                ) : (
-                  <User className="w-6 h-6 text-zinc-400 dark:text-zinc-600" />
-                )}
-              </div>
-              <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-[#09090b] transition-colors ${partnerIsOnline ? 'bg-[#4ADE80]' : 'bg-zinc-300 dark:bg-zinc-700'}`}></div>
-            </Link>
-            <div>
-              <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 leading-tight hover:underline cursor-pointer block">
+            <div className="flex items-center gap-3">
+              <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="font-bold text-[17px] text-zinc-900 dark:text-zinc-100 leading-tight hover:underline cursor-pointer flex items-center gap-1">
                 {capitalizeName(partner?.full_name || partner?.username) || "Loading..."}
+                {partner?.is_verified && (
+                  <CheckCircle2 size={16} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
+                )}
               </Link>
-              <p className={`text-[11px] font-medium transition-colors ${partnerIsTyping ? "text-primary" : (partnerIsOnline ? "text-[#4ADE80]" : "text-zinc-500 dark:text-zinc-500")}`}>
-                {partnerIsTyping ? "Typing..." : (partnerIsOnline ? "Online" : "Offline")}
-              </p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4 text-zinc-600 dark:text-zinc-400 relative">
-          <MoreVertical 
-            size={20} 
-            className="hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer" 
-            onClick={() => setShowDropdown(!showDropdown)}
-          />
-          
-          {showDropdown && (
-            <div className="absolute top-8 right-0 w-48 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-800 py-2 z-50 overflow-hidden">
-              <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">View Profile</Link>
-              <button className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">Mute Notifications</button>
-              <button className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 block font-bold border-t border-zinc-50 dark:border-zinc-800">Block User</button>
-            </div>
-          )}
+        <div className="flex items-center gap-4 text-zinc-900 dark:text-zinc-100">
+          <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+            <Phone size={20} strokeWidth={2} />
+          </button>
+          <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+            <Video size={20} strokeWidth={2} />
+          </button>
+          <div className="relative">
+            <button 
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+            >
+                <MoreHorizontal size={20} strokeWidth={2} />
+            </button>
+            
+            {showDropdown && (
+                <div className="absolute top-12 right-0 w-48 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-800 py-2 z-50 overflow-hidden">
+                <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">View Profile</Link>
+                <button className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">Mute Notifications</button>
+                <button className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 block font-bold border-t border-zinc-50 dark:border-zinc-800">Block User</button>
+                </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -891,8 +878,39 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
         {/* Subtle Wallpaper Pattern */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05] grayscale" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #000 1px, transparent 0)', backgroundSize: '32px 32px' }} />
         
+        {/* Top Profile Summary (X-Style) */}
+        <div className="flex flex-col items-center justify-center py-12 px-6 border-b border-zinc-50 dark:border-zinc-900/50 mb-4 relative z-10">
+          <div className="w-24 h-24 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 mb-4 shadow-sm border-2 border-white dark:border-zinc-800">
+            {partner?.avatar_url ? (
+              <Image src={partner.avatar_url} alt="" width={96} height={96} className="object-cover w-full h-full" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-zinc-300 dark:text-zinc-700">
+                <User size={48} />
+              </div>
+            )}
+          </div>
+          <h2 className="text-xl font-black text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 mb-0.5">
+            {capitalizeName(partner?.full_name || partner?.username)}
+            {partner?.is_verified && (
+              <CheckCircle2 size={18} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
+            )}
+          </h2>
+          <p className="text-zinc-500 dark:text-zinc-500 font-bold text-sm mb-1">@{partner?.username}</p>
+          <p className="text-zinc-400 dark:text-zinc-600 font-medium text-[13px] mb-6">
+            Joined {partner?.created_at ? new Date(partner.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : "Recently"}
+          </p>
+          <Link 
+            href={`/profile/${partner?.id}`}
+            className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-sm hover:opacity-90 transition-all active:scale-95"
+          >
+            View Profile
+          </Link>
+        </div>
+
         <div className="flex justify-center mb-4 relative z-10">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-600 bg-zinc-100 dark:bg-zinc-900/50 px-3 py-1 rounded-full backdrop-blur-sm border border-black/5 dark:border-white/5">Conversation Started</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-600">
+            {new Date(messages[0]?.created_at || Date.now()).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+          </span>
         </div>
         
         {(() => {
@@ -999,12 +1017,12 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
         
         <form 
           onSubmit={(e) => { e.preventDefault(); handleSendAction(); }}
-          className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex items-center gap-3 relative"
+          className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex items-center gap-2 relative max-w-[1000px] mx-auto w-full"
         >
           {editingMessageId && (
             <div className="absolute bottom-full left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 px-4 py-2 flex items-center justify-between animate-in slide-in-from-bottom-2 duration-200">
                <div className="flex items-center gap-2">
-                 <div className="w-1 h-8 bg-[#E5FF66] rounded-full" />
+                 <div className="w-1 h-8 bg-sky-500 rounded-full" />
                  <div>
                    <p className="text-xs font-black uppercase text-zinc-400 tracking-wider">Editing Message</p>
                    <p className="text-[11px] text-zinc-500 truncate max-w-[250px]">Press X to cancel</p>
@@ -1026,25 +1044,41 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             accept="image/*" 
             onChange={onFileSelected}
           />
-          <div className="flex items-center gap-2 text-zinc-400">
+          
+          <div className="flex items-center gap-1">
+            <button 
+              type="button" 
+              className="w-9 h-9 flex items-center justify-center rounded-full text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+              disabled={isUploading || !!pendingImage || !!editingMessageId}
+            >
+              <Plus size={20} strokeWidth={2.5} />
+            </button>
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading || !!pendingImage || !!editingMessageId}
-              className={`w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors ${(isUploading || pendingImage || editingMessageId) ? 'opacity-30 cursor-not-allowed' : ''}`}
+              className="w-9 h-9 flex items-center justify-center rounded-full text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
             >
-              <Plus size={22} />
+              <Globe size={20} strokeWidth={2.5} />
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setShowEmojis(!showEmojis)}
+              className="w-9 h-9 flex items-center justify-center rounded-full text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+            >
+              <Smile size={20} strokeWidth={2.5} />
             </button>
           </div>
-          <div className="flex-1 relative flex items-center">
+
+          <div className="flex-1 relative flex items-center min-w-0">
             {isRecording ? (
-              <div className="w-full bg-zinc-900 dark:bg-zinc-800 text-white rounded-full py-2.5 pl-4 pr-2 flex items-center justify-between font-medium shadow-lg animate-in slide-in-from-bottom-2 duration-300">
+              <div className="w-full bg-zinc-900 dark:bg-zinc-800 text-white rounded-full py-2 pl-4 pr-2 flex items-center justify-between font-medium shadow-lg animate-in slide-in-from-bottom-2 duration-300">
                 <div className="flex items-center gap-3">
                    <div className="flex items-center gap-1 h-4">
                       {[1, 2, 3, 4, 5, 6].map(i => (
                         <div 
                           key={i} 
-                          className={`w-0.5 bg-[#E5FF66] rounded-full transition-all duration-300 ${isPaused ? 'h-1.5' : 'animate-wave'}`} 
+                          className={`w-0.5 bg-sky-500 rounded-full transition-all duration-300 ${isPaused ? 'h-1.5' : 'animate-wave'}`} 
                           style={{ animationDelay: `${i * 0.1}s`, height: isPaused ? '6px' : undefined }}
                         />
                       ))}
@@ -1056,51 +1090,49 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
                   <button 
                     type="button" 
                     onClick={isPaused ? resumeRecording : pauseRecording}
-                    className="h-9 px-4 rounded-full bg-white/10 hover:bg-white/20 transition-all text-xs font-black uppercase tracking-wider flex items-center justify-center border border-white/5"
+                    className="h-8 px-3 rounded-full bg-white/10 hover:bg-white/20 transition-all text-[10px] font-black uppercase tracking-wider flex items-center justify-center border border-white/5"
                   >
                     {isPaused ? "Resume" : "Pause"}
                   </button>
                   <button 
                     type="button" 
                     onClick={stopRecording}
-                    className="h-9 w-9 rounded-full bg-[#E5FF66] text-black flex items-center justify-center shadow-[0_0_20px_rgba(229,255,102,0.4)] active:scale-90 transition-all"
+                    className="h-8 w-8 rounded-full bg-sky-500 text-white flex items-center justify-center shadow-lg active:scale-90 transition-all"
                   >
-                    <Send size={16} strokeWidth={3} />
+                    <Send size={14} strokeWidth={3} />
                   </button>
                 </div>
               </div>
             ) : (
-              <>
-                <input 
-                  type="text" 
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  placeholder={pendingImage ? "Add a caption..." : editingMessageId ? "Edit your message..." : "Type a message..."} 
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-full py-3.5 pl-5 pr-12 outline-none text-[15px] font-bold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-[#E5FF66]/30 transition-all border-none" 
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowEmojis(!showEmojis)}
-                  className="absolute right-2.5 w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
-                >
-                  <Smile size={20} className={showEmojis ? "text-zinc-800 dark:text-white" : ""} />
-                </button>
-              </>
+              <input 
+                type="text" 
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder={pendingImage ? "Add a caption..." : editingMessageId ? "Edit message..." : "Start a message"} 
+                className="w-full bg-zinc-100 dark:bg-zinc-900/80 rounded-full py-2.5 px-5 outline-none text-[15px] font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-500 transition-all border border-transparent focus:bg-white dark:focus:bg-zinc-900 focus:border-sky-500/30" 
+              />
             )}
           </div>
-          <button 
-            type={isRecording ? "button" : (inputText.trim() || pendingImage ? "submit" : "button")}
-            onClick={!inputText.trim() && !pendingImage ? (isRecording ? stopRecording : startRecording) : undefined}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
-              inputText.trim() || pendingImage
-                ? "bg-zinc-900 dark:bg-white text-[#E5FF66] dark:text-zinc-900 shadow-xl scale-105 active:scale-95" 
-                : isRecording
-                  ? "bg-red-500 text-white shadow-[0_4px_15px_rgba(239,68,68,0.3)] animate-pulse"
-                  : "bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-600 hover:bg-zinc-200 dark:hover:bg-zinc-800"
-            }`}
-          >
-            {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-[#E5FF66]" /> : (inputText.trim() || pendingImage ? <Send size={20} strokeWidth={3} /> : <Mic size={20} strokeWidth={isRecording ? 3 : 2} />)}
-          </button>
+
+          <div className="flex items-center gap-1">
+            {(inputText.trim() || pendingImage) ? (
+              <button 
+                type="submit"
+                className="w-10 h-10 flex items-center justify-center rounded-full text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-500/10 transition-colors active:scale-90"
+              >
+                {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send size={20} strokeWidth={2.5} />}
+              </button>
+            ) : !isRecording && (
+              <button 
+                type="button" 
+                onClick={startRecording}
+                className="w-10 h-10 flex items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors active:scale-90"
+              >
+                <Mic size={20} strokeWidth={2} />
+              </button>
+            )}
+          </div>
+        </form>
           
           {pendingImage && (
             <button
