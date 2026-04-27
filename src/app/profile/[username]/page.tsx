@@ -13,8 +13,8 @@ import FeedCard from "@/components/FeedCard";
 import ConnectionsModal from "@/components/ConnectionsModal";
 import { capitalizeName } from "@/lib/utils";
 
-export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: userId } = use(params);
+export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  const { username: identifier } = use(params);
   const router = useRouter();
   const supabase = createClient();
   
@@ -49,20 +49,37 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
       const { data: { user: authUser } } = await supabase.auth.getUser();
       setCurrentUser(authUser);
 
+      // Fetch profile: Try UUID first, then username
+      let profileQuery = supabase.from('profiles').select('*');
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      
+      if (isUUID) {
+        profileQuery = profileQuery.eq('id', identifier);
+      } else {
+        // Support both with and without @ prefix in URL
+        const searchUsername = identifier.startsWith('@') ? identifier : `@${identifier}`;
+        profileQuery = profileQuery.eq('username', searchUsername);
+      }
+
+      const { data: profileData } = await profileQuery.single();
+
+      if (!profileData) {
+        router.push("/");
+        return;
+      }
+
+      const userId = profileData.id;
+
       if (authUser && authUser.id === userId) {
         router.push("/profile");
         return;
       }
 
-      // Fetch profile safely without strict nested relations
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (!profileData) {
-        router.push("/");
+      // If they accessed via UUID, redirect to the pretty username URL
+      if (isUUID && profileData.username) {
+        const prettyUsername = profileData.username.replace('@', '');
+        router.replace(`/profile/${prettyUsername}`);
         return;
       }
       

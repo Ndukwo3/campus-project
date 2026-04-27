@@ -160,7 +160,10 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
           const isSending = connectingIds.has(user.id);
           return (
           <div key={user.id} className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-900/40 rounded-[28px] border border-zinc-100 dark:border-zinc-800/60 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="w-14 h-14 rounded-full overflow-hidden bg-white dark:bg-zinc-800 border-2 border-white dark:border-zinc-800 shadow-sm relative shrink-0">
+            <Link 
+              href={user.username ? `/profile/${user.username.replace('@', '')}` : `/profile/${user.id}`}
+              className="w-14 h-14 rounded-full overflow-hidden bg-white dark:bg-zinc-800 border-2 border-white dark:border-zinc-800 shadow-sm relative shrink-0"
+            >
               {user.avatar_url ? (
                 <Image src={user.avatar_url} alt="" fill className="object-cover" />
               ) : (
@@ -168,7 +171,7 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
                   <User size={24} strokeWidth={2.5} />
                 </div>
               )}
-            </div>
+            </Link>
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">

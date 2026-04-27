@@ -423,7 +423,7 @@ export default function SearchPage() {
                           >
                             <div className="flex items-center gap-4 px-4 py-4 bg-white dark:bg-zinc-900/50 hover:bg-zinc-50/50 dark:hover:bg-zinc-800 transition-all rounded-[32px] group border border-zinc-50 dark:border-zinc-800 hover:border-zinc-100 dark:hover:border-zinc-700 ring-1 ring-transparent hover:ring-zinc-50/50 dark:hover:ring-zinc-800">
                               <Link 
-                                href={`/profile/${student.id}`}
+                                href={student.username ? `/profile/${student.username.replace('@', '')}` : `/profile/${student.id}`}
                                 className="h-[60px] w-[60px] rounded-[24px] overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0 relative active:scale-95 transition-transform"
                               >
                                 {student.avatar_url ? (
@@ -435,7 +435,7 @@ export default function SearchPage() {
                                 )}
                               </Link>
                               <Link 
-                                href={`/profile/${student.id}`}
+                                href={student.username ? `/profile/${student.username.replace('@', '')}` : `/profile/${student.id}`}
                                 className="flex-1 min-w-0"
                               >
                                 <div className="flex items-center gap-1.5 min-w-0">

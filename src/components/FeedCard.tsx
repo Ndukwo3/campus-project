@@ -20,6 +20,7 @@ interface FeedCardProps {
   isLiked?: boolean;
   isBookmarked?: boolean;
   authorId: string;
+  authorUsername?: string;
   currentUserId?: string | null;
   onLike?: (id: string) => void;
   onComment?: (id: string) => void;
@@ -46,6 +47,7 @@ export default function FeedCard({
   isBookmarked = false,
   isReposted = false,
   authorId,
+  authorUsername,
   currentUserId,
   onLike,
   onComment,
@@ -57,6 +59,7 @@ export default function FeedCard({
   isVerified = false,
   onNotInterested,
 }: FeedCardProps) {
+  const profileLink = authorUsername ? `/profile/${authorUsername.replace('@', '')}` : `/profile/${authorId}`;
   const [localIsLiked, setLocalIsLiked] = useState(isLiked);
   const [localLikesCount, setLocalLikesCount] = useState(likes);
   const [localIsBookmarked, setLocalIsBookmarked] = useState(isBookmarked);
@@ -146,7 +149,7 @@ export default function FeedCard({
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
           <Link 
-            href={`/profile/${authorId}`}
+            href={profileLink}
             className="w-12 h-12 rounded-2xl overflow-hidden bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 flex items-center justify-center p-[1px] shadow-sm hover:scale-105 active:scale-95 transition-transform relative"
           >
             {authorImage ? (
@@ -164,7 +167,7 @@ export default function FeedCard({
           <div className="flex flex-col space-y-1">
             <div className="flex items-center gap-1.5 min-w-0">
               <Link 
-                href={`/profile/${authorId}`}
+                href={profileLink}
                 className="font-bold text-[15px] text-zinc-900 dark:text-zinc-100 tracking-tight leading-none hover:text-black dark:hover:text-white cursor-pointer truncate"
               >
                 {capitalizeName(authorName)}
@@ -195,7 +198,7 @@ export default function FeedCard({
           {isMenuOpen && (
             <div className="absolute right-0 top-12 w-48 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border border-zinc-100/50 dark:border-zinc-800/50 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
               <Link 
-                href={`/profile/${authorId}`}
+                href={profileLink}
                 className="w-full px-4 py-3 text-left text-[13px] font-bold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-3 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >

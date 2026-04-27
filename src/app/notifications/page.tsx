@@ -230,6 +230,7 @@ function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept
   };
 
   const config = getTypeConfig();
+  const profileLink = sender?.username ? `/profile/${sender.username.replace('@', '')}` : (sender?.id ? `/profile/${sender.id}` : '#');
 
   return (
     <div className={`flex items-center gap-4 px-4 py-4.5 rounded-[28px] transition-all duration-500 group relative border shadow-sm backdrop-blur-md ${
@@ -242,7 +243,7 @@ function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept
         <div className="absolute inset-0 bg-gradient-to-r from-[#E5FF66]/5 via-transparent to-transparent rounded-[28px] pointer-events-none" />
       )}
       {/* Avatar with Floating Type Icon */}
-      <Link href={sender?.id ? `/profile/${sender.id}` : '#'} className="relative shrink-0 block active:scale-90 transition-transform">
+      <Link href={profileLink} className="relative shrink-0 block active:scale-90 transition-transform">
         <div className="h-13 w-13 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center p-[2px] ring-4 ring-transparent group-hover:ring-[#E5FF66]/20 transition-all duration-500">
           <div className="w-full h-full rounded-2xl overflow-hidden bg-white dark:bg-zinc-950 border border-zinc-100/50 dark:border-zinc-800/50 shadow-inner">
             {avatar ? (
@@ -262,7 +263,7 @@ function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept
       {/* Text Content Area */}
       <div className="flex-1 min-w-0 pr-1 z-10">
         <p className="text-[13.5px] leading-snug text-zinc-500 dark:text-zinc-400 font-medium tracking-tight">
-          <Link href={sender?.id ? `/profile/${sender.id}` : '#'} className="font-bold text-zinc-950 dark:text-white hover:text-black dark:hover:text-[#E2FF3D] transition-colors">{displayName}</Link>
+          <Link href={profileLink} className="font-bold text-zinc-950 dark:text-white hover:text-black dark:hover:text-[#E2FF3D] transition-colors">{displayName}</Link>
           {" "}
           {content.includes("commented:") ? (
             <>
