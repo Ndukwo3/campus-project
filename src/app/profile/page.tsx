@@ -214,7 +214,7 @@ export default function ProfilePage() {
           created_at,
           posts (
             *,
-            profiles:user_id (username, full_name, avatar_url)
+            profiles:user_id (username, full_name, avatar_url, is_verified)
           )
         `)
         .eq('user_id', user.id)
@@ -507,7 +507,7 @@ export default function ProfilePage() {
           
           <div className="flex items-center justify-center gap-1.5 mb-1 w-full max-w-[280px] mx-auto">
             <h2 className="text-2xl font-black text-black dark:text-white leading-tight truncate">{capitalizeName(profile?.full_name || "New Student")}</h2>
-            {profile?.full_name !== "New Student" && <CheckCircle2 size={18} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />}
+            {profile?.is_verified && <CheckCircle2 size={18} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />}
           </div>
           <p className="text-zinc-500 dark:text-zinc-400 text-[14px] font-medium mb-4">{profile?.username} • {profile?.level || "Undergraduate"}</p>
           
@@ -713,8 +713,9 @@ export default function ProfilePage() {
                   authorId={post.user_id}
                   currentUserId={profile?.id}
                   isLiked={currentUserLikes.has(post.id)}
-                  isBookmarked={currentUserBookmarks.has(post.id)}
+                   isBookmarked={currentUserBookmarks.has(post.id)}
                   isReposted={currentUserReposts.has(post.id)}
+                  isVerified={profile?.is_verified}
                   onDelete={async (id: string) => {
                     const { error } = await supabase.from('posts').delete().eq('id', id);
                     if (!error) {
@@ -823,6 +824,7 @@ export default function ProfilePage() {
                   isBookmarked={true}
                   isLiked={currentUserLikes.has(post.id)}
                   isReposted={currentUserReposts.has(post.id)}
+                  isVerified={post.profiles?.is_verified}
                   onRepost={handleRepost}
                   onLike={async (id: string) => {
                     const { data: { user } } = await supabase.auth.getUser();
@@ -873,6 +875,7 @@ export default function ProfilePage() {
                   isLiked={currentUserLikes.has(repost.post_id)}
                   isBookmarked={currentUserBookmarks.has(repost.post_id)}
                   isReposted={true}
+                  isVerified={repost.posts.profiles?.is_verified}
                   onRepost={handleRepost}
                   onLike={async (id: string) => {
                     const { data: { user } } = await supabase.auth.getUser();
