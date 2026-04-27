@@ -34,7 +34,7 @@ export default function ChatSidebar() {
         .eq('user_id', user.id);
       
       if (!myConvos || myConvos.length === 0) return { chats: [] };
-      const conversationIds = myConvos.map((c: any) => c.conversation_id);
+      const conversationIds = myConvos.map((c: { conversation_id: string }) => c.conversation_id);
 
       const [partnersResult, latestMsgsResult, unreadResult] = await Promise.all([
         supabase
@@ -113,7 +113,7 @@ export default function ChatSidebar() {
     if (user) {
         const { data: convs } = await supabase.from('conversation_participants').select('conversation_id').eq('user_id', user.id);
         if (convs && convs.length > 0) {
-            await supabase.from('messages').update({ is_read: true }).in('conversation_id', convs.map(c => c.conversation_id)).neq('sender_id', user.id).eq('is_read', false);
+            await supabase.from('messages').update({ is_read: true }).in('conversation_id', convs.map((c: { conversation_id: string }) => c.conversation_id)).neq('sender_id', user.id).eq('is_read', false);
             queryClient.invalidateQueries({ queryKey: ['inbox'] });
             queryClient.invalidateQueries({ queryKey: ['unread-messages'] });
         }
