@@ -5,11 +5,12 @@ COMMENT ON COLUMN public.profiles.is_verified IS 'Whether the user has a complet
 CREATE OR REPLACE FUNCTION public.update_profile_verification_status()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Only auto-verify if they meet the criteria. 
+    -- Only auto-verify if they meet the criteria (Now including BIO as per Profile Strength widget)
     IF (NEW.full_name IS NOT NULL AND NEW.full_name != '' AND
         NEW.username IS NOT NULL AND NEW.username != '' AND
         NEW.avatar_url IS NOT NULL AND NEW.avatar_url != '' AND
-        NEW.university_id IS NOT NULL) THEN
+        NEW.university_id IS NOT NULL AND
+        NEW.bio IS NOT NULL AND NEW.bio != '') THEN
         NEW.is_verified := true;
     ELSE
         -- If they don't meet criteria, only set to false if they aren't an admin/staff
@@ -34,4 +35,5 @@ SET is_verified = true
 WHERE full_name IS NOT NULL AND full_name != ''
 AND username IS NOT NULL AND username != ''
 AND avatar_url IS NOT NULL AND avatar_url != ''
-AND university_id IS NOT NULL;
+AND university_id IS NOT NULL
+AND bio IS NOT NULL AND bio != '';
