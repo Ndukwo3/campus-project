@@ -19,7 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const checkAdmin = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push("/auth");
+        router.push("/login");
         return;
       }
 

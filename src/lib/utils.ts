@@ -1,3 +1,7 @@
+export function cn(...classes: (string | undefined | null | false)[]): string {
+  return classes.filter(Boolean).join(" ");
+}
+
 export function formatRelativeTime(date: Date): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);

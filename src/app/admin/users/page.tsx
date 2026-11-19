@@ -14,6 +14,7 @@ import {
   ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 interface Profile {
   id: string;
@@ -21,6 +22,7 @@ interface Profile {
   username: string;
   role: string;
   avatar_url?: string;
+  is_verified?: boolean;
   created_at?: string;
 }
 
@@ -56,7 +58,7 @@ export default function UserManagementPage() {
 
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, full_name, username, role, avatar_url, created_at')
+        .select('id, full_name, username, role, avatar_url, is_verified, created_at')
         .order('role', { ascending: false });
       
       if (error) throw error;
@@ -180,9 +182,12 @@ export default function UserManagementPage() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-black text-lg text-zinc-900 dark:text-white leading-none capitalize mb-1 truncate">
-                    {user.full_name || "Unknown"}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-lg text-zinc-900 dark:text-white leading-none capitalize mb-1 truncate">
+                      {user.full_name || "Unknown"}
+                    </h3>
+                    {user.is_verified && <VerifiedBadge size={16} />}
+                  </div>
                   <div className="flex items-center gap-2">
                     <p className="text-[12px] font-bold text-zinc-400 dark:text-zinc-500">
                       @{user.username || "user"}

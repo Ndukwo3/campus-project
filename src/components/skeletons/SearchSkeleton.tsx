@@ -33,22 +33,6 @@ export default function SearchSkeleton() {
           ))}
         </div>
       </section>
-
-      {/* Univas Groups Skeleton */}
-      <section>
-        <div className="w-36 h-5 rounded-md bg-zinc-200 mb-4 animate-pulse" />
-        <div className="grid grid-cols-2 gap-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="bg-white rounded-[32px] p-2 border border-zinc-100/50">
-              <div className="h-32 rounded-3xl bg-zinc-100 mb-3 animate-pulse" />
-              <div className="px-2 pb-2 space-y-2">
-                <div className="h-4 bg-zinc-200 rounded-md w-24" />
-                <div className="h-8 bg-zinc-100 rounded-xl w-full" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

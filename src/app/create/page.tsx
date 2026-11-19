@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Loader2, Image as ImageIcon, Link2, AtSign } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { useMentions } from "@/hooks/useMentions";
 import MentionSuggestions from "@/components/MentionSuggestions";
 
-function CreatePostInner() {
+export default function CreatePostPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const groupId = searchParams.get('group_id');
   const supabase = createClient();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,12 +77,7 @@ function CreatePostInner() {
     }
 
     sessionStorage.setItem('isPosting', 'true');
-
-    if (groupId) {
-      router.push(`/groups/${groupId}`);
-    } else {
-      router.push("/");
-    }
+    router.push("/");
 
     const uploadAndInsert = async () => {
       try {
@@ -116,7 +109,7 @@ function CreatePostInner() {
           .insert({
             user_id: user.id,
             university_id: userProfile.university_id,
-            group_id: groupId || null,
+            group_id: null,
             content: content.trim(),
             image_url: imageUrl
           });
@@ -298,17 +291,5 @@ function CreatePostInner() {
         onChange={handleImageSelect}
       />
     </div>
-  );
-}
-
-export default function CreatePostPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-4 border-zinc-100 dark:border-zinc-800 border-t-[#E5FF66] animate-spin" />
-      </div>
-    }>
-      <CreatePostInner />
-    </Suspense>
   );
 }

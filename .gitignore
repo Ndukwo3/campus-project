@@ -44,3 +44,5 @@ manifest-checksum.txt
 android.keystore
 local.properties
 /.gradle/
+
+android-app-build-cache/

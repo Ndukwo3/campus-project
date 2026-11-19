@@ -12,6 +12,7 @@ import Toast from "@/components/Toast";
 import FeedCard from "@/components/FeedCard";
 import ConnectionsModal from "@/components/ConnectionsModal";
 import { capitalizeName } from "@/lib/utils";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username: identifier } = use(params);
@@ -50,22 +51,28 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       const { data: { user: authUser } } = await supabase.auth.getUser();
       setCurrentUser(authUser);
 
-      // Fetch profile: Try UUID first, then username
-      let profileQuery = supabase.from('profiles').select('*');
+      const cleanIdentifier = decodeURIComponent(identifier).trim();
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanIdentifier);
       
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
-      
+      let profileData: any = null;
+
       if (isUUID) {
-        profileQuery = profileQuery.eq('id', identifier);
+        const { data } = await supabase.from('profiles').select('*').eq('id', cleanIdentifier).maybeSingle();
+        profileData = data;
       } else {
-        // Support both with and without @ prefix in URL
-        const searchUsername = identifier.startsWith('@') ? identifier : `@${identifier}`;
-        profileQuery = profileQuery.eq('username', searchUsername);
+        const stripped = cleanIdentifier.replace(/^@+/, '');
+        // Search matching without @, with @, or with @@ prefix, case-insensitive
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .or(`username.ilike.${stripped},username.ilike.@${stripped},username.ilike.@@${stripped}`)
+          .limit(1)
+          .maybeSingle();
+        profileData = data;
       }
 
-      const { data: profileData } = await profileQuery.single();
-
       if (!profileData) {
+        setIsLoading(false);
         router.push("/");
         return;
       }
@@ -80,7 +87,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
       // If they accessed via UUID, redirect to the pretty username URL
       if (isUUID && profileData.username) {
-        const prettyUsername = profileData.username.replace('@', '');
+        const prettyUsername = profileData.username.replace(/^@+/, '');
         router.replace(`/profile/${prettyUsername}`);
         return;
       }
@@ -112,7 +119,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           .from('friends')
           .select('*')
           .or(`and(user_id1.eq.${authUser.id},user_id2.eq.${fetchedUserId}),and(user_id1.eq.${fetchedUserId},user_id2.eq.${authUser.id})`)
-          .single();
+          .maybeSingle();
         
         if (friendData) {
           setConnectionStatus('connected');
@@ -413,7 +420,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           <div className="flex items-center justify-center gap-1.5 mb-1 w-full max-w-[280px] mx-auto">
             <h2 className="text-2xl font-black text-black dark:text-white leading-tight truncate">{capitalizeName(profile?.full_name)}</h2>
             {profile?.is_verified && (
-              <CheckCircle2 size={18} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
+              <VerifiedBadge size={18} />
             )}
           </div>
           <p className="text-zinc-500 dark:text-zinc-400 text-[14px] font-medium mb-4">{profile?.username} • {profile?.level || "Undergraduate"}</p>

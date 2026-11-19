@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { capitalizeName } from "@/lib/utils";
+import VerifiedBadge from "./VerifiedBadge";
 
 interface SuggestedConnectionsProps {
   userId: string;
@@ -178,7 +179,7 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
               <div className="flex items-center gap-1.5 min-w-0">
                 <h4 className="text-[14px] font-black text-zinc-900 dark:text-zinc-100 tracking-tight truncate leading-tight">{capitalizeName(user.full_name)}</h4>
                 {user.is_verified && (
-                  <CheckCircle2 size={12} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
+                  <VerifiedBadge size={12} />
                 )}
               </div>
               <p className="text-[11px] font-bold text-[#E5FF66] uppercase tracking-widest mt-0.5">{user.username}</p>

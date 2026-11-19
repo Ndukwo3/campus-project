@@ -62,63 +62,51 @@ export default function BottomNavigation() {
   }, [supabase, queryClient]);
 
   const isHome = pathname === "/";
-  const isMessages = pathname === "/messages";
-  const isProfile = pathname === "/profile";
-  const isSearch = pathname === "/search";
-  const isUnivas = pathname === "/univas";
+  const isLibrary = pathname === "/library" || pathname.startsWith("/library/");
+  const isMessages = pathname === "/messages" || pathname.startsWith("/messages/");
+  const isProfile = pathname === "/profile" || pathname.startsWith("/profile/");
 
   return (
-    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 dark:bg-black/80 backdrop-blur-xl border-t border-zinc-100/50 dark:border-zinc-800/50 z-50 pb-[env(safe-area-inset-bottom)] transition-colors lg:hidden">
-      <div className="flex items-center justify-between w-full px-4 h-[84px]">
+    <div className="fixed bottom-0 left-0 right-0 w-full bg-white/80 dark:bg-black/80 backdrop-blur-xl border-t border-zinc-100/50 dark:border-zinc-800/50 z-50 pb-[env(safe-area-inset-bottom)] transition-colors lg:hidden">
+      <div className="flex items-center justify-around w-full px-4 h-[84px]">
         
         {/* Home/Feed */}
         <Link 
           href="/" 
           prefetch={true}
-          className={`flex flex-col items-center justify-center gap-1 w-14 transition-all duration-300 ${isHome ? "text-zinc-900 dark:text-zinc-100 scale-105" : "text-zinc-400 hover:text-zinc-600"}`}
+          className={`flex flex-col items-center justify-center gap-1 w-16 transition-all duration-300 ${isHome ? "text-zinc-900 dark:text-zinc-100 scale-105" : "text-zinc-400 hover:text-zinc-600"}`}
         >
-          <Home size={20} strokeWidth={isHome ? 2.5 : 2} />
-          <span className={`text-[9px] font-black uppercase tracking-tight transition-all duration-300 ${isHome ? "opacity-100" : "opacity-60"}`}>Feed</span>
+          <Home size={22} strokeWidth={isHome ? 2.5 : 2} />
+          <span className={`text-[10px] font-black uppercase tracking-tight transition-all duration-300 ${isHome ? "opacity-100" : "opacity-60"}`}>Feed</span>
           <div className={`h-1 w-1 rounded-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-300 ${isHome ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
 
-        {/* Search */}
+        {/* Library */}
         <Link 
-          href="/search" 
+          href="/library" 
           prefetch={true}
-          className={`flex flex-col items-center justify-center gap-1 w-14 transition-all duration-300 ${isSearch ? "text-zinc-900 dark:text-zinc-100 scale-105" : "text-zinc-400 hover:text-zinc-600"}`}
+          className={`flex flex-col items-center justify-center gap-1 w-16 transition-all duration-300 ${isLibrary ? "text-zinc-900 dark:text-zinc-100 scale-105" : "text-zinc-400 hover:text-zinc-600"}`}
         >
-          <Search size={20} strokeWidth={isSearch ? 2.5 : 2} />
-          <span className={`text-[9px] font-black uppercase tracking-tight transition-all duration-300 ${isSearch ? "opacity-100" : "opacity-60"}`}>Search</span>
-          <div className={`h-1 w-1 rounded-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-300 ${isSearch ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
-        </Link>
-
-        {/* Univas */}
-        <Link 
-          href="/univas" 
-          prefetch={true}
-          className={`flex flex-col items-center justify-center gap-1 w-14 transition-all duration-300 ${isUnivas ? "text-zinc-900 dark:text-zinc-100 scale-105" : "text-zinc-400 hover:text-zinc-600"}`}
-        >
-          <BookOpen size={20} strokeWidth={isUnivas ? 2.5 : 2} />
-          <span className={`text-[9px] font-black uppercase tracking-tight transition-all duration-300 ${isUnivas ? "opacity-100" : "opacity-60"}`}>Univas</span>
-          <div className={`h-1 w-1 rounded-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-300 ${isUnivas ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
+          <BookOpen size={22} strokeWidth={isLibrary ? 2.5 : 2} />
+          <span className={`text-[10px] font-black uppercase tracking-tight transition-all duration-300 ${isLibrary ? "opacity-100" : "opacity-60"}`}>Library</span>
+          <div className={`h-1 w-1 rounded-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-300 ${isLibrary ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
 
         {/* Messages/Chat */}
         <Link 
           href="/messages" 
           prefetch={true}
-          className={`flex flex-col items-center justify-center gap-1 w-14 transition-all duration-300 relative ${isMessages ? "text-zinc-900 dark:text-zinc-100 scale-105" : "text-zinc-400 hover:text-zinc-600"}`}
+          className={`flex flex-col items-center justify-center gap-1 w-16 transition-all duration-300 relative ${isMessages ? "text-zinc-900 dark:text-zinc-100 scale-105" : "text-zinc-400 hover:text-zinc-600"}`}
         >
           <div className="relative">
-            <MessageSquare size={20} strokeWidth={isMessages ? 2.5 : 2} />
+            <MessageSquare size={22} strokeWidth={isMessages ? 2.5 : 2} />
             {unreadCount > 0 && (
               <div className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] px-1 bg-black dark:bg-zinc-100 rounded-full flex items-center justify-center border-2 border-white dark:border-black animate-in zoom-in duration-300">
                 <span className="text-[8px] font-black text-[#E5FF66] dark:text-black leading-none">{unreadCount}</span>
               </div>
             )}
           </div>
-          <span className={`text-[9px] font-black uppercase tracking-tight transition-all duration-300 ${isMessages ? "opacity-100" : "opacity-60"}`}>Chat</span>
+          <span className={`text-[10px] font-black uppercase tracking-tight transition-all duration-300 ${isMessages ? "opacity-100" : "opacity-60"}`}>Chat</span>
           <div className={`h-1 w-1 rounded-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-300 ${isMessages ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
         
@@ -126,10 +114,10 @@ export default function BottomNavigation() {
         <Link 
           href="/profile" 
           prefetch={true}
-          className={`flex flex-col items-center justify-center gap-1 w-14 transition-all duration-300 ${isProfile ? "text-zinc-900 dark:text-zinc-100 scale-105" : "text-zinc-400 hover:text-zinc-600"}`}
+          className={`flex flex-col items-center justify-center gap-1 w-16 transition-all duration-300 ${isProfile ? "text-zinc-900 dark:text-zinc-100 scale-105" : "text-zinc-400 hover:text-zinc-600"}`}
         >
-          <User size={20} strokeWidth={isProfile ? 2.5 : 2} />
-          <span className={`text-[9px] font-black uppercase tracking-tight transition-all duration-300 ${isProfile ? "opacity-100" : "opacity-60"}`}>Profile</span>
+          <User size={22} strokeWidth={isProfile ? 2.5 : 2} />
+          <span className={`text-[10px] font-black uppercase tracking-tight transition-all duration-300 ${isProfile ? "opacity-100" : "opacity-60"}`}>Profile</span>
           <div className={`h-1 w-1 rounded-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-300 ${isProfile ? "opacity-100 scale-100" : "opacity-0 scale-0"}`}></div>
         </Link>
       </div>

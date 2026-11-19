@@ -10,8 +10,9 @@ import BottomNavigation from "@/components/BottomNavigation";
 import SearchSkeleton from "@/components/skeletons/SearchSkeleton";
 import { createClient } from "@/lib/supabase";
 import { capitalizeName } from "@/lib/utils";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
-const filters = ["All", "Students", "Groups", "Trending"];
+const filters = ["All", "Students", "Trending"];
 
 export default function SearchPage() {
   const router = useRouter();
@@ -19,7 +20,6 @@ export default function SearchPage() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [students, setStudents] = useState<any[]>([]);
-  const [groups, setGroups] = useState<any[]>([]);
   const [trending, setTrending] = useState<string[]>([]);
   const [connectionStatuses, setConnectionStatuses] = useState<Record<string, 'none' | 'pending_sent' | 'pending_received' | 'connected'>>({});
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -110,15 +110,6 @@ export default function SearchPage() {
 
       setStudents(fetchedStudents);
 
-      // Groups fetching
-      let groupsQuery = supabase.from('groups').select('*').limit(6);
-      if (searchQuery && (activeFilter === "All" || activeFilter === "Groups")) {
-        groupsQuery = groupsQuery.ilike('name', `%${searchQuery}%`);
-      }
-      const { data: groupData, error: gErr } = await groupsQuery;
-      if (gErr) console.error("Error fetching groups:", gErr);
-      setGroups(groupData || []);
-
       // Trending words (Topics) from recent posts
       const { data: trendingPosts } = await supabase
         .from('posts')
@@ -171,30 +162,6 @@ export default function SearchPage() {
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, activeFilter, supabase]);
-
-  const handleJoinGroup = async (groupId: string) => {
-    if (!currentUser || isActionLoading) return;
-    setIsActionLoading(groupId);
-
-    try {
-      const { error } = await supabase
-        .from('group_members')
-        .insert({
-          group_id: groupId,
-          user_id: currentUser.id,
-          role: 'member'
-        });
-
-      if (error) throw error;
-      
-      // Update local state to show joined (optional, or just redirect)
-      router.push(`/groups/${groupId}`);
-    } catch (err: any) {
-      console.error("Error joining group:", err);
-    } finally {
-      setIsActionLoading(null);
-    }
-  };
 
   const handleConnect = async (studentId: string) => {
     if (!currentUser || isActionLoading) return;
@@ -441,7 +408,7 @@ export default function SearchPage() {
                                 <div className="flex items-center gap-1.5 min-w-0">
                                   <h3 className="text-[15.5px] font-bold text-zinc-900 dark:text-zinc-100 truncate tracking-tight">{capitalizeName(student.full_name || student.username)}</h3>
                                   {student.is_verified && (
-                                    <CheckCircle2 size={14} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
+                                    <VerifiedBadge size={14} />
                                   )}
                                 </div>
                                 <p className="text-[12.5px] font-medium text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{student.universities?.name || "Lagos City, NG"}</p>
@@ -482,58 +449,6 @@ export default function SearchPage() {
                          </div>
                          <h3 className="text-lg font-black text-zinc-900 dark:text-zinc-100 mb-2">No students found</h3>
                          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Try searching for a name, username, or even their university.</p>
-                      </div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </section>
-            )}
-
-            {/* Univas Groups */}
-            {(activeFilter === "All" || activeFilter === "Groups") && (
-              <section>
-                <div className="flex items-center justify-between mb-5 px-1">
-                  <h2 className="text-[17px] font-black tracking-tight text-zinc-900 dark:text-zinc-100">Communities</h2>
-                  <Link href="/univas" className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white">SEE MAP</Link>
-                </div>
-                <div className="grid grid-cols-2 gap-4 pb-12">
-                  <AnimatePresence>
-                    {groups.length > 0 ? (
-                      groups.map((group, i) => (
-                        <motion.div 
-                          key={group.id} 
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.2 + i * 0.05 }}
-                          className="bg-white dark:bg-zinc-900 rounded-[40px] p-2.5 shadow-[0_10px_35px_rgba(0,0,0,0.025)] dark:shadow-none border border-zinc-100/50 dark:border-zinc-800 group overflow-hidden flex flex-col h-full"
-                        >
-                          <div className="h-32 rounded-[32px] overflow-hidden relative mb-4 shrink-0">
-                            {group.image_url ? (
-                              <Image src={group.image_url} alt={group.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 flex items-center justify-center">
-                                <Users className="text-zinc-200 dark:text-zinc-700 w-9 h-9" />
-                              </div>
-                            )}
-                            <div className="absolute top-2 right-2 px-2.5 py-1.5 bg-white/90 dark:bg-black/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/50 dark:border-zinc-800">
-                               <p className="text-[10px] font-black text-black dark:text-[#E5FF66]">HOT</p>
-                            </div>
-                          </div>
-                          <div className="px-2 pb-2 flex-1 flex flex-col">
-                            <h3 className="text-[14px] font-extrabold text-zinc-900 dark:text-zinc-100 mb-1 leading-tight line-clamp-1">{group.name}</h3>
-                            <button 
-                              onClick={() => handleJoinGroup(group.id)}
-                              disabled={isActionLoading === group.id}
-                              className="w-full mt-auto py-3 bg-[#1A1A24] dark:bg-zinc-800 rounded-2xl text-[11px] font-black text-white hover:bg-black dark:hover:bg-zinc-700 transition-all active:scale-95 shadow-lg shadow-zinc-200 dark:shadow-none group-hover:bg-[#E5FF66] group-hover:text-black group-hover:shadow-[#E5FF66]/20"
-                            >
-                              {isActionLoading === group.id ? <Loader2 size={16} className="animate-spin mx-auto" /> : "EXPLORE"}
-                            </button>
-                          </div>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <div className="col-span-2 py-12 text-center text-sm font-bold text-zinc-300 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-900/50 rounded-[40px] border border-dashed border-zinc-200 dark:border-zinc-800">
-                        Searching communities...
                       </div>
                     )}
                   </AnimatePresence>

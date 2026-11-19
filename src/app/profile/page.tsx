@@ -16,6 +16,7 @@ import Toast from "@/components/Toast";
 import FeedCard from "@/components/FeedCard";
 import ConnectionsModal from "@/components/ConnectionsModal";
 import { capitalizeName } from "@/lib/utils";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -507,7 +508,7 @@ export default function ProfilePage() {
           
           <div className="flex items-center justify-center gap-1.5 mb-1 w-full max-w-[280px] mx-auto">
             <h2 className="text-2xl font-black text-black dark:text-white leading-tight truncate">{capitalizeName(profile?.full_name || "New Student")}</h2>
-            {profile?.is_verified && <CheckCircle2 size={18} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />}
+            {profile?.is_verified && <VerifiedBadge size={18} />}
           </div>
           <p className="text-zinc-500 dark:text-zinc-400 text-[14px] font-medium mb-4">{profile?.username} • {profile?.level || "Undergraduate"}</p>
           
@@ -601,7 +602,7 @@ export default function ProfilePage() {
                     className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all
                       ${item.done ? "bg-[#E5FF66] text-black" : "bg-white/5 text-zinc-500 border border-white/10"}`}
                   >
-                    {item.done && <CheckCircle2 size={10} strokeWidth={3} />}
+                    {item.done && <VerifiedBadge size={10} />}
                     {item.label}
                   </div>
                 ))}

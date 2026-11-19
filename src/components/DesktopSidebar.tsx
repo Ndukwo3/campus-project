@@ -41,10 +41,9 @@ export default function DesktopSidebar() {
 
   const navItems = [
     { label: "Home", href: "/", icon: Home },
-    { label: "Explore", href: "/search", icon: Search },
+    { label: "Library", href: "/library", icon: BookOpen },
     { label: "Notifications", href: "/notifications", icon: Bell },
     { label: "Messages", href: "/messages", icon: MessageSquare, badge: unreadCount },
-    { label: "Univas", href: "/univas", icon: BookOpen },
     { label: "Profile", href: "/profile", icon: User },
     { label: "Settings", href: "/settings", icon: Settings },
   ];

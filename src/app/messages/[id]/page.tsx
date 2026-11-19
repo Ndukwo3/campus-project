@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { capitalizeName } from "@/lib/utils";
 import { usePresenceStore } from "@/store/presenceStore";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 // Separate memoized component for each message to prevent unnecessary re-renders
 const MessageItem = memo(({ 
@@ -331,7 +332,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
           // Fetch partner profile from conversation_participants
           const { data: participantData } = await supabase
             .from('conversation_participants')
-            .select('profiles (id, username, full_name, avatar_url)')
+            .select('profiles (id, username, full_name, avatar_url, is_verified)')
             .eq('conversation_id', conversationId)
             .neq('user_id', authUser.id)
             .single();
@@ -824,10 +825,10 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
           </Link>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
-              <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="font-bold text-[17px] text-zinc-900 dark:text-zinc-100 leading-tight hover:underline cursor-pointer flex items-center gap-1">
+              <Link href={partner?.username ? `/profile/${partner.username.replace(/^@+/, '')}` : (partner?.id ? `/profile/${partner.id}` : '#')} className="font-bold text-[17px] text-zinc-900 dark:text-zinc-100 leading-tight hover:underline cursor-pointer flex items-center gap-1">
                 {capitalizeName(partner?.full_name || partner?.username) || "Loading..."}
                 {partner?.is_verified && (
-                  <CheckCircle2 size={16} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
+                  <VerifiedBadge size={16} />
                 )}
               </Link>
             </div>
@@ -850,7 +851,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             
             {showDropdown && (
                 <div className="absolute top-12 right-0 w-48 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-800 py-2 z-50 overflow-hidden">
-                <Link href={partner?.id ? `/profile/${partner.id}` : '#'} className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">View Profile</Link>
+                <Link href={partner?.username ? `/profile/${partner.username.replace(/^@+/, '')}` : (partner?.id ? `/profile/${partner.id}` : '#')} className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">View Profile</Link>
                 <button className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 block font-bold">Mute Notifications</button>
                 <button className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 block font-bold border-t border-zinc-50 dark:border-zinc-800">Block User</button>
                 </div>
@@ -892,15 +893,15 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
           <h2 className="text-xl font-black text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 mb-0.5">
             {capitalizeName(partner?.full_name || partner?.username)}
             {partner?.is_verified && (
-              <CheckCircle2 size={18} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black shrink-0" />
+              <VerifiedBadge size={18} />
             )}
           </h2>
-          <p className="text-zinc-500 dark:text-zinc-500 font-bold text-sm mb-1">@{partner?.username}</p>
+          <p className="text-zinc-500 dark:text-zinc-500 font-bold text-sm mb-1">@{partner?.username ? partner.username.replace(/^@+/, '') : ''}</p>
           <p className="text-zinc-400 dark:text-zinc-600 font-medium text-[13px] mb-6">
             Joined {partner?.created_at ? new Date(partner.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : "Recently"}
           </p>
           <Link 
-            href={`/profile/${partner?.id}`}
+            href={partner?.username ? `/profile/${partner.username.replace(/^@+/, '')}` : `/profile/${partner?.id}`}
             className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-sm hover:opacity-90 transition-all active:scale-95"
           >
             View Profile

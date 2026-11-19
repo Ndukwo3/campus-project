@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { formatRelativeTime, capitalizeName } from "@/lib/utils";
 import TopNavigation from "@/components/TopNavigation";
-import StoriesBar from "@/components/StoriesBar";
 import FeedCard from "@/components/FeedCard";
 import BottomNavigation from "@/components/BottomNavigation";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
@@ -13,7 +12,6 @@ import FeedCardSkeleton from "@/components/skeletons/FeedCardSkeleton";
 import { Loader2, Sparkles, Plus } from "lucide-react";
 import Toast from "@/components/Toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import SuggestedConnections from "@/components/SuggestedConnections";
 import Link from "next/link";
 
 export default function Home() {
@@ -23,7 +21,6 @@ export default function Home() {
   const [user, setUser] = useState<any>(null);
   
   // States
-  const [hasClickedContinue, setHasClickedContinue] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedPostForDelete, setSelectedPostForDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -39,14 +36,6 @@ export default function Home() {
   };
 
   const [userUniId, setUserUniId] = useState<string | undefined>(undefined);
-  const [connectionCount, setConnectionCount] = useState(0);
-
-  // Auto-save loop complete flag as soon as they hit 5 connections
-  useEffect(() => {
-    if (user?.id && connectionCount >= 5) {
-      localStorage.setItem(`loop_complete_${user.id}`, 'true');
-    }
-  }, [connectionCount, user?.id]);
 
   // 1. Initial State Sync
   useEffect(() => {
@@ -60,9 +49,6 @@ export default function Home() {
       if (profile) {
         setUser(profile);
         setUserUniId(profile.university_id);
-        // If user has previously completed onboarding, skip loop builder
-        const loopDone = localStorage.getItem(`loop_complete_${authUser.id}`);
-        if (loopDone) setHasClickedContinue(true);
       }
     }
     init();
@@ -239,78 +225,6 @@ export default function Home() {
     setIsDeleting(false);
   };
 
-  // 🏆 DETERMINING THE VIEW STATE
-  const showBuildYourLoop = posts.length === 0 && !hasClickedContinue && !!user?.id && !!userUniId;
-
-  if (showBuildYourLoop) {
-    return (
-      <div className="min-h-screen bg-black flex flex-col font-sans overflow-hidden">
-        {/* Header Section */}
-        <div className="pt-16 pb-8 px-8 flex flex-col items-center">
-          <div className="w-24 h-24 bg-zinc-900 rounded-[32px] flex items-center justify-center mb-10 shadow-[0_0_30px_rgba(229,255,102,0.1)] relative group">
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#E5FF66]/20 to-transparent rounded-[32px]" />
-            <span className="text-[#E5FF66] font-[900] text-4xl italic tracking-tighter z-10">U</span>
-            <span className="text-white font-[900] text-4xl italic tracking-tighter z-10">-v</span>
-          </div>
-
-          
-          <h1 className="text-[38px] leading-[0.95] font-[900] text-white text-center mb-4 tracking-tighter italic uppercase">
-            CONNECT WITH<br/>PEOPLE
-          </h1>
-          <p className="text-zinc-500 text-center text-[12px] leading-relaxed max-w-[280px] font-bold uppercase tracking-widest italic opacity-80">
-            Follow at least 5 students to fuel your feed and start your Univas experience.
-          </p>
-
-          
-          {/* Progress Banner */}
-          <div className="mt-8 w-full max-w-[240px] bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-4 flex flex-col items-center gap-3">
-             <div className="flex gap-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className={`h-2 w-8 rounded-full transition-all duration-500 ${i < connectionCount ? 'bg-[#E5FF66] shadow-[0_0_10px_rgba(229,255,102,0.4)]' : 'bg-zinc-800'}`} />
-                ))}
-             </div>
-             <span className="text-[10px] font-black text-[#E5FF66] uppercase tracking-[0.2em]">
-               {connectionCount < 5 ? `${5 - connectionCount} more to go` : "Loop Synchronized"}
-             </span>
-
-          </div>
-        </div>
-
-
-
-        {/* Scrollable Connections List */}
-        <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-4 custom-scrollbar">
-          <SuggestedConnections userId={user.id} universityId={userUniId} onCountChange={setConnectionCount} />
-          
-          <div className="pt-4 pb-8 text-center">
-            <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">
-              DISCOVER YOUR NETWORK
-            </p>
-          </div>
-        </div>
-
-        {/* Bottom Button Action */}
-        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black to-transparent pt-12">
-          <button 
-            onClick={() => {
-              localStorage.setItem(`loop_complete_${user.id}`, 'true');
-              setHasClickedContinue(true);
-            }}
-
-            disabled={connectionCount < 5}
-            className={`w-full py-5 rounded-full text-[13px] font-black uppercase tracking-[0.2em] transition-all active:scale-[0.95] ${
-              connectionCount >= 5 
-              ? 'bg-[#E5FF66] text-black shadow-lg shadow-[#E5FF66]/20' 
-              : 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50'
-            }`}
-          >
-            {connectionCount >= 5 ? "Enter the Feed" : "Go to Feed"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // STANDARD FEED VIEW
   return (
     <div className="min-h-screen bg-white dark:bg-black pb-[100px] lg:pb-0 relative font-sans overflow-hidden transition-colors">
@@ -329,8 +243,7 @@ export default function Home() {
       </div>
 
       <main className="px-5 py-2">
-        <StoriesBar />
-        <div className="mt-6 flex flex-col gap-4">
+        <div className="mt-4 flex flex-col gap-4">
           {isLoadingPosts ? (
             <div className="flex flex-col gap-6">
               <FeedCardSkeleton /><FeedCardSkeleton />

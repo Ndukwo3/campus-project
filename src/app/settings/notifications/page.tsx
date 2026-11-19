@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Smartphone, MessageSquare, AtSign, Users, Calendar, CheckCircle, Loader2, Heart } from "lucide-react";
+import { ArrowLeft, MessageSquare, CheckCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
@@ -74,13 +74,7 @@ export default function NotificationsSettingsPage() {
 
   // Local state for toggles
   const [settings, setSettings] = useState({
-    push: true,
     direct_messages: true,
-    comments: true,
-    mentions: true,
-    likes: true,
-    group_activity: true,
-    events: true
   });
 
   const showToast = (msg: string) => {
@@ -161,84 +155,18 @@ export default function NotificationsSettingsPage() {
       </div>
 
       <main className="px-4 pt-6 space-y-8">
-        {/* Delivery Types */}
+        {/* Direct Messages */}
         <section>
           <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-4 shadow-none">
-            Delivery Methods
-          </h3>
-          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden transition-colors">
-            <ToggleSetting 
-              icon={Smartphone} 
-              title="Push Notifications" 
-              description="Receive alerts directly on your device."
-              checked={settings.push}
-              onChange={(val) => handleUpdateSetting('push', val)}
-              disabled={isLoading}
-            />
-          </div>
-        </section>
-
-        {/* Social Alerts */}
-        <section>
-          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-4 shadow-none">
-            Social & Activity
+            Direct Messaging
           </h3>
           <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden transition-colors">
             <ToggleSetting 
               icon={MessageSquare} 
               title="Direct Messages" 
-              description="When someone sends you a direct message."
+              description="Notify when someone sends you a private message."
               checked={settings.direct_messages}
               onChange={(val) => handleUpdateSetting('direct_messages', val)}
-              disabled={isLoading}
-            />
-            <ToggleSetting 
-              icon={MessageSquare} 
-              title="Comments on My Posts" 
-              description="When someone comments on a post you created."
-              checked={settings.comments}
-              onChange={(val) => handleUpdateSetting('comments', val)}
-              disabled={isLoading}
-            />
-            <ToggleSetting 
-              icon={AtSign} 
-              title="Mentions" 
-              description="When someone mentions you in a post or comment."
-              checked={settings.mentions}
-              onChange={(val) => handleUpdateSetting('mentions', val)}
-              disabled={isLoading}
-            />
-            <ToggleSetting 
-              icon={Heart} 
-              title="Likes" 
-              description="When someone likes your post or comment."
-              checked={settings.likes}
-              onChange={(val) => handleUpdateSetting('likes', val)}
-              disabled={isLoading}
-            />
-          </div>
-        </section>
-
-        {/* Univas Alerts */}
-        <section>
-          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 px-4 shadow-none">
-            Univas & Groups
-          </h3>
-          <div className="bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm border border-zinc-100/50 dark:border-zinc-800/50 overflow-hidden transition-colors">
-            <ToggleSetting 
-              icon={Users} 
-              title="Group Activity" 
-              description="New posts or messages in study groups you joined."
-              checked={settings.group_activity}
-              onChange={(val) => handleUpdateSetting('group_activity', val)}
-              disabled={isLoading}
-            />
-            <ToggleSetting 
-              icon={Calendar} 
-              title="Event Reminders" 
-              description="Reminders for upcoming academic events or deadlines."
-              checked={settings.events}
-              onChange={(val) => handleUpdateSetting('events', val)}
               disabled={isLoading}
             />
           </div>

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { useNotificationStore } from "@/store/notificationStore";
 import { usePresenceStore } from "@/store/presenceStore";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function GlobalStateLoader() {
   const { setHasUnread } = useNotificationStore();
@@ -12,9 +11,6 @@ export default function GlobalStateLoader() {
   const supabase = createClient();
   const channelRef = useRef<any>(null);
   const [userId, setUserId] = useState<string | null>(null);
-
-  // Register push notifications for the logged-in user
-  usePushNotifications(userId);
 
   useEffect(() => {
     async function init() {

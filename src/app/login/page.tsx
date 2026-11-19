@@ -1,14 +1,43 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { ArrowLeft, EyeOff, Eye, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 
-export default function LoginPage() {
+/**
+ * Validates and sanitizes internal redirect URLs.
+ * Rejects protocol-relative URLs (//), external URLs, backslash tricks, and malformed inputs.
+ */
+function sanitizeRedirect(target: string | null | undefined, fallback: string = '/'): string {
+  if (!target) return fallback;
+  const trimmed = target.trim();
+
+  // Must begin with a single '/' and not with '//' or contain backslashes
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('\\')) {
+    return fallback;
+  }
+
+  try {
+    const dummyOrigin = 'http://localhost';
+    const parsed = new URL(trimmed, dummyOrigin);
+    if (parsed.origin !== dummyOrigin) {
+      return fallback;
+    }
+    return parsed.pathname + parsed.search + parsed.hash;
+  } catch {
+    return fallback;
+  }
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  const rawRedirectTo = searchParams.get('redirectTo');
+  const redirectRef = useRef(rawRedirectTo);
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -29,7 +58,6 @@ export default function LoginPage() {
       });
 
       if (loginError) {
-        console.error("Login call returned error:", loginError);
         // Custom message for invalid credentials which often means user not found or wrong password
         if (loginError.message.includes("Invalid login credentials")) {
           setError("Account not found or password incorrect. Don't have an account? Sign up below.");
@@ -43,7 +71,8 @@ export default function LoginPage() {
       console.log("Login successful, user data:", data);
 
       if (data.user) {
-        router.push("/");
+        const destination = sanitizeRedirect(rawRedirectTo, '/');
+        router.push(destination);
       } else {
         setIsLoading(false);
       }
@@ -58,6 +87,7 @@ export default function LoginPage() {
 
   // 🛡️ Initialize Google GSI on Mount for speed and reliability
   useEffect(() => {
+    let isMounted = true;
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) return;
 
@@ -65,13 +95,12 @@ export default function LoginPage() {
     const maxRetries = 10;
 
     const initGoogle = () => {
+      if (!isMounted) return;
       const { google } = window as any;
       if (!google) {
         if (retryCount < maxRetries) {
           retryCount++;
           setTimeout(initGoogle, 500);
-        } else {
-          console.error("Google GSI script not found after max retries");
         }
         return;
       }
@@ -115,7 +144,8 @@ export default function LoginPage() {
                 if (!profile || !profile.username || !profile.first_name || !profile.last_name || !profile.university_id) {
                   router.push("/onboarding");
                 } else {
-                  router.push("/");
+                  const destination = sanitizeRedirect(redirectRef.current, '/');
+                  router.push(destination);
                 }
               }
             } catch (err: any) {
@@ -143,12 +173,17 @@ export default function LoginPage() {
           }
         }, 150);
       } catch (err) {
-        console.error("Error during Google init:", err);
+        // Ignored in dev / unconfigured origin
       }
     };
 
     initGoogle();
-  }, [supabase, router]);
+
+    return () => {
+      isMounted = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-black text-zinc-900 dark:text-white font-sans px-6 py-12 transition-colors">
@@ -249,10 +284,28 @@ export default function LoginPage() {
         <div className="mt-auto flex flex-col items-center gap-8">
           {/* Signup switch */}
           <p className="text-[12px] text-zinc-400 dark:text-zinc-600 font-bold uppercase tracking-[0.2em]">
-            Don't have an account? <Link href="/signup" className="text-zinc-900 dark:text-white hover:underline decoration-[#E5FF66] decoration-2 underline-offset-4 transition-colors">Sign up</Link>
+            Don't have an account?{" "}
+            <Link 
+              href={rawRedirectTo ? `/signup?redirectTo=${encodeURIComponent(rawRedirectTo)}` : "/signup"} 
+              className="text-zinc-900 dark:text-white hover:underline decoration-[#E5FF66] decoration-2 underline-offset-4 transition-colors"
+            >
+              Sign up
+            </Link>
           </p>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#E5FF66]" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

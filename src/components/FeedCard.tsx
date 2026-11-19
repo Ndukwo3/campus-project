@@ -7,6 +7,7 @@ import { usePresenceStore } from "@/store/presenceStore";
 import { createClient } from "@/lib/supabase";
 import ActiveText from "./ActiveText";
 import { capitalizeName } from "@/lib/utils";
+import VerifiedBadge from "./VerifiedBadge";
 
 interface FeedCardProps {
   id: string;
@@ -179,7 +180,7 @@ export default function FeedCard({
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 15 }}
                   >
-                    <CheckCircle2 size={14} className="fill-black dark:fill-[#E5FF66] text-white dark:text-black" />
+                    <VerifiedBadge size={13} />
                   </motion.div>
                 </div>
               )}

@@ -11,6 +11,7 @@ import { capitalizeName } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePresenceStore } from "@/store/presenceStore";
 import ChatListSkeleton from "./skeletons/ChatListSkeleton";
+import VerifiedBadge from "./VerifiedBadge";
 
 export default function ChatSidebar() {
   const supabase = createClient();
@@ -39,7 +40,7 @@ export default function ChatSidebar() {
       const [partnersResult, latestMsgsResult, unreadResult] = await Promise.all([
         supabase
           .from('conversation_participants')
-          .select('conversation_id, profiles(id, username, full_name, avatar_url)')
+          .select('conversation_id, profiles(id, username, full_name, avatar_url, is_verified)')
           .in('conversation_id', conversationIds)
           .neq('user_id', user.id),
         supabase
@@ -81,6 +82,7 @@ export default function ChatSidebar() {
           partner_id: partnerData?.id,
           name: capitalizeName(partnerData?.full_name || partnerData?.username || "Unknown Student"),
           avatar: partnerData?.avatar_url,
+          is_verified: partnerData?.is_verified,
           lastMessage: msg.content.startsWith('[IMAGE]') ? "📷 Photo" 
                        : msg.content.startsWith('[VOICE_NOTE]') ? "🎤 Voice Note" 
                        : msg.content,
@@ -123,6 +125,7 @@ export default function ChatSidebar() {
   };
 
   const chats = chatsData?.chats || [];
+  const onlineChats = chats.filter((chat: any) => onlineUsersList.includes(chat.partner_id));
   const filteredChats = chats.filter((c: any) => 
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
@@ -159,7 +162,7 @@ export default function ChatSidebar() {
       </div>
 
       {/* Search */}
-      <div className="px-6 mb-4">
+      <div className="px-6 mb-3">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 w-4.5 h-4.5 group-focus-within:text-black dark:group-focus-within:text-[#E5FF66] transition-colors" />
           <input 
@@ -171,6 +174,48 @@ export default function ChatSidebar() {
           />
         </div>
       </div>
+
+      {/* Online Now Horizontal Circles */}
+      {onlineChats.length > 0 && (
+        <div className="px-6 mb-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/60">
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse" />
+            <span className="text-[11px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Online ({onlineChats.length})
+            </span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide py-1">
+            {onlineChats.map((chat: any) => {
+              const firstName = chat.name.split(' ')[0];
+              const isSelected = pathname === `/messages/${chat.id}`;
+              return (
+                <Link
+                  key={chat.id}
+                  href={`/messages/${chat.id}`}
+                  className="flex flex-col items-center gap-1.5 shrink-0 group active:scale-95 transition-transform"
+                >
+                  <div className="relative">
+                    <div className="w-[54px] h-[54px] rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                      {chat.avatar ? (
+                        <Image src={chat.avatar} alt={chat.name} width={54} height={54} className="object-cover w-full h-full" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-300 dark:text-zinc-600">
+                          <User size={24} />
+                        </div>
+                      )}
+                    </div>
+                    {/* Active green status dot */}
+                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-[#4ADE80] border-2 border-white dark:border-black shadow-sm" />
+                  </div>
+                  <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 max-w-[58px] truncate text-center">
+                    {firstName}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto scrollbar-hide px-3 pb-20 lg:pb-4">
@@ -202,7 +247,12 @@ export default function ChatSidebar() {
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
-                      <h3 className={`font-black text-[14.5px] truncate tracking-tight ${chat.unread > 0 ? 'text-zinc-900 dark:text-white' : 'text-zinc-900 dark:text-zinc-100'}`}>{chat.name}</h3>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <h3 className={`font-black text-[14.5px] truncate tracking-tight ${chat.unread > 0 ? 'text-zinc-900 dark:text-white' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                          {chat.name}
+                        </h3>
+                        {chat.is_verified && <VerifiedBadge size={13} />}
+                      </div>
                       <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-600 shrink-0">{chat.time}</span>
                     </div>
                     <div className="flex justify-between items-center gap-2">

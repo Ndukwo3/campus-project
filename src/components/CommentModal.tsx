@@ -9,6 +9,7 @@ import MentionSuggestions from "@/components/MentionSuggestions";
 import ActiveText from "./ActiveText";
 import { useRef } from "react";
 import { capitalizeName } from "@/lib/utils";
+import VerifiedBadge from "./VerifiedBadge";
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -79,7 +80,7 @@ export default function CommentModal({
       .from("comments")
       .select(`
         *,
-        profiles:user_id (username, full_name, avatar_url),
+        profiles:user_id (username, full_name, avatar_url, is_verified),
         comment_likes (user_id)
       `)
       .eq("post_id", postId)
@@ -250,13 +251,12 @@ export default function CommentModal({
                         )}
                       </div>
                       <div className="flex-1 flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-[13px] text-zinc-900">{capitalizeName(c.profiles?.full_name || c.profiles?.username)}</span>
-                            <span className="text-[10px] text-zinc-400 font-medium">
-                              {new Date(c.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[13px] text-zinc-900">{capitalizeName(c.profiles?.full_name || c.profiles?.username)}</span>
+                          {c.profiles?.is_verified && <VerifiedBadge size={12} />}
+                          <span className="text-[10px] text-zinc-400 font-medium ml-1">
+                            {new Date(c.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </div>
                         <div className="bg-zinc-50 px-4 py-2.5 rounded-[22px] rounded-tl-none border border-zinc-100/50">
                           <ActiveText text={c.content} className="text-zinc-700 text-[14px] leading-relaxed" />
@@ -306,9 +306,10 @@ export default function CommentModal({
                                 )}
                               </div>
                               <div className="flex-1 flex flex-col gap-1">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5">
                                   <span className="font-bold text-[12px] text-zinc-900">{capitalizeName(reply.profiles?.full_name || reply.profiles?.username)}</span>
-                                  <span className="text-[9px] text-zinc-400 font-medium">
+                                  {reply.profiles?.is_verified && <VerifiedBadge size={11} />}
+                                  <span className="text-[9px] text-zinc-400 font-medium ml-1">
                                     {new Date(reply.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
