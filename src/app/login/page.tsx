@@ -72,7 +72,8 @@ function LoginForm() {
 
       if (data.user) {
         const destination = sanitizeRedirect(rawRedirectTo, '/');
-        router.push(destination);
+        // Force full window navigation to ensure SSR proxy picks up the fresh auth cookies immediately
+        window.location.href = destination;
       } else {
         setIsLoading(false);
       }
@@ -142,10 +143,10 @@ function LoginForm() {
                   .single();
 
                 if (!profile || !profile.username || !profile.first_name || !profile.last_name || !profile.university_id) {
-                  router.push("/onboarding");
+                  window.location.href = "/onboarding";
                 } else {
                   const destination = sanitizeRedirect(redirectRef.current, '/');
-                  router.push(destination);
+                  window.location.href = destination;
                 }
               }
             } catch (err: any) {
