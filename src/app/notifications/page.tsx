@@ -211,7 +211,7 @@ export default function NotificationsPage() {
 
 function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept: (id: string) => void, onDecline: (id: string) => void }) {
   const { type, sender, content, created_at, is_read, _handled } = notif;
-  const displayName = type === 'welcome' ? 'Univas Team' : capitalizeName(sender?.full_name || sender?.username || 'Someone');
+  const displayName = type === 'welcome' ? 'Peerza Team' : capitalizeName(sender?.full_name || sender?.username || 'Someone');
   const avatar = type === 'welcome' ? '/logo.png' : sender?.avatar_url;
   const time = formatDistanceToNow(new Date(created_at), { addSuffix: true });
   const isUnread = !is_read;

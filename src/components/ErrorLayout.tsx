@@ -83,10 +83,10 @@ export default function ErrorLayout({
 
       {/* Footer Branding */}
       <div className="absolute bottom-10 flex items-center gap-2 opacity-20 group">
-        <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center overflow-hidden transition-transform group-hover:rotate-12">
-          <span className="text-white dark:text-black font-black italic text-xs">U</span>
+        <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center p-1.5 overflow-hidden transition-transform group-hover:rotate-12">
+          <img src="/logo.png" alt="Peerza" className="w-full h-full object-contain" />
         </div>
-        <span className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em]">Univas</span>
+        <span className="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-[0.2em]">Peerza</span>
       </div>
     </div>
   );

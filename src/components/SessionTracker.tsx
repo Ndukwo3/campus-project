@@ -35,7 +35,7 @@ export default function SessionTracker() {
         </h1>
         
         <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed max-w-[320px] mb-8 font-medium">
-          Univas requires location access to secure your account and sync your campus experience.
+          Peerza requires location access to secure your account and sync your campus experience.
         </p>
 
         {errorMsg && (

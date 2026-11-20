@@ -204,7 +204,7 @@ export default function CreatePostPage() {
               }}
               onKeyUp={handleInput}
               onMouseUp={handleInput}
-              placeholder="What's happening on Univas?"
+              placeholder="What's happening on Peerza?"
               className="w-full text-[17px] text-zinc-900 dark:text-white border-none outline-none resize-none min-h-[30vh] bg-transparent pt-1 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 font-medium leading-[1.6]"
             />
 

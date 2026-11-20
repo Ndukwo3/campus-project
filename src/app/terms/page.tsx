@@ -8,11 +8,11 @@ export default function TermsOfService() {
   const sections = [
     {
       title: "1. Acceptance of Terms",
-      content: "By accessing Univas Hub (the \"Platform\"), you represent that you have read, understood, and agree to be bound by these Terms. If you do not agree, strictly discontinue use of the Platform immediately."
+      content: "By accessing Peerza Hub (the \"Platform\"), you represent that you have read, understood, and agree to be bound by these Terms. If you do not agree, strictly discontinue use of the Platform immediately."
     },
     {
       title: "2. Academic Integrity Disclaimer",
-      content: "Univas is designed exclusively as a study aid. You agree that materials obtained through this platform (past questions, notes, solutions) shall NOT be used for any form of examination malpractice, cheating, or plagiarism. Univas is not liable for any disciplinary actions taken by your University for academic dishonesty."
+      content: "Peerza is designed exclusively as a study aid. You agree that materials obtained through this platform (past questions, notes, solutions) shall NOT be used for any form of examination malpractice, cheating, or plagiarism. Peerza is not liable for any disciplinary actions taken by your University for academic dishonesty."
     },
     {
       title: "3. User Registration",
@@ -20,11 +20,11 @@ export default function TermsOfService() {
     },
     {
       title: "4. Intellectual Property Rights",
-      content: "Academic materials provided on the Platform are for personal, non-commercial study use only. You shall not redistribute, sell, or exploit any content from the Platform without explicit authorization. We do not claim ownership of materials uploaded by users; however, by uploading, you grant Univas a license to host and display those materials."
+      content: "Academic materials provided on the Platform are for personal, non-commercial study use only. You shall not redistribute, sell, or exploit any content from the Platform without explicit authorization. We do not claim ownership of materials uploaded by users; however, by uploading, you grant Peerza a license to host and display those materials."
     },
     {
       title: "5. Limitation of Liability",
-      content: "The Platform and all its content are provided on an \"as-is\" and \"as-available\" basis. Univas Hub, its developers, and affiliates do not guarantee the accuracy of academic materials and are not responsible for your academic performance, grades, or university results."
+      content: "The Platform and all its content are provided on an \"as-is\" and \"as-available\" basis. Peerza Hub, its developers, and affiliates do not guarantee the accuracy of academic materials and are not responsible for your academic performance, grades, or university results."
     },
     {
       title: "6. User Conduct",
@@ -57,7 +57,7 @@ export default function TermsOfService() {
         </Link>
         <div>
           <h1 className="text-xl font-black uppercase tracking-tighter italic leading-none">Terms of Service</h1>
-          <p className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-1">Version 1.0 · Univas Hub</p>
+          <p className="text-[9px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest mt-1">Version 1.0 · Peerza Hub</p>
         </div>
       </motion.div>
 
@@ -70,7 +70,7 @@ export default function TermsOfService() {
         >
           <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 mb-10">
             <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed uppercase tracking-widest">
-              Please read these terms carefully before proceeding. By using Univas, you are agreeing to the rules of our academic community.
+              Please read these terms carefully before proceeding. By using Peerza, you are agreeing to the rules of our academic community.
             </p>
           </div>
 
@@ -95,7 +95,7 @@ export default function TermsOfService() {
 
           <div className="pt-10 border-t border-zinc-100 dark:border-zinc-800">
             <p className="text-[10px] italic font-black text-center text-zinc-300 dark:text-zinc-700 uppercase tracking-widest">
-              UNIVAS HUB · EMPOWERING ACADEMIC EXCELLENCE
+              PEERZA HUB · EMPOWERING ACADEMIC EXCELLENCE
             </p>
           </div>
         </motion.div>

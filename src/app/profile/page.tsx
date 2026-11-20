@@ -438,9 +438,8 @@ export default function ProfilePage() {
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black transition-colors">
         <div className="relative flex items-center justify-center">
           <div className="absolute w-16 h-16 bg-[#E5FF66]/20 rounded-full animate-ping" />
-          <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(229,255,102,0.15)] animate-pulse relative z-10">
-            <span className="text-[#E5FF66] font-black text-3xl italic tracking-tighter">U</span>
-            <span className="text-white font-black text-3xl italic tracking-tighter">-v</span>
+          <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center p-3 shadow-[0_0_30px_rgba(229,255,102,0.15)] animate-pulse relative z-10">
+            <img src="/logo.png" alt="Peerza" className="w-full h-full object-contain" />
           </div>
         </div>
       </div>
@@ -634,7 +633,7 @@ export default function ProfilePage() {
             </p>
           ) : (
             <p className="text-sm text-zinc-400 italic px-1 font-normal">
-              Tell your Univas community something about yourself...
+              Tell your Peerza community something about yourself...
             </p>
           )}
         </div>
@@ -964,7 +963,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between mb-8 px-1">
                 <div>
                   <h2 className="text-2xl font-black text-black dark:text-white">Edit Identity</h2>
-                  <p className="text-zinc-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-widest mt-0.5">Univas Profile Settings</p>
+                  <p className="text-zinc-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-widest mt-0.5">Peerza Profile Settings</p>
                 </div>
                 <button 
                   onClick={() => setIsEditing(false)}

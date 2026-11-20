@@ -1,9 +1,9 @@
 "use client";
 
-import { Search, MoreVertical, User, MessageSquare } from "lucide-react";
+import { Search, MoreVertical, User, MessageSquare, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { createClient } from "@/lib/supabase";
@@ -17,6 +17,7 @@ export default function ChatSidebar() {
   const supabase = createClient();
   const queryClient = useQueryClient();
   const pathname = usePathname();
+  const router = useRouter();
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -135,7 +136,16 @@ export default function ChatSidebar() {
     <div className="flex flex-col h-full bg-white dark:bg-black border-r border-zinc-100 dark:border-zinc-800 transition-colors w-full lg:w-[380px] xl:w-[420px] shrink-0 overflow-hidden">
       {/* Header */}
       <div className="px-6 pt-10 pb-5 flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-100">Chat</h1>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 transition-all lg:hidden active:scale-95"
+            aria-label="Go back"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <h1 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-100">Chat</h1>
+        </div>
         <div className="flex gap-2 relative">
             <button 
                 onClick={() => setShowMoreMenu(!showMoreMenu)}

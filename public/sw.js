@@ -60,7 +60,7 @@ self.addEventListener('fetch', (event) => {
 
 // Fired when the server sends a push message to the browser
 self.addEventListener('push', (event) => {
-    let payload = { title: 'Univas', body: 'You have a new notification', url: '/', icon: '/icon-192x192.png' };
+    let payload = { title: 'Peerza', body: 'You have a new notification', url: '/', icon: '/icon-192x192.png' };
 
     try {
         if (event.data) {

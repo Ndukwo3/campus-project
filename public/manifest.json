@@ -1,7 +1,7 @@
 {
-  "id": "com.univas.app",
-  "name": "Univas",
-  "short_name": "Univas",
+  "id": "com.peerza.app",
+  "name": "Peerza",
+  "short_name": "Peerza",
   "description": "The ultimate social and academic network for Nigerian university students.",
   "start_url": "/",
   "display": "standalone",
@@ -28,7 +28,7 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Univas Home Feed"
+      "label": "Peerza Home Feed"
     }
   ],
   "categories": ["social", "education"],
@@ -36,7 +36,7 @@
     {
       "name": "Explore",
       "url": "/explore",
-      "description": "Explore Univas life"
+      "description": "Explore Peerza life"
     },
     {
       "name": "Messages",

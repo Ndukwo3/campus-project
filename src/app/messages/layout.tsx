@@ -1,6 +1,7 @@
 "use client";
 
 import ChatSidebar from "@/components/ChatSidebar";
+import BottomNavigation from "@/components/BottomNavigation";
 import { usePathname } from "next/navigation";
 
 export default function MessagesLayout({ children }: { children: React.ReactNode }) {
@@ -18,6 +19,9 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
       <div className={`flex-1 h-full bg-[#FDFDFD] dark:bg-[#050505] transition-colors ${!isIndividualChat ? 'hidden lg:flex' : 'flex'}`}>
         {children}
       </div>
+
+      {/* Bottom navigation — fixed, covers both chat list and individual chat on mobile */}
+      <BottomNavigation />
     </div>
   );
 }

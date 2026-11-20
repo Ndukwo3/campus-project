@@ -33,7 +33,7 @@ export default function DesktopWidgets() {
           </div>
           <input 
             type="text" 
-            placeholder="Search Univas"
+            placeholder="Search Peerza"
             className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-full py-3.5 pl-14 pr-6 text-sm font-medium outline-none border border-transparent focus:border-[#E5FF66] focus:bg-white dark:focus:bg-black transition-all"
           />
         </div>
@@ -41,7 +41,7 @@ export default function DesktopWidgets() {
 
       {/* Subscribe/Premium Placeholder */}
       <div className="bg-zinc-50 dark:bg-zinc-900 rounded-[24px] p-5 border border-zinc-100 dark:border-zinc-800 space-y-3">
-        <h3 className="text-xl font-black italic tracking-tighter">Univas Premium</h3>
+        <h3 className="text-xl font-black italic tracking-tighter">Peerza Premium</h3>
         <p className="text-sm font-medium text-zinc-500 leading-relaxed">
           Unlock exclusive academic tools and community features.
         </p>
@@ -97,7 +97,7 @@ export default function DesktopWidgets() {
 
       {/* Footer Links */}
       <div className="px-5 py-2 flex flex-wrap gap-x-4 gap-y-1">
-          {["Terms of Service", "Privacy Policy", "Cookie Policy", "Accessibility", "Ads info", "More ...", "© 2026 Univas Corp."].map((link, i) => (
+          {["Terms of Service", "Privacy Policy", "Cookie Policy", "Accessibility", "Ads info", "More ...", "© 2026 Peerza Corp."].map((link, i) => (
               <span key={i} className="text-[12px] text-zinc-500 hover:underline cursor-pointer">{link}</span>
           ))}
       </div>

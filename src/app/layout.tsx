@@ -16,15 +16,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Univas",
-    default: "Univas",
+    template: "%s | Peerza",
+    default: "Peerza",
   },
   description: "The ultimate social and academic network for Nigerian university students.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Univas",
+    title: "Peerza",
   },
   formatDetection: {
     telephone: false,

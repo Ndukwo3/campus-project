@@ -96,7 +96,7 @@ function ContactModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: ()
 const FAQ_ITEMS = [
   { q: "How do I change my university?", a: "Contact support with your new enrollment document. University changes are reviewed within 5 business days." },
   { q: "How do I reset my password?", a: "Go to Settings → Security → Change Password to update your password." },
-  { q: "Can I use two accounts?", a: "No, each student is allowed one Univas-verified account." },
+  { q: "Can I use two accounts?", a: "No, each student is allowed one Peerza-verified account." },
   { q: "How do I report another user?", a: "Tap the three-dot menu on any post or profile and select 'Report'." },
 ];
 
@@ -144,7 +144,7 @@ function GuidelinesModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="space-y-4 text-[14px] text-zinc-600">
           {[
-            { title: "🤝 Respect Everyone", body: "Treat all Univas members with courtesy. Harassment, bullying, or discrimination of any kind is strictly prohibited." },
+            { title: "🤝 Respect Everyone", body: "Treat all Peerza members with courtesy. Harassment, bullying, or discrimination of any kind is strictly prohibited." },
             { title: "✅ Be Authentic", body: "Use your real identity. Impersonating others or creating fake accounts is against our terms of service." },
             { title: "📚 Academic Integrity", body: "Do not facilitate cheating or plagiarism. Academic integrity violations are reported to your institution." },
             { title: "🔒 Protect Privacy", body: "Do not share another person's private information without consent." },

@@ -23,11 +23,10 @@ export default function WelcomePage() {
             initial={{ scale: 0.8, rotate: -10 }}
             animate={{ scale: 1, rotate: -3 }}
             transition={{ duration: 1, type: "spring", bounce: 0.5, delay: 0.2 }}
-            className="w-28 h-28 bg-[#1A1A24] dark:bg-zinc-900 rounded-[32px] flex items-center justify-center mb-10 shadow-2xl shadow-zinc-200/50 dark:shadow-none border border-transparent dark:border-zinc-800 relative group"
+            className="w-28 h-28 bg-[#1A1A24] dark:bg-zinc-900 rounded-[32px] flex items-center justify-center p-5 mb-10 shadow-2xl shadow-zinc-200/50 dark:shadow-none border border-transparent dark:border-zinc-800 relative group"
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-[#E5FF66]/20 to-transparent rounded-[32px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <span className="text-[#E5FF66] font-black text-5xl italic tracking-tighter mix-blend-difference z-10">U</span>
-            <span className="text-white font-black text-5xl italic tracking-tighter mix-blend-difference z-10">-v</span>
+            <img src="/logo.png" alt="Peerza Logo" className="w-full h-full object-contain relative z-10" />
           </motion.div>
 
           <h1 className="text-[42px] font-black text-center leading-[1.1] tracking-tighter mb-8 uppercase mt-6">
@@ -38,7 +37,7 @@ export default function WelcomePage() {
               transition={{ delay: 0.5, duration: 0.6 }}
               className="text-zinc-900 dark:text-[#E2FF3D] italic relative inline-block mt-2"
             >
-              Univas
+              Peerza
               <svg className="absolute w-full h-3 -bottom-1 top-auto left-0 text-[#E5FF66] -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
                 <motion.path 
                   initial={{ pathLength: 0 }}
@@ -88,7 +87,7 @@ export default function WelcomePage() {
           </Link>
           
           <p className="text-center text-[10px] text-zinc-400 dark:text-zinc-500 mt-6 mx-auto font-black uppercase tracking-[0.15em] max-w-[260px] leading-wider">
-            By continuing, you agree to Univas's <br/>
+            By continuing, you agree to Peerza's <br/>
             <a href="#" className="underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-4 hover:text-zinc-900 dark:hover:text-white transition-colors">Terms</a> and <a href="#" className="underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-4 hover:text-zinc-900 dark:hover:text-white transition-colors">Privacy</a>
           </p>
         </motion.div>

@@ -100,9 +100,8 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black transition-colors duration-500">
         <div className="relative flex items-center justify-center">
           <div className="absolute w-16 h-16 bg-[#E5FF66]/20 rounded-full animate-ping" />
-          <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(229,255,102,0.15)] animate-pulse relative z-10">
-            <span className="text-[#E5FF66] font-black text-3xl italic tracking-tighter">U</span>
-            <span className="text-white font-black text-3xl italic tracking-tighter">-v</span>
+          <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center p-3 shadow-[0_0_30px_rgba(229,255,102,0.15)] animate-pulse relative z-10">
+            <img src="/logo.png" alt="Peerza" className="w-full h-full object-contain" />
           </div>
         </div>
       </div>

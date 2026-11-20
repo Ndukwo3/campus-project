@@ -68,7 +68,7 @@ export default function MessagingSettingsPage() {
                 </div>
               </div>
               <select className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-[14px] font-medium text-black outline-none ml-8 max-w-[calc(100%-32px)]">
-                <option selected>Everyone on Univas</option>
+                <option selected>Everyone on Peerza</option>
                 <option>Only People I Follow</option>
                 <option>No One</option>
               </select>

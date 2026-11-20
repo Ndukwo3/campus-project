@@ -224,7 +224,7 @@ export default function IntegratedPdfViewer({ url, onClose, title, courseCode }:
       {/* Watermark */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.025] select-none scale-150 overflow-hidden">
         <h2 className="text-[120px] font-black italic -rotate-12 tracking-tighter whitespace-pre text-center">
-          UNIVAS HUB PROTECTED
+          PEERZA HUB PROTECTED
         </h2>
       </div>
     </div>

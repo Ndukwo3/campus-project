@@ -1,20 +1,13 @@
 "use client";
 
-import { MessageSquare, Plus } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import Link from "next/link";
-import ChatSidebar from "@/components/ChatSidebar";
-import BottomNavigation from "@/components/BottomNavigation";
 
 export default function MessagesPage() {
   return (
     <>
-      {/* Mobile Only: Show the sidebar list directly here */}
-      <div className="lg:hidden h-full">
-        <ChatSidebar />
-        <BottomNavigation />
-      </div>
-
       {/* Desktop Only: Show the "Select a conversation" placeholder */}
+      {/* On mobile the layout's ChatSidebar handles rendering */}
       <div className="hidden lg:flex flex-col items-center justify-center w-full h-full bg-[#FDFDFD] dark:bg-black p-10 text-center animate-in fade-in duration-500">
         <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
           <MessageSquare size={36} className="text-zinc-300 dark:text-zinc-600" />
