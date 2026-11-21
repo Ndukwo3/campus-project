@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { MoreVertical, Heart, MessageCircle, Share2, User, Flag, AlertTriangle, Trash2, Bookmark, BookmarkCheck, Repeat2, CheckCircle2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -60,6 +61,7 @@ export default function FeedCard({
   isVerified = false,
   onNotInterested,
 }: FeedCardProps) {
+  const router = useRouter();
   const profileLink = authorUsername ? `/profile/${authorUsername.replace('@', '')}` : `/profile/${authorId}`;
   const [localIsLiked, setLocalIsLiked] = useState(isLiked);
   const [localLikesCount, setLocalLikesCount] = useState(likes);
@@ -245,25 +247,31 @@ export default function FeedCard({
         </div>
       </div>
 
-      {/* Description */}
-      {description && description !== "[[USER_PROFILE_UPDATE]]" && description !== "Just updated my profile photo!" && (
-        <ActiveText 
-          text={description} 
-          className="text-zinc-700 dark:text-zinc-300 text-[15.5px] leading-relaxed font-medium px-1 tracking-tight" 
-        />
-      )}
-
-      {/* Image Content (Optional) */}
-      {postImage && (
-        <div className="w-full relative rounded-[28px] overflow-hidden aspect-[4/5] sm:aspect-square bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-800 shadow-sm group">
-          <Image
-            src={postImage}
-            alt="Post content"
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-700"
+      {/* Post Body - Click to view detail */}
+      <div 
+        onClick={() => router.push(`/post/${id}`)}
+        className="cursor-pointer flex flex-col gap-3 group/post"
+      >
+        {/* Description */}
+        {description && description !== "[[USER_PROFILE_UPDATE]]" && description !== "Just updated my profile photo!" && (
+          <ActiveText 
+            text={description} 
+            className="text-zinc-700 dark:text-zinc-300 text-[15.5px] leading-relaxed font-medium px-1 tracking-tight group-hover/post:text-zinc-900 dark:group-hover/post:text-zinc-100 transition-colors" 
           />
-        </div>
-      )}
+        )}
+
+        {/* Image Content (Optional) */}
+        {postImage && (
+          <div className="w-full relative rounded-[28px] overflow-hidden aspect-[4/5] sm:aspect-square bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-800 shadow-sm group">
+            <Image
+              src={postImage}
+              alt="Post content"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-700"
+            />
+          </div>
+        )}
+      </div>
 
       {/* Action Bar */}
       <div className="flex items-center justify-between mt-1 px-1">
