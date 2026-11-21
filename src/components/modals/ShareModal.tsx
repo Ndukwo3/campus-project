@@ -37,8 +37,6 @@ export default function ShareModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Check out this post on Peerza",
-          text: postContent,
           url: shareUrl,
         });
       } catch (err) {

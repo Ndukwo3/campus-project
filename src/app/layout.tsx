@@ -15,11 +15,34 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://peerza-test.vercel.app'),
   title: {
     template: "%s | Peerza",
     default: "Peerza",
   },
   description: "The ultimate social and academic network for Nigerian university students.",
+  openGraph: {
+    title: "Peerza — Campus Social & Academic Network",
+    description: "Connect with university students, share posts, and read course resources on Peerza.",
+    url: "https://peerza-test.vercel.app",
+    siteName: "Peerza",
+    images: [
+      {
+        url: "/icon-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Peerza Logo",
+      },
+    ],
+    locale: "en_NG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Peerza",
+    description: "The ultimate social and academic network for Nigerian university students.",
+    images: ["/icon-512x512.png"],
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
