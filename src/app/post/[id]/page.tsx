@@ -233,14 +233,18 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         </div>
 
         {/* Stats Row */}
-        <div className="py-5 border-y border-zinc-100 dark:border-zinc-800/50 flex flex-wrap items-center gap-x-8 gap-y-3 mb-2">
+        <div className="py-3.5 border-y border-zinc-100 dark:border-zinc-800/50 flex flex-wrap items-center gap-x-6 gap-y-2 mb-2">
            <div className="flex items-baseline gap-1.5">
-             <span className="font-black text-xl text-zinc-900 dark:text-white leading-none">{post.likes_count}</span>
-             <span className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.15em]">Likes</span>
+             <span className="font-bold text-[15px] text-zinc-900 dark:text-white leading-none">{post.likes_count}</span>
+             <span className="text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold tracking-normal">
+               {post.likes_count === 1 ? 'like' : 'likes'}
+             </span>
            </div>
            <div className="flex items-baseline gap-1.5">
-             <span className="font-black text-xl text-zinc-900 dark:text-white leading-none">{post.comments_count}</span>
-             <span className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.15em]">Comments</span>
+             <span className="font-bold text-[15px] text-zinc-900 dark:text-white leading-none">{post.comments_count}</span>
+             <span className="text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold tracking-normal">
+               {post.comments_count === 1 ? 'comment' : 'comments'}
+             </span>
            </div>
         </div>
 
