@@ -104,7 +104,7 @@ export default function CreatePostPage() {
           imageUrl = publicUrl;
         }
 
-        const { error: postError } = await supabase
+        const { data: newPost, error: postError } = await supabase
           .from("posts")
           .insert({
             user_id: user.id,
@@ -112,7 +112,9 @@ export default function CreatePostPage() {
             group_id: null,
             content: content.trim(),
             image_url: imageUrl
-          });
+          })
+          .select('id')
+          .single();
 
         if (postError) {
           console.error("Full Post Error:", postError);
@@ -134,6 +136,7 @@ export default function CreatePostPage() {
                    sender_id: user.id,
                    type: 'mention',
                    content: `mentioned you in a post: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+                   post_id: newPost?.id || null,
                    is_read: false
                  });
                }

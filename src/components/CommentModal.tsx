@@ -113,6 +113,7 @@ export default function CommentModal({
             sender_id: currentUser.id,
             type: 'comment',
             content: `commented on your post: "${comment.substring(0, 50)}${comment.length > 50 ? '...' : ''}"`,
+            post_id: postId,
             is_read: false
           });
         }
@@ -134,6 +135,7 @@ export default function CommentModal({
                  sender_id: currentUser.id,
                  type: 'mention',
                  content: `mentioned you in a comment: "${comment.substring(0, 50)}${comment.length > 50 ? '...' : ''}"`,
+                 post_id: postId,
                  is_read: false
                });
              }
@@ -182,6 +184,7 @@ export default function CommentModal({
           sender_id: currentUser.id,
           type: 'like',
           content: `liked your comment: "${commentObj.content?.substring(0, 50)}${commentObj.content?.length > 50 ? '...' : ''}"`,
+          post_id: postId,
           is_read: false
         });
       }

@@ -144,6 +144,7 @@ export default function Home() {
           sender_id: user.id,
           type: 'like',
           content: `liked your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+          post_id: postId,
           is_read: false
         });
       }
@@ -207,6 +208,7 @@ export default function Home() {
           sender_id: user.id,
           type: 'repost',
           content: `reposted your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+          post_id: postId,
           is_read: false
         });
       }

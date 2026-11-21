@@ -184,7 +184,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
   useEffect(() => {
     async function fetchUserReposts() {
-      if (activeTab !== "reposts") return;
+      if (activeTab !== "reposts" || !userId) return;
       
       const { data, error } = await supabase
         .from('reposts')
@@ -192,7 +192,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           id,
           post_id,
           created_at,
-          posts (
+          posts:post_id (
             *,
             profiles:user_id (username, full_name, avatar_url, is_verified)
           )
@@ -200,7 +200,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (data) setReposts(data);
+      if (data) {
+        // Only keep reposts where post still exists
+        const validReposts = data.filter((r: any) => Boolean(r.posts));
+        setReposts(validReposts);
+      }
     }
     fetchUserReposts();
   }, [activeTab, userId, supabase]);
@@ -232,6 +236,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           sender_id: user.id,
           type: 'repost',
           content: `reposted your post.`,
+          post_id: postId,
           is_read: false
         });
       }
@@ -654,18 +659,19 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                 <FeedCard 
                   key={repost.id}
                   id={repost.post_id}
-                  authorName={capitalizeName(repost.posts.profiles?.full_name || "User")}
-                  authorImage={repost.posts.profiles?.avatar_url}
-                  timePosted={new Date(repost.posts.created_at).toLocaleDateString()}
-                  postImage={repost.posts.image_url}
-                  likes={repost.posts.likes_count || 0}
-                  comments={repost.posts.comments_count || 0}
-                  description={repost.posts.content}
-                  authorId={repost.posts.user_id}
+                  authorName={capitalizeName(repost.posts?.profiles?.full_name || repost.posts?.profiles?.username || "User")}
+                  authorImage={repost.posts?.profiles?.avatar_url}
+                  timePosted={repost.posts?.created_at ? new Date(repost.posts.created_at).toLocaleDateString() : ""}
+                  postImage={repost.posts?.image_url}
+                  likes={repost.posts?.likes_count || 0}
+                  comments={repost.posts?.comments_count || 0}
+                  description={repost.posts?.content}
+                  authorId={repost.posts?.user_id}
+                  authorUsername={repost.posts?.profiles?.username}
                   currentUserId={currentUser?.id}
                   isBookmarked={currentUserBookmarks.has(repost.post_id)}
                   isReposted={currentUserReposts.has(repost.post_id)}
-                  isVerified={repost.posts.profiles?.is_verified}
+                  isVerified={repost.posts?.profiles?.is_verified}
                   onLike={async (id: string) => {
                     const { data: { user } } = await supabase.auth.getUser();
                     if (!user) return;

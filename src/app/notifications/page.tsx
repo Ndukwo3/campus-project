@@ -236,6 +236,8 @@ function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept
 
   const config = getTypeConfig();
   const profileLink = sender?.username ? `/profile/${sender.username.replace('@', '')}` : (sender?.id ? `/profile/${sender.id}` : '#');
+  const postLink = notif.post_id ? `/post/${notif.post_id}` : null;
+  const isPostNotification = Boolean(postLink && ['like', 'comment', 'repost', 'mention'].includes(type));
 
   return (
     <div className={`flex items-center gap-4 px-4 py-4.5 rounded-[28px] transition-all duration-500 group relative border shadow-sm backdrop-blur-md ${
@@ -270,16 +272,30 @@ function NotificationItem({ notif, onAccept, onDecline }: { notif: any, onAccept
         <p className="text-[13.5px] leading-snug text-zinc-500 dark:text-zinc-400 font-medium tracking-tight">
           <Link href={profileLink} className="font-bold text-zinc-950 dark:text-white hover:text-black dark:hover:text-[#E2FF3D] transition-colors">{displayName}</Link>
           {" "}
-          {content.includes("commented:") ? (
+          {isPostNotification && postLink ? (
+            <Link href={postLink} className="hover:underline text-zinc-600 dark:text-zinc-300">
+              {content.includes("commented:") ? (
+                <>
+                  commented: <span className="text-zinc-900 dark:text-zinc-200 font-bold block mt-1.5 line-clamp-2 italic text-[12px] border-l-2 border-[#E5FF66] pl-3 py-1 bg-zinc-50/50 dark:bg-zinc-900/50 rounded-r-xl shadow-inner-sm">"{content.split("commented: ")[1].replace(/^"/, '').replace(/"$/, '')}"</span>
+                </>
+              ) : content}
+            </Link>
+          ) : content.includes("commented:") ? (
             <>
               commented: <span className="text-zinc-900 dark:text-zinc-200 font-bold block mt-1.5 line-clamp-2 italic text-[12px] border-l-2 border-[#E5FF66] pl-3 py-1 bg-zinc-50/50 dark:bg-zinc-900/50 rounded-r-xl shadow-inner-sm">"{content.split("commented: ")[1].replace(/^"/, '').replace(/"$/, '')}"</span>
             </>
           ) : content}
         </p>
         <div className="flex items-center gap-2 mt-2">
-          <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-widest">
-            {time}
-          </span>
+          {postLink ? (
+            <Link href={postLink} className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest">
+              {time} • View post
+            </Link>
+          ) : (
+            <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-widest">
+              {time}
+            </span>
+          )}
           {isUnread && (
              <span className="w-1.5 h-1.5 rounded-full bg-[#E5FF66] shadow-[0_0_8px_rgba(229,255,102,0.8)]"></span>
           )}

@@ -116,6 +116,7 @@ export default function ProfilePage() {
           sender_id: user.id,
           type: 'repost',
           content: `reposted your post: "${postData.content?.substring(0, 50)}${postData.content?.length > 50 ? '...' : ''}"`,
+          post_id: postId,
           is_read: false
         });
       }
@@ -213,7 +214,7 @@ export default function ProfilePage() {
           id,
           post_id,
           created_at,
-          posts (
+          posts:post_id (
             *,
             profiles:user_id (username, full_name, avatar_url, is_verified)
           )
@@ -221,7 +222,10 @@ export default function ProfilePage() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (data) setReposts(data);
+      if (data) {
+        const validReposts = data.filter((r: any) => Boolean(r.posts));
+        setReposts(validReposts);
+      }
     }
     fetchReposts();
   }, [activeTab, supabase]);
@@ -737,6 +741,7 @@ export default function ProfilePage() {
                         sender_id: user.id,
                         type: 'like',
                         content: `liked your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+                        post_id: id,
                         is_read: false
                       });
                     }
@@ -863,19 +868,20 @@ export default function ProfilePage() {
                 <FeedCard 
                   key={repost.id}
                   id={repost.post_id}
-                  authorName={repost.posts.profiles?.full_name || "User"}
-                  authorImage={repost.posts.profiles?.avatar_url}
-                  timePosted={new Date(repost.posts.created_at).toLocaleDateString()}
-                  postImage={repost.posts.image_url}
-                  likes={repost.posts.likes_count || 0}
-                  comments={repost.posts.comments_count || 0}
-                  description={repost.posts.content}
-                  authorId={repost.posts.user_id}
+                  authorName={capitalizeName(repost.posts?.profiles?.full_name || repost.posts?.profiles?.username || "User")}
+                  authorImage={repost.posts?.profiles?.avatar_url}
+                  timePosted={repost.posts?.created_at ? new Date(repost.posts.created_at).toLocaleDateString() : ""}
+                  postImage={repost.posts?.image_url}
+                  likes={repost.posts?.likes_count || 0}
+                  comments={repost.posts?.comments_count || 0}
+                  description={repost.posts?.content}
+                  authorId={repost.posts?.user_id}
+                  authorUsername={repost.posts?.profiles?.username}
                   currentUserId={profile?.id}
                   isLiked={currentUserLikes.has(repost.post_id)}
                   isBookmarked={currentUserBookmarks.has(repost.post_id)}
                   isReposted={true}
-                  isVerified={repost.posts.profiles?.is_verified}
+                  isVerified={repost.posts?.profiles?.is_verified}
                   onRepost={handleRepost}
                   onLike={async (id: string) => {
                     const { data: { user } } = await supabase.auth.getUser();

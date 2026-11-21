@@ -122,6 +122,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
          sender_id: currentUser.id,
          type: 'like',
          content: `liked your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+         post_id: postId,
          is_read: false
        });
     }
@@ -149,6 +150,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
           sender_id: currentUser.id,
           type: 'repost',
           content: `reposted your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
+          post_id: postId,
           is_read: false
         });
       }
