@@ -1114,12 +1114,25 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
             ) : (
-              <input 
-                type="text" 
+              <textarea 
+                rows={1}
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
+                onChange={(e) => {
+                  setInputText(e.target.value);
+                  // Auto-grow height up to 120px
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+                }}
+                onKeyDown={(e) => {
+                  // On Desktop: Enter sends, Shift+Enter creates a new line
+                  // On Mobile: Enter / Return / Go creates a new line by default
+                  if (e.key === 'Enter' && !e.shiftKey && window.innerWidth >= 1024) {
+                    e.preventDefault();
+                    handleSendAction();
+                  }
+                }}
                 placeholder={pendingImage ? "Add a caption..." : editingMessageId ? "Edit message..." : "Start a message"} 
-                className="w-full bg-zinc-100 dark:bg-zinc-900/80 rounded-full py-2.5 px-5 outline-none text-[15px] font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-500 transition-all border border-transparent focus:bg-white dark:focus:bg-zinc-900 focus:border-sky-500/30" 
+                className="w-full bg-zinc-100 dark:bg-zinc-900/80 rounded-2xl py-2.5 px-5 outline-none text-[15px] font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-500 transition-all border border-transparent focus:bg-white dark:focus:bg-zinc-900 focus:border-sky-500/30 resize-none max-h-[120px] leading-relaxed scrollbar-hide" 
               />
             )}
           </div>
