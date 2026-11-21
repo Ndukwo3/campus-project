@@ -6,6 +6,7 @@ import Link from "next/link";
 import { memo, useState, useEffect, useRef, use, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase";
 import { capitalizeName } from "@/lib/utils";
 import { usePresenceStore } from "@/store/presenceStore";
@@ -279,6 +280,7 @@ const MessageItem = memo(({
 export default function ChatDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: conversationId } = use(params);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const supabase = createClient();
   
   const [messages, setMessages] = useState<any[]>([]);
@@ -369,6 +371,8 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
              const unreadIds = history.filter((m: any) => !m.is_read && m.sender_id !== authUser.id).map((m: any) => m.id);
              if (unreadIds.length > 0) {
                 await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
+                queryClient.invalidateQueries({ queryKey: ['inbox'] });
+                queryClient.invalidateQueries({ queryKey: ['unread-messages'] });
              }
           }
         }
@@ -447,6 +451,8 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
                   setTimeout(scrollToBottom, 100);
                   // Ensure the mark-as-read update is awaited for consistency
                   await supabase.from('messages').update({ is_read: true }).eq('id', payload.new.id);
+                  queryClient.invalidateQueries({ queryKey: ['inbox'] });
+                  queryClient.invalidateQueries({ queryKey: ['unread-messages'] });
                 }
               }
             } else if (payload.eventType === 'UPDATE') {
