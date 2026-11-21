@@ -1,31 +1,31 @@
-# UNIVAS
+# PEERZA
 
 ## MVP IMPLEMENTATION PLAN
 
 **Version:** 1.0  
 **Date:** 18 November 2026  
 **Status:** Proposed for Approval  
-**Product:** UNIVAS  
+**Product:** PEERZA  
 **Reference Documents:**
 
-- `univas_mvp.md`
-- `UNIVAS_MVP_AUDIT_REPORT.md`
+- `peerza_mvp.md`
+- `PEERZA_MVP_AUDIT_REPORT.md`
 
 ---
 
 # 1. PURPOSE
 
-This document defines the technical implementation strategy for simplifying the existing UNIVAS application into a stable, functional and launch-ready Minimum Viable Product.
+This document defines the technical implementation strategy for simplifying the existing PEERZA application into a stable, functional and launch-ready Minimum Viable Product.
 
-The existing UNIVAS codebase already contains substantial implementations of the core features.
+The existing PEERZA codebase already contains substantial implementations of the core features.
 
-The objective is therefore not to rebuild UNIVAS but to simplify, improve, secure and stabilise the existing application.
+The objective is therefore not to rebuild PEERZA but to simplify, improve, secure and stabilise the existing application.
 
 All implementation activities must follow the approved MVP scope.
 
 # 2. APPROVED MVP SCOPE
 
-The first release of UNIVAS will contain four primary capabilities.
+The first release of PEERZA will contain four primary capabilities.
 
 | No. | Feature                    | Description                                                              |
 | --- | -------------------------- | ------------------------------------------------------------------------ |
@@ -47,7 +47,7 @@ Essential supporting functionality:
 
 ## 2.1 Platform Direction
 
-UNIVAS will remain a web-only application.
+PEERZA will remain a web-only application.
 
 It must work properly on:
 
@@ -183,7 +183,7 @@ Objective: Make the student experience straightforward.
 
 The feed must:
 
-- Display posts from all UNIVAS users.
+- Display posts from all PEERZA users.
 - Use a consistent ordering system.
 - Allow users to create text posts.
 - Display the author's basic information.
@@ -317,7 +317,7 @@ Simplify unnecessary administrative features without compromising the ability to
 
 ### Expected Outcome
 
-Students can communicate privately, while administrators can manage the essential operations of UNIVAS.
+Students can communicate privately, while administrators can manage the essential operations of PEERZA.
 
 ---
 
@@ -486,6 +486,6 @@ The development strategy is to simplify the existing application, preserve usefu
 
 ---
 
-**Document Owner:** UNIVAS Product Team  
-**Implementation Reference:** `univas_mvp.md`  
-**Audit Reference:** `UNIVAS_MVP_AUDIT_REPORT.md`
+**Document Owner:** PEERZA Product Team  
+**Implementation Reference:** `peerza_mvp.md`  
+**Audit Reference:** `PEERZA_MVP_AUDIT_REPORT.md`

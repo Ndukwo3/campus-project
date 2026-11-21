@@ -1,28 +1,28 @@
-# UNIVAS
+# PEERZA
 
 ## Minimum Viable Product (MVP) Scope Document
 
 **Version:** 1.0  
 **Date:** 18 November 2026  
 **Status:** Draft for Approval  
-**Product:** UNIVAS  
+**Product:** PEERZA  
 **Tagline:** The Ultimate Social and Academic Network for Nigerian University Students.
 
 ---
 
 # 1. Product Overview
 
-UNIVAS is a web-based social and academic platform designed to connect students across Nigerian universities.
+PEERZA is a web-based social and academic platform designed to connect students across Nigerian universities.
 
 The platform provides a simple environment where students can communicate privately, share posts publicly, and access academic books and learning materials in PDF format.
 
 The initial release will focus on delivering these essential capabilities reliably.
 
-UNIVAS will not attempt to become a feature-heavy social network at launch. The objective is to release a functional, accessible and secure platform that students can begin using immediately.
+PEERZA will not attempt to become a feature-heavy social network at launch. The objective is to release a functional, accessible and secure platform that students can begin using immediately.
 
 # 2. MVP Objective
 
-The primary objective of the UNIVAS MVP is to launch a working platform that allows students to:
+The primary objective of the PEERZA MVP is to launch a working platform that allows students to:
 
 1. Create accounts and access the platform.
 2. Publish and view posts on one general public feed.
@@ -48,7 +48,7 @@ There will be no separate university-specific feeds in the MVP.
 
 ## 4.1 User Registration and Authentication
 
-Users must be able to create accounts and securely access UNIVAS.
+Users must be able to create accounts and securely access PEERZA.
 
 Essential functionality:
 
@@ -77,7 +77,7 @@ The profile system should remain simple. Advanced profile customisation is not r
 
 ## 4.3 General Public Feed
 
-UNIVAS will have one shared public feed.
+PEERZA will have one shared public feed.
 
 Posts from users across different institutions will appear in the same feed.
 
@@ -114,7 +114,7 @@ The MVP will not include group chats, group messaging or community channels.
 
 ## 4.5 Academic PDF Library
 
-UNIVAS will provide a library where students can access academic books and learning materials in PDF format.
+PEERZA will provide a library where students can access academic books and learning materials in PDF format.
 
 Essential functionality:
 
@@ -169,7 +169,7 @@ The PDF library must also use appropriate permissions to prevent unauthorised re
 
 # 7. Platform Requirements
 
-UNIVAS will be a web-only product for the initial release.
+PEERZA will be a web-only product for the initial release.
 
 Requirements:
 
@@ -225,7 +225,7 @@ All AI-related functionality is excluded from the current product scope.
 - Play Store deployment.
 - App Store deployment.
 
-UNIVAS will operate exclusively as a responsive web platform for now.
+PEERZA will operate exclusively as a responsive web platform for now.
 
 ## 8.5 Other Deferred Features
 
@@ -264,9 +264,9 @@ Keeping these ideas documented ensures that reducing the MVP scope does not mean
 
 The first release should support four straightforward user journeys.
 
-### Journey 1: Joining UNIVAS
+### Journey 1: Joining PEERZA
 
-1. A student visits the UNIVAS website.
+1. A student visits the PEERZA website.
 2. The student creates an account.
 3. The student logs in.
 4. The student completes or updates basic profile information.
@@ -319,7 +319,7 @@ The MVP should not be considered ready for launch until the following conditions
 
 # 12. Development Principles
 
-Development of the UNIVAS MVP should follow these principles:
+Development of the PEERZA MVP should follow these principles:
 
 **1. Simplicity first**
 
@@ -351,7 +351,7 @@ A separate mobile application is unnecessary for the initial release, but the we
 
 # 13. Definition of MVP Success
 
-The first version of UNIVAS will be considered successful when students can reliably:
+The first version of PEERZA will be considered successful when students can reliably:
 
 - Register and access their accounts.
 - Share and read posts.
@@ -362,7 +362,7 @@ The platform must also be secure, stable and usable enough to support real stude
 
 # 14. Final Scope Statement
 
-The UNIVAS MVP is a web-based social and academic platform for Nigerian tertiary students.
+The PEERZA MVP is a web-based social and academic platform for Nigerian tertiary students.
 
 Its initial release will focus exclusively on:
 
@@ -375,6 +375,6 @@ Essential administrative, security and operational capabilities will support the
 
 Groups, communities, events, AI functionality and mobile applications are excluded from the current release.
 
-The objective is to launch a simple, stable and useful product, gather feedback from actual students and expand UNIVAS gradually based on real needs.
+The objective is to launch a simple, stable and useful product, gather feedback from actual students and expand PEERZA gradually based on real needs.
 
-**UNIVAS MVP: Connect. Share. Communicate. Learn.**
+**PEERZA MVP: Connect. Share. Communicate. Learn.**

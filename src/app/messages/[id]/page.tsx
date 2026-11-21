@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, MoreVertical, Send, Mic, Smile, Plus, Loader2, User, Edit, ChevronDown, Trash2, Globe, Eye, Check, CheckCircle2, Phone, Video, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, MoreVertical, Send, Mic, Smile, Plus, Loader2, User, Edit, ChevronDown, Trash2, Globe, Eye, Check, CheckCircle2, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { memo, useState, useEffect, useRef, use, useMemo } from "react";
@@ -198,6 +198,15 @@ const MessageItem = memo(({
               src={(msg.content || "").replace('[VOICE_NOTE]', '')} 
               controls 
               controlsList="nodownload"
+              onPlay={(e) => {
+                // Pause all other audio elements on the page so only one plays at a time
+                const audios = document.querySelectorAll('audio');
+                audios.forEach((audio) => {
+                  if (audio !== e.currentTarget && !audio.paused) {
+                    audio.pause();
+                  }
+                });
+              }}
               onContextMenu={(e) => e.preventDefault()}
               className={`h-8 w-48 custom-audio ${isMe ? 'invert dark:invert-0' : 'dark:invert'}`}
             />
@@ -834,13 +843,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4 text-zinc-900 dark:text-zinc-100">
-          <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
-            <Phone size={20} strokeWidth={2} />
-          </button>
-          <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
-            <Video size={20} strokeWidth={2} />
-          </button>
+        <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
           <div className="relative">
             <button 
                 onClick={() => setShowDropdown(!showDropdown)}

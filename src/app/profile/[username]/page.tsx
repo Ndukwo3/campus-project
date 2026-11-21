@@ -124,15 +124,23 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         if (friendData) {
           setConnectionStatus('connected');
         } else {
+          // Check for any friend request between the two users
           const { data: reqData } = await supabase
             .from('friend_requests')
             .select('*')
             .or(`and(sender_id.eq.${authUser.id},receiver_id.eq.${fetchedUserId}),and(sender_id.eq.${fetchedUserId},receiver_id.eq.${authUser.id})`)
-            .eq('status', 'pending')
+            .order('created_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
             
           if (reqData) {
-            setConnectionStatus(reqData.sender_id === authUser.id ? 'pending_sent' : 'pending_received');
+            if (reqData.status === 'accepted') {
+              setConnectionStatus('connected');
+            } else if (reqData.status === 'pending') {
+              setConnectionStatus(reqData.sender_id === authUser.id ? 'pending_sent' : 'pending_received');
+            } else {
+              setConnectionStatus('none');
+            }
           } else {
             setConnectionStatus('none');
           }
@@ -256,6 +264,13 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         const { error: fErr } = await supabase.from('friend_requests').update({ status: 'accepted' })
           .match({ sender_id: userId, receiver_id: currentUser.id, status: 'pending' });
         if (fErr) throw fErr;
+
+        // Ensure friends table has this pair
+        if (userId) {
+          const u1 = currentUser.id < userId ? currentUser.id : userId;
+          const u2 = currentUser.id < userId ? userId : currentUser.id;
+          await supabase.from('friends').insert({ user_id1: u1, user_id2: u2 });
+        }
 
         // Delete the corresponding connect_request notification as it's now handled
         await supabase.from('notifications').delete()

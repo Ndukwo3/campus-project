@@ -1,8 +1,8 @@
-# UNIVAS
+# PEERZA
 
 ## Product Requirements Document (PRD)
 
-**Product Name:** UNIVAS  
+**Product Name:** PEERZA  
 **Document Type:** Product Requirements Document  
 **Document Version:** 1.0  
 **Date:** 18 November 2026  
@@ -16,19 +16,19 @@
 
 ## 1.1 Introduction
 
-UNIVAS is a digital social and academic networking platform designed to connect university and tertiary institution students across Nigeria.
+PEERZA is a digital social and academic networking platform designed to connect university and tertiary institution students across Nigeria.
 
 The platform provides students with a central digital environment where they can interact with fellow students, build academic and professional connections, participate in campus communities, share information, communicate in real time, access academic resources and receive academic support.
 
-UNIVAS combines the social networking experience of platforms such as Facebook with the professional networking and community-building aspects of LinkedIn, while introducing features specifically designed around the structure and needs of Nigerian tertiary institutions.
+PEERZA combines the social networking experience of platforms such as Facebook with the professional networking and community-building aspects of LinkedIn, while introducing features specifically designed around the structure and needs of Nigerian tertiary institutions.
 
-Unlike conventional social media platforms, UNIVAS is built around the student experience. Its structure recognizes universities, faculties, colleges, departments, academic levels and courses, allowing students to connect and collaborate based on their academic identities while remaining part of a larger nationwide student community.
+Unlike conventional social media platforms, PEERZA is built around the student experience. Its structure recognizes universities, faculties, colleges, departments, academic levels and courses, allowing students to connect and collaborate based on their academic identities while remaining part of a larger nationwide student community.
 
 The platform is intended to become a central digital space for student interaction, academic collaboration, knowledge sharing and networking across Nigerian tertiary institutions.
 
 ## 1.2 Product Concept
 
-UNIVAS brings together five major areas of student digital life:
+PEERZA brings together five major areas of student digital life:
 
 1. **Social Networking:** Connecting students, sharing updates, interacting with posts and participating in campus conversations.
 2. **Academic Collaboration:** Helping students discover, contribute and share academic resources.
@@ -40,7 +40,7 @@ These areas operate within one interconnected platform rather than requiring stu
 
 ## 1.3 Product Positioning
 
-UNIVAS is positioned as a student-first social and academic network for Nigerian tertiary institutions.
+PEERZA is positioned as a student-first social and academic network for Nigerian tertiary institutions.
 
 It is not intended to be another generic social media platform or simply an online repository of past questions. It brings social interaction, academic resources, student communities and communication together in one environment.
 
@@ -60,7 +60,7 @@ WhatsApp and Telegram groups are commonly used for departmental announcements, c
 
 However, these experiences are fragmented. Students often have to move between several platforms to accomplish activities that are directly connected to their academic and social lives.
 
-UNIVAS was conceived to address this fragmentation by providing a unified digital environment specifically designed for tertiary students.
+PEERZA was conceived to address this fragmentation by providing a unified digital environment specifically designed for tertiary students.
 
 ## 2.2 Problems Being Addressed
 
@@ -104,7 +104,7 @@ These capabilities are often provided through separate applications rather than 
 
 Nigerian tertiary students lack a unified digital platform that combines social networking, academic resource management, real-time communication and academic collaboration within an institution-aware environment.
 
-UNIVAS aims to bridge this gap by creating a connected student ecosystem where academic and social interactions can happen in one place.
+PEERZA aims to bridge this gap by creating a connected student ecosystem where academic and social interactions can happen in one place.
 
 ---
 
@@ -114,7 +114,7 @@ UNIVAS aims to bridge this gap by creating a connected student ecosystem where a
 
 To build the largest digital student network in Nigeria, becoming the default platform where university students connect socially, collaborate academically, build professional networks, learn together and grow beyond physical campus boundaries.
 
-In the long term, UNIVAS aims to connect students from tertiary institutions across Africa into a unified digital ecosystem that encourages innovation, academic advancement and career opportunities.
+In the long term, PEERZA aims to connect students from tertiary institutions across Africa into a unified digital ecosystem that encourages innovation, academic advancement and career opportunities.
 
 ## 3.2 Mission
 
@@ -122,7 +122,7 @@ To eliminate academic and social boundaries for tertiary students by providing a
 
 ## 3.3 Product Philosophy
 
-UNIVAS is built around the following principles:
+PEERZA is built around the following principles:
 
 - **Student First:** Product decisions should prioritize the needs and experiences of students.
 - **Connected Communities:** Students should be able to connect within their institutions and beyond them.
@@ -136,7 +136,7 @@ UNIVAS is built around the following principles:
 
 # 4. PRODUCT GOALS AND OBJECTIVES
 
-The primary goals of UNIVAS are:
+The primary goals of PEERZA are:
 
 ## 4.1 Build a Nationwide Student Network
 
@@ -170,7 +170,7 @@ Build a technical and product foundation that can support increasing numbers of 
 
 # 5. TARGET AUDIENCE
 
-UNIVAS is primarily designed for students and members of tertiary education communities.
+PEERZA is primarily designed for students and members of tertiary education communities.
 
 ## 5.1 Undergraduate Students
 
@@ -202,7 +202,7 @@ Trusted student representatives or appointed personnel responsible for reviewing
 
 # 6. USER ROLES AND ACCESS LEVELS
 
-UNIVAS supports different user roles with varying permissions.
+PEERZA supports different user roles with varying permissions.
 
 ## 6.1 Student
 
@@ -264,7 +264,7 @@ They can:
 
 # 7. CORE VALUE PROPOSITION
 
-UNIVAS provides value through the integration of several student-focused capabilities.
+PEERZA provides value through the integration of several student-focused capabilities.
 
 ## 7.1 Institution-Aware Networking
 
@@ -300,13 +300,13 @@ The platform combines posts, comments, reactions, stories and connections within
 
 # 8. PRODUCT FEATURES AND MODULES
 
-UNIVAS is organized into five major product modules.
+PEERZA is organized into five major product modules.
 
 ## 8.1 Module One: Identity, Authentication and Onboarding
 
 ### Purpose
 
-To provide students with a simple way to create accounts, establish their academic identities and become part of the UNIVAS network.
+To provide students with a simple way to create accounts, establish their academic identities and become part of the PEERZA network.
 
 ### Core Features
 
@@ -362,7 +362,7 @@ A student should be able to register, establish an academic identity, connect wi
 
 ### Purpose
 
-To provide a central space where students can publish content, discover updates and interact with other members of the UNIVAS community.
+To provide a central space where students can publish content, discover updates and interact with other members of the PEERZA community.
 
 ### A. Social Feed — The Loop
 
@@ -458,7 +458,7 @@ Students should be able to maintain conversations, participate in group discussi
 
 To provide a centralized and organized repository of academic materials that students can discover and access.
 
-The academic library is one of the major educational components of UNIVAS.
+The academic library is one of the major educational components of PEERZA.
 
 ### A. Academic Resource Categories
 
@@ -490,7 +490,7 @@ Students should be able to navigate the academic hierarchy and find resources re
 
 ### D. In-App PDF Viewer
 
-Students should be able to read supported PDF documents directly within UNIVAS.
+Students should be able to read supported PDF documents directly within PEERZA.
 
 The existing viewer includes document navigation and viewing controls such as zoom, pan, rotation and page thumbnails.
 
@@ -552,7 +552,7 @@ Moderators should only manage academic contributions within their assigned unive
 
 ### Expected Outcome
 
-UNIVAS should maintain a manageable and accountable platform environment as its user base and academic content grow.
+PEERZA should maintain a manageable and accountable platform environment as its user base and academic content grow.
 
 ---
 
@@ -560,9 +560,9 @@ UNIVAS should maintain a manageable and accountable platform environment as its 
 
 ## 9.1 Purpose
 
-The AI Academic Assistant is intended to provide students with intelligent academic support directly within UNIVAS.
+The AI Academic Assistant is intended to provide students with intelligent academic support directly within PEERZA.
 
-Rather than requiring students to leave the platform to seek assistance from external AI applications, UNIVAS aims to integrate academic support into its learning environment.
+Rather than requiring students to leave the platform to seek assistance from external AI applications, PEERZA aims to integrate academic support into its learning environment.
 
 ## 9.2 Intended Capabilities
 
@@ -598,11 +598,11 @@ The AI Academic Assistant remains an important product capability, but its imple
 
 # 10. USER JOURNEYS
 
-This section describes the main interactions users are expected to have with UNIVAS.
+This section describes the main interactions users are expected to have with PEERZA.
 
 ## 10.1 New Student Registration
 
-1. A student visits UNIVAS.
+1. A student visits PEERZA.
 2. The student creates an account using email or Google authentication.
 3. The student enters their personal information.
 4. The student selects their university category.
@@ -634,7 +634,7 @@ This section describes the main interactions users are expected to have with UNI
 
 1. A student discovers another user.
 2. The student initiates a conversation.
-3. UNIVAS opens or creates the conversation.
+3. PEERZA opens or creates the conversation.
 4. Both users exchange messages.
 5. New messages update in real time.
 6. Relevant unread indicators and notifications are displayed.
@@ -673,7 +673,7 @@ This section describes the main interactions users are expected to have with UNI
 
 # 11. FUNCTIONAL REQUIREMENTS
 
-The following requirements define the expected functional behaviour of UNIVAS.
+The following requirements define the expected functional behaviour of PEERZA.
 
 | ID     | Requirement                                                          | Priority |
 | ------ | -------------------------------------------------------------------- | -------- |
@@ -707,7 +707,7 @@ Priorities represent product importance, not confirmation that every requirement
 
 # 12. NON-FUNCTIONAL REQUIREMENTS
 
-Non-functional requirements describe the quality, reliability and operational expectations of UNIVAS.
+Non-functional requirements describe the quality, reliability and operational expectations of PEERZA.
 
 ## 12.1 Security
 
@@ -753,7 +753,7 @@ The application should have a modular and maintainable architecture that allows 
 
 ## 13.1 Supported Platforms
 
-UNIVAS is designed around a web application experience, with Android distribution also represented in the existing project.
+PEERZA is designed around a web application experience, with Android distribution also represented in the existing project.
 
 The product should provide a consistent experience across supported desktop and mobile devices.
 
@@ -786,7 +786,7 @@ This table documents the technologies identified during the investigation. It is
 
 # 14. PRODUCT SCOPE AND PRIORITIES
 
-UNIVAS is intended to develop into a comprehensive student platform. Its features should be managed according to their importance, implementation status and readiness.
+PEERZA is intended to develop into a comprehensive student platform. Its features should be managed according to their importance, implementation status and readiness.
 
 ## 14.1 Core Product Capabilities
 
@@ -896,7 +896,7 @@ The official product roadmap should be updated to reflect the actual product dir
 
 # 16. BUSINESS AND SUSTAINABILITY CONSIDERATIONS
 
-UNIVAS is intended to provide a valuable digital service to tertiary students.
+PEERZA is intended to provide a valuable digital service to tertiary students.
 
 The initial product direction prioritizes building a useful and active student network, establishing trust and creating a strong academic resource ecosystem.
 
@@ -919,7 +919,7 @@ The core product experience and its long-term sustainability model should be dev
 
 # 17. SUCCESS METRICS
 
-UNIVAS should measure its success through product adoption, engagement, academic usefulness and platform reliability.
+PEERZA should measure its success through product adoption, engagement, academic usefulness and platform reliability.
 
 Potential success indicators include:
 
@@ -978,11 +978,11 @@ Specific numerical targets should be established after baseline usage data becom
 
 # 18. ASSUMPTIONS AND OPEN PRODUCT DECISIONS
 
-The following matters require further clarification as UNIVAS develops.
+The following matters require further clarification as PEERZA develops.
 
 | Area               | Open Decision                                                                                         |
 | ------------------ | ----------------------------------------------------------------------------------------------------- |
-| Product Naming     | Confirm UNIVAS as the exclusive official product name across documentation and user-facing materials. |
+| Product Naming     | Confirm PEERZA as the exclusive official product name across documentation and user-facing materials. |
 | Feed Structure     | Finalize the relationship between campus-specific feeds and nationwide content discovery.             |
 | AI Assistant       | Select the AI provider, model, backend architecture and usage limits.                                 |
 | Academic Catalogue | Determine how official university, department and course information will be maintained.              |
@@ -1000,7 +1000,7 @@ These decisions should be resolved through product planning and technical review
 
 # 19. LONG-TERM PRODUCT DIRECTION
 
-UNIVAS is intended to grow beyond a conventional campus social network.
+PEERZA is intended to grow beyond a conventional campus social network.
 
 Its long-term direction is to become a comprehensive digital ecosystem for students and tertiary education communities.
 
@@ -1020,7 +1020,7 @@ These possibilities represent the broader product vision and should not be inter
 
 # 20. CONCLUSION
 
-UNIVAS is being developed to create a unified digital environment for Nigerian tertiary students.
+PEERZA is being developed to create a unified digital environment for Nigerian tertiary students.
 
 By combining social networking, academic resources, real-time communication, student communities and intelligent academic support, the platform aims to address the fragmentation that currently exists across students' digital academic and social experiences.
 
@@ -1028,14 +1028,14 @@ The product's central idea is straightforward:
 
 Students should not need several disconnected platforms to connect with classmates, discover academic materials, participate in discussions and build relationships with other students.
 
-UNIVAS aims to bring these experiences together in one connected student ecosystem.
+PEERZA aims to bring these experiences together in one connected student ecosystem.
 
 Its long-term ambition is to become a major digital network for tertiary students in Nigeria and, eventually, across Africa.
 
-**UNIVAS — The ultimate social and academic network for Nigerian university students.**
+**PEERZA — The ultimate social and academic network for Nigerian university students.**
 
 ---
 
 **Document Status:** Initial Product Requirements Document (PRD) — Version 1.0  
-**Source of Initial Requirements:** UNIVAS Product Foundation Investigation and existing project codebase.  
+**Source of Initial Requirements:** PEERZA Product Foundation Investigation and existing project codebase.  
 **Next Review:** After product-owner review and confirmation of outstanding product decisions.

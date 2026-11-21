@@ -115,31 +115,36 @@ export default function ConnectionsModal({ isOpen, onClose, userId, userName }: 
                 </div>
               ) : filteredConnections.length > 0 ? (
                 <div className="flex flex-col gap-2">
-                  {filteredConnections.map((user: any) => (
-                    <Link 
-                      key={user.id}
-                      href={`/profile/${user.id}`}
-                      onClick={onClose}
-                      className="flex items-center gap-4 p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all group"
-                    >
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-                        {user.avatar_url ? (
-                          <Image src={user.avatar_url} alt="" width={48} height={48} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-400">
-                            <User size={20} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-black text-zinc-900 dark:text-zinc-100 tracking-tight truncate">{capitalizeName(user.full_name)}</h4>
-                        <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate">{user.username}</p>
-                      </div>
-                      <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                        <ArrowRight size={14} />
-                      </div>
-                    </Link>
-                  ))}
+                  {filteredConnections.map((user: any) => {
+                    const profileHref = user.username 
+                      ? `/profile/${user.username.replace(/^@+/, '')}` 
+                      : (user.id ? `/profile/${user.id}` : '#');
+                    return (
+                      <Link 
+                        key={user.id}
+                        href={profileHref}
+                        onClick={onClose}
+                        className="flex items-center gap-4 p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all group"
+                      >
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                          {user.avatar_url ? (
+                            <Image src={user.avatar_url} alt="" width={48} height={48} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-400">
+                              <User size={20} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-black text-zinc-900 dark:text-zinc-100 tracking-tight truncate">{capitalizeName(user.full_name || user.username)}</h4>
+                          <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest truncate">@{user.username ? user.username.replace(/^@+/, '') : ''}</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                          <ArrowRight size={14} />
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="py-20 text-center px-6">

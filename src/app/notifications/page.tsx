@@ -81,6 +81,11 @@ export default function NotificationsPage() {
       
       await supabase.from('friend_requests').update({ status: 'accepted' })
         .match({ sender_id: senderId, receiver_id: user.id, status: 'pending' });
+
+      // Ensure friends table has this pair
+      const u1 = user.id < senderId ? user.id : senderId;
+      const u2 = user.id < senderId ? senderId : user.id;
+      await supabase.from('friends').insert({ user_id1: u1, user_id2: u2 });
         
       // Delete the connect_request notification as it's now handled
       await supabase.from('notifications').delete()

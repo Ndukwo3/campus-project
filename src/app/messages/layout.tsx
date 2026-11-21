@@ -20,8 +20,8 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
         {children}
       </div>
 
-      {/* Bottom navigation — fixed, covers both chat list and individual chat on mobile */}
-      <BottomNavigation />
+      {/* Bottom navigation — visible on mobile when browsing the inbox list, but hidden inside individual conversations so the message input bar is not covered */}
+      {!isIndividualChat && <BottomNavigation />}
     </div>
   );
 }
