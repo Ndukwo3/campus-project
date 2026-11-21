@@ -2,9 +2,13 @@ export function cn(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(" ");
 }
 
-export function formatRelativeTime(date: Date): string {
+export function formatRelativeTime(date: Date | string | number | null | undefined): string {
+  if (!date) return "";
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return "";
+
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const diffInSeconds = Math.floor((now.getTime() - d.getTime()) / 1000);
 
   if (diffInSeconds < 60) {
     return "Just now";
@@ -21,7 +25,7 @@ export function formatRelativeTime(date: Date): string {
   }
 
   // After 24 hours, show date
-  return date.toLocaleDateString(undefined, {
+  return d.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
   }).toUpperCase();

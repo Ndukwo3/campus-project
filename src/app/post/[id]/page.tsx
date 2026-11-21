@@ -277,7 +277,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                 <div className="flex-1">
                    <div className="flex items-baseline gap-2 mb-1">
                       <span className="font-bold text-[14px] text-zinc-900 dark:text-white leading-none">{capitalizeName(comment.profiles?.full_name || 'Anonymous User')}</span>
-                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.05em]">{formatRelativeTime(comment.created_at)}</span>
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.05em]">{formatRelativeTime(new Date(comment.created_at))}</span>
                    </div>
                    <p className="text-zinc-700 dark:text-zinc-300 text-[14.5px] font-medium leading-[1.5] mt-1.5">{comment.content}</p>
                 </div>
