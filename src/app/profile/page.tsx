@@ -16,6 +16,7 @@ import Toast from "@/components/Toast";
 import FeedCard from "@/components/FeedCard";
 import ConnectionsModal from "@/components/ConnectionsModal";
 import { capitalizeName } from "@/lib/utils";
+import ProfileSkeleton from "@/components/skeletons/ProfileSkeleton";
 import VerifiedBadge from "@/components/VerifiedBadge";
 
 export default function ProfilePage() {
@@ -438,16 +439,7 @@ export default function ProfilePage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black transition-colors">
-        <div className="relative flex items-center justify-center">
-          <div className="absolute w-16 h-16 bg-[#E5FF66]/20 rounded-full animate-ping" />
-          <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center p-3 shadow-[0_0_30px_rgba(229,255,102,0.15)] animate-pulse relative z-10">
-            <img src="/logo.png" alt="Peerza" className="w-full h-full object-contain" />
-          </div>
-        </div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   const isProfileComplete = profile?.bio && profile?.full_name !== "New Student" && profile?.avatar_url;

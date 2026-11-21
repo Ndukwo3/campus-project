@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Toast from "@/components/Toast";
 import FeedCard from "@/components/FeedCard";
 import ConnectionsModal from "@/components/ConnectionsModal";
+import ProfileSkeleton from "@/components/skeletons/ProfileSkeleton";
 import { capitalizeName } from "@/lib/utils";
 import VerifiedBadge from "@/components/VerifiedBadge";
 
@@ -381,14 +382,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
 
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-6">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#E5FF66] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-zinc-400 font-bold text-sm tracking-widest uppercase">Loading Profile...</p>
-        </div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (
