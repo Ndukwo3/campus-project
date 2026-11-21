@@ -160,14 +160,25 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="w-8 h-8 animate-spin text-zinc-900" />
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black transition-colors duration-500">
+        <div className="relative flex items-center justify-center">
+          <div className="absolute w-16 h-16 bg-[#E5FF66]/20 rounded-full animate-ping" />
+          <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center p-3 shadow-[0_0_30px_rgba(229,255,102,0.15)] animate-pulse relative z-10">
+            <img src="/logo.png" alt="Peerza" className="w-full h-full object-contain" />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans transition-colors">
+    <motion.div 
+      initial={{ x: "100%", opacity: 0.8 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: "100%", opacity: 0 }}
+      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+      className="min-h-screen bg-white dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans transition-colors"
+    >
       {/* Header */}
       <div className="flex items-center px-6 py-4 sticky top-0 bg-white/80 dark:bg-black/80 backdrop-blur-xl z-30 border-b border-zinc-100/50 dark:border-zinc-800/50">
         <button onClick={() => router.back()} className="mr-4 w-10 h-10 -ml-2 rounded-full flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors active:scale-90">
@@ -319,6 +330,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       />
 
       <BottomNavigation />
-    </div>
+    </motion.div>
   );
 }
