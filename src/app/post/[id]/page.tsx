@@ -158,19 +158,6 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black transition-colors duration-500">
-        <div className="relative flex items-center justify-center">
-          <div className="absolute w-16 h-16 bg-[#E5FF66]/20 rounded-full animate-ping" />
-          <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center p-3 shadow-[0_0_30px_rgba(229,255,102,0.15)] animate-pulse relative z-10">
-            <img src="/logo.png" alt="Peerza" className="w-full h-full object-contain" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <motion.div 
       initial={{ x: "100%", opacity: 0.8 }}
@@ -191,125 +178,144 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       </div>
 
       <div className="px-6 pt-6 pb-20">
-        {/* Author info */}
-        <div className="flex items-center justify-between mb-6">
-          <Link href={`/profile/${post.profiles.id}`} className="flex items-center gap-3 group active:scale-[0.98] transition-all">
-             <div className="w-14 h-14 rounded-[20px] overflow-hidden bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800 shadow-sm group-hover:shadow-md transition-shadow">
-               {post.profiles.avatar_url ? (
-                 <Image src={post.profiles.avatar_url} alt={post.profiles.full_name} width={56} height={56} className="object-cover w-full h-full" />
-               ) : (
-                 <User className="w-6 h-6 text-zinc-300 dark:text-zinc-700" />
-               )}
-             </div>
-             <div className="flex flex-col justify-center">
-               <p className="font-bold text-[16px] text-zinc-900 dark:text-white leading-tight tracking-tight group-hover:underline underline-offset-2">{capitalizeName(post.profiles.full_name)}</p>
-               <p className="text-[11px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.1em] mt-0.5">@{post.profiles.username}</p>
-             </div>
-          </Link>
-          <button className="w-10 h-10 rounded-2xl flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-400 dark:text-zinc-500 transition-colors">
-             <MoreVertical size={20} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="mb-6">
-          {post.content && post.content !== "[[USER_PROFILE_UPDATE]]" && post.content !== "Just updated my profile photo!" && (
-            <p className="text-[17px] text-zinc-800 dark:text-zinc-200 leading-[1.6] font-medium mb-5 tracking-tight">
-              {post.content}
-            </p>
-          )}
-          
-          {post.image_url && (
-            <div className="rounded-[32px] overflow-hidden border border-zinc-100/50 dark:border-zinc-800/50 shadow-sm bg-zinc-50 dark:bg-zinc-900 mb-5 relative">
-              <Image 
-                src={post.image_url} 
-                alt="Post content" 
-                layout="responsive" 
-                width={100} 
-                height={125} 
-                className="object-cover" 
-              />
+        {isLoading || !post ? (
+          <div className="animate-pulse space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-[20px] bg-zinc-100 dark:bg-zinc-800" />
+              <div className="space-y-2">
+                <div className="w-32 h-4 bg-zinc-100 dark:bg-zinc-800 rounded-md" />
+                <div className="w-20 h-3 bg-zinc-50 dark:bg-zinc-900 rounded-md" />
+              </div>
             </div>
-          )}
-          
-          <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-600">
-            <p className="text-[11px] font-black uppercase tracking-[0.1em]">
-              {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </p>
-            <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-            <p className="text-[11px] font-black uppercase tracking-[0.1em]">
-               {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-            </p>
+            <div className="space-y-2">
+              <div className="w-full h-4 bg-zinc-100 dark:bg-zinc-800 rounded-md" />
+              <div className="w-3/4 h-4 bg-zinc-100 dark:bg-zinc-800 rounded-md" />
+            </div>
+            <div className="w-full h-64 bg-zinc-100 dark:bg-zinc-800 rounded-[32px]" />
           </div>
-        </div>
-
-        {/* Stats Row */}
-        <div className="py-3.5 border-y border-zinc-100 dark:border-zinc-800/50 flex flex-wrap items-center gap-x-6 gap-y-2 mb-2">
-           <div className="flex items-baseline gap-1.5">
-             <span className="font-bold text-[15px] text-zinc-900 dark:text-white leading-none">{post.likes_count}</span>
-             <span className="text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold tracking-normal">
-               {post.likes_count === 1 ? 'like' : 'likes'}
-             </span>
-           </div>
-           <div className="flex items-baseline gap-1.5">
-             <span className="font-bold text-[15px] text-zinc-900 dark:text-white leading-none">{post.comments_count}</span>
-             <span className="text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold tracking-normal">
-               {post.comments_count === 1 ? 'comment' : 'comments'}
-             </span>
-           </div>
-        </div>
-
-        {/* Actions Row */}
-        <div className="flex items-center justify-between py-3 mb-6">
-           <button onClick={handleLike} className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-colors active:scale-95 ${isLiked ? 'bg-red-50 dark:bg-red-500/10 text-red-500' : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
-             <Heart size={22} fill={isLiked ? "currentColor" : "none"} strokeWidth={isLiked ? 2 : 2.5} />
-           </button>
-           <button onClick={() => setShowCommentModal(true)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors active:scale-95">
-             <MessageCircle size={22} strokeWidth={2.5} />
-           </button>
-           <button onClick={handleRepost} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors active:scale-95">
-             <Repeat2 size={22} strokeWidth={2.5} />
-           </button>
-           <button onClick={() => setIsBookmarked(!isBookmarked)} className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-colors active:scale-95 ${isBookmarked ? 'bg-emerald-50 dark:bg-[#E5FF66]/10 text-emerald-500 dark:text-[#E2FF3D]' : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
-             <Bookmark size={22} fill={isBookmarked ? "currentColor" : "none"} strokeWidth={isBookmarked ? 2 : 2.5} />
-           </button>
-           <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors active:scale-95">
-             <Share2 size={22} strokeWidth={2.5} />
-           </button>
-        </div>
-
-        {/* Comments List */}
-        <div className="space-y-6 pb-6">
-           {comments.map((comment) => (
-             <div key={comment.id} className="flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <Link href={`/profile/${comment.profiles?.id || ''}`} className="w-[42px] h-[42px] rounded-2xl overflow-hidden bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex-shrink-0 flex items-center justify-center shrink-0">
-                   {comment.profiles?.avatar_url ? (
-                     <Image src={comment.profiles.avatar_url} alt={comment.profiles.full_name || 'User'} width={42} height={42} className="object-cover w-full h-full" />
+        ) : (
+          <>
+            {/* Author info */}
+            <div className="flex items-center justify-between mb-6">
+              <Link href={`/profile/${post.profiles?.id || ''}`} className="flex items-center gap-3 group active:scale-[0.98] transition-all">
+                 <div className="w-14 h-14 rounded-[20px] overflow-hidden bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800 shadow-sm group-hover:shadow-md transition-shadow">
+                   {post.profiles?.avatar_url ? (
+                     <Image src={post.profiles.avatar_url} alt={post.profiles.full_name || 'User'} width={56} height={56} className="object-cover w-full h-full" />
                    ) : (
-                     <User className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
+                     <User className="w-6 h-6 text-zinc-300 dark:text-zinc-700" />
                    )}
-                </Link>
-                <div className="flex-1">
-                   <div className="flex items-baseline gap-2 mb-1">
-                      <span className="font-bold text-[14px] text-zinc-900 dark:text-white leading-none">{capitalizeName(comment.profiles?.full_name || 'Anonymous User')}</span>
-                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.05em]">{formatRelativeTime(new Date(comment.created_at))}</span>
-                   </div>
-                   <p className="text-zinc-700 dark:text-zinc-300 text-[14.5px] font-medium leading-[1.5] mt-1.5">{comment.content}</p>
+                 </div>
+                 <div className="flex flex-col justify-center">
+                   <p className="font-bold text-[16px] text-zinc-900 dark:text-white leading-tight tracking-tight group-hover:underline underline-offset-2">{capitalizeName(post.profiles?.full_name)}</p>
+                   <p className="text-[11px] text-zinc-400 dark:text-zinc-500 font-black uppercase tracking-[0.1em] mt-0.5">@{post.profiles?.username}</p>
+                 </div>
+              </Link>
+              <button className="w-10 h-10 rounded-2xl flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-400 dark:text-zinc-500 transition-colors">
+                 <MoreVertical size={20} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="mb-6">
+              {post.content && post.content !== "[[USER_PROFILE_UPDATE]]" && post.content !== "Just updated my profile photo!" && (
+                <p className="text-[17px] text-zinc-800 dark:text-zinc-200 leading-[1.6] font-medium mb-5 tracking-tight">
+                  {post.content}
+                </p>
+              )}
+              
+              {post.image_url && (
+                <div className="rounded-[32px] overflow-hidden border border-zinc-100/50 dark:border-zinc-800/50 shadow-sm bg-zinc-50 dark:bg-zinc-900 mb-5 relative">
+                  <Image 
+                    src={post.image_url} 
+                    alt="Post content" 
+                    layout="responsive" 
+                    width={100} 
+                    height={125} 
+                    className="object-cover" 
+                  />
                 </div>
-             </div>
-           ))}
-           {comments.length === 0 && (
-             <div className="py-12 flex flex-col items-center justify-center text-center bg-zinc-50/50 dark:bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800">
-                <MessageCircle size={32} className="text-zinc-300 dark:text-zinc-700 mb-3" />
-                <p className="text-zinc-900 dark:text-white font-bold text-sm mb-1">No comments yet</p>
-                <p className="text-zinc-400 text-xs tracking-wide">Be the first to share your thoughts.</p>
-             </div>
-           )}
-        </div>
+              )}
+              
+              <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-600">
+                <p className="text-[11px] font-black uppercase tracking-[0.1em]">
+                  {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+                <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                <p className="text-[11px] font-black uppercase tracking-[0.1em]">
+                   {new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+              </div>
+            </div>
+
+            {/* Stats Row */}
+            <div className="py-3.5 border-y border-zinc-100 dark:border-zinc-800/50 flex flex-wrap items-center gap-x-6 gap-y-2 mb-2">
+               <div className="flex items-baseline gap-1.5">
+                 <span className="font-bold text-[15px] text-zinc-900 dark:text-white leading-none">{post.likes_count}</span>
+                 <span className="text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold tracking-normal">
+                   {post.likes_count === 1 ? 'like' : 'likes'}
+                 </span>
+               </div>
+               <div className="flex items-baseline gap-1.5">
+                 <span className="font-bold text-[15px] text-zinc-900 dark:text-white leading-none">{post.comments_count}</span>
+                 <span className="text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold tracking-normal">
+                   {post.comments_count === 1 ? 'comment' : 'comments'}
+                 </span>
+               </div>
+            </div>
+
+            {/* Actions Row */}
+            <div className="flex items-center justify-between py-3 mb-6">
+               <button onClick={handleLike} className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-colors active:scale-95 ${isLiked ? 'bg-red-50 dark:bg-red-500/10 text-red-500' : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
+                 <Heart size={22} fill={isLiked ? "currentColor" : "none"} strokeWidth={isLiked ? 2 : 2.5} />
+               </button>
+               <button onClick={() => setShowCommentModal(true)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors active:scale-95">
+                 <MessageCircle size={22} strokeWidth={2.5} />
+               </button>
+               <button onClick={handleRepost} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors active:scale-95">
+                 <Repeat2 size={22} strokeWidth={2.5} />
+               </button>
+               <button onClick={() => setIsBookmarked(!isBookmarked)} className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-colors active:scale-95 ${isBookmarked ? 'bg-emerald-50 dark:bg-[#E5FF66]/10 text-emerald-500 dark:text-[#E2FF3D]' : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}>
+                 <Bookmark size={22} fill={isBookmarked ? "currentColor" : "none"} strokeWidth={isBookmarked ? 2 : 2.5} />
+               </button>
+               <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors active:scale-95">
+                 <Share2 size={22} strokeWidth={2.5} />
+               </button>
+            </div>
+
+            {/* Comments List */}
+            <div className="space-y-6 pb-6">
+               {comments.map((comment) => (
+                 <div key={comment.id} className="flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <Link href={`/profile/${comment.profiles?.id || ''}`} className="w-[42px] h-[42px] rounded-2xl overflow-hidden bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex-shrink-0 flex items-center justify-center shrink-0">
+                       {comment.profiles?.avatar_url ? (
+                         <Image src={comment.profiles.avatar_url} alt={comment.profiles.full_name || 'User'} width={42} height={42} className="object-cover w-full h-full" />
+                       ) : (
+                         <User className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
+                       )}
+                    </Link>
+                    <div className="flex-1">
+                       <div className="flex items-baseline gap-2 mb-1">
+                          <span className="font-bold text-[14px] text-zinc-900 dark:text-white leading-none">{capitalizeName(comment.profiles?.full_name || 'Anonymous User')}</span>
+                          <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.05em]">{formatRelativeTime(new Date(comment.created_at))}</span>
+                       </div>
+                       <p className="text-zinc-700 dark:text-zinc-300 text-[14.5px] font-medium leading-[1.5] mt-1.5">{comment.content}</p>
+                    </div>
+                 </div>
+               ))}
+               {comments.length === 0 && (
+                 <div className="py-12 flex flex-col items-center justify-center text-center bg-zinc-50/50 dark:bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                    <MessageCircle size={32} className="text-zinc-300 dark:text-zinc-700 mb-3" />
+                    <p className="text-zinc-900 dark:text-white font-bold text-sm mb-1">No comments yet</p>
+                    <p className="text-zinc-400 text-xs tracking-wide">Be the first to share your thoughts.</p>
+                 </div>
+               )}
+            </div>
+          </>
+        )}
       </div>
 
       <AnimatePresence>
-        {showCommentModal && (
+        {showCommentModal && post && (
           <CommentModal 
             isOpen={true}
             onClose={() => setShowCommentModal(false)}
