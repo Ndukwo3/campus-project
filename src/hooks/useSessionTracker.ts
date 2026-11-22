@@ -127,12 +127,8 @@ export function useSessionTracker() {
               requestLocation(); 
             }
           } else {
-            // "prompt" state
+            // "prompt" state — let the app's custom UI prompt the user first
             setLocationStatus("prompt");
-            if (!isVerified) {
-              // Still trigger once to show native prompt
-              requestLocation();
-            }
           }
           
           status.onchange = () => {
