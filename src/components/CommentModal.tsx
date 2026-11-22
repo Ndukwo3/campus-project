@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Send, User, Loader2, Heart, MessageCircle, CornerDownRight } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase";
+import { sendPushNotification } from "@/lib/push";
 import { useMentions } from "@/hooks/useMentions";
 import MentionSuggestions from "@/components/MentionSuggestions";
 import ActiveText from "./ActiveText";
@@ -115,6 +116,13 @@ export default function CommentModal({
             content: `commented on your post: "${comment.substring(0, 50)}${comment.length > 50 ? '...' : ''}"`,
             post_id: postId,
             is_read: false
+          });
+          sendPushNotification({
+            recipientId: postAuthorId,
+            title: 'New Comment on Peerza',
+            body: `Someone commented: "${comment.substring(0, 60)}"`,
+            url: `/post/${postId}`,
+            tag: `comment-${postId}`,
           });
         }
 

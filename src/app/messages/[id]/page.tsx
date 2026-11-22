@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase";
+import { sendPushNotification } from "@/lib/push";
 import { capitalizeName } from "@/lib/utils";
 import { usePresenceStore } from "@/store/presenceStore";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -623,7 +624,19 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
 
     const { data, error } = await supabase.from('messages').insert(newMessage).select().single();
     if (error) setMessages((prev) => prev.filter(m => m.id !== tempId));
-    else if (data) setMessages((prev) => prev.map(m => m.id === tempId ? data : m));
+    else if (data) {
+      setMessages((prev) => prev.map(m => m.id === tempId ? data : m));
+      if (partner?.id && partner.id !== user?.id) {
+        const senderName = user?.user_metadata?.full_name || "Someone";
+        sendPushNotification({
+          recipientId: partner.id,
+          title: `New message from ${senderName}`,
+          body: newMessage.content || "Sent an attachment",
+          url: `/messages/${user?.id}`,
+          tag: `msg-${user?.id}`,
+        });
+      }
+    }
   };
 
   const handleDeleteMessage = async (messageId: string, strategy: 'me' | 'everyone') => {
@@ -746,7 +759,19 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
 
     const { data, error } = await supabase.from('messages').insert(newMessage).select().single();
     if (error) setMessages((prev) => prev.filter(m => m.id !== tempId));
-    else if (data) setMessages((prev) => prev.map(m => m.id === tempId ? data : m));
+    else if (data) {
+      setMessages((prev) => prev.map(m => m.id === tempId ? data : m));
+      if (partner?.id && partner.id !== user?.id) {
+        const senderName = user?.user_metadata?.full_name || "Someone";
+        sendPushNotification({
+          recipientId: partner.id,
+          title: `New message from ${senderName}`,
+          body: newMessage.content || "Sent an attachment",
+          url: `/messages/${user?.id}`,
+          tag: `msg-${user?.id}`,
+        });
+      }
+    }
   };
 
   const handleViewOnceMessage = async (msg: any) => {

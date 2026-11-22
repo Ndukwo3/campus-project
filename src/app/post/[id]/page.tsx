@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@/lib/supabase";
 import { formatRelativeTime, capitalizeName } from "@/lib/utils";
+import { sendPushNotification } from "@/lib/push";
 import BottomNavigation from "@/components/BottomNavigation";
 import CommentModal from "@/components/CommentModal";
 import { motion, AnimatePresence } from "framer-motion";

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { useNotificationStore } from "@/store/notificationStore";
 import { usePresenceStore } from "@/store/presenceStore";
+import NotificationPermissionModal from "@/components/NotificationPermissionModal";
 
 export default function GlobalStateLoader() {
   const { setHasUnread } = useNotificationStore();
@@ -89,5 +90,5 @@ export default function GlobalStateLoader() {
     };
   }, [setHasUnread, setOnlineUsers, supabase]);
 
-  return null;
+  return <NotificationPermissionModal userId={userId} />;
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { ArrowLeft, MessageSquare, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, MessageSquare, CheckCircle, Loader2, Bell, Heart, Repeat2 } from "lucide-react";
+import Image from "next/image";
+import { sendPushNotification } from "@/lib/push";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
@@ -169,6 +171,74 @@ export default function NotificationsSettingsPage() {
               onChange={(val) => handleUpdateSetting('direct_messages', val)}
               disabled={isLoading}
             />
+          </div>
+        </section>
+
+        {/* Phone Notification Preview */}
+        <section>
+          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 px-4">
+            Phone Lock Screen Preview
+          </h3>
+          <div className="bg-zinc-950 rounded-[28px] p-5 border border-zinc-800 shadow-xl space-y-3">
+            {/* Simulated Phone Status Bar */}
+            <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400 px-1 pb-2 border-b border-zinc-900">
+              <span>9:41</span>
+              <span className="uppercase tracking-widest text-[9px] text-zinc-500">Lock Screen</span>
+              <span>100%</span>
+            </div>
+
+            {/* Notification Banner 1: Message */}
+            <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 shadow-md">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-md bg-black overflow-hidden border border-zinc-700">
+                    <Image src="/icon-192x192.png" alt="Peerza" width={20} height={20} className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Peerza</span>
+                </div>
+                <span className="text-[10px] text-zinc-500">now</span>
+              </div>
+              <p className="text-[13px] font-bold text-white">New message from Amarachi</p>
+              <p className="text-[12px] text-zinc-300 mt-0.5">Hey! Are you coming to the study group?</p>
+            </div>
+
+            {/* Notification Banner 2: Likes & Reposts */}
+            <div className="p-3.5 rounded-2xl bg-zinc-900/70 border border-zinc-800/60">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-md bg-black overflow-hidden border border-zinc-700">
+                    <Image src="/icon-192x192.png" alt="Peerza" width={20} height={20} className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Peerza</span>
+                </div>
+                <span className="text-[10px] text-zinc-500">2m ago</span>
+              </div>
+              <p className="text-[13px] font-bold text-white flex items-center gap-1.5">
+                <Heart size={12} className="text-rose-500 fill-rose-500" />
+                <Repeat2 size={12} className="text-[#E5FF66]" />
+                New Activity on your post
+              </p>
+              <p className="text-[12px] text-zinc-400 mt-0.5">Victor liked and reposted your post.</p>
+            </div>
+
+            <button
+              onClick={async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                sendPushNotification({
+                  recipientId: user.id,
+                  title: "Peerza Test Notification",
+                  body: "This is how Peerza alerts look on your phone!",
+                  url: "/notifications",
+                  tag: "test-notif",
+                });
+                showToast("Test notification sent!");
+              }}
+              className="w-full mt-2 py-3 rounded-2xl bg-[#E5FF66] text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            >
+              <Bell size={14} strokeWidth={2.5} />
+              Send Test Notification
+            </button>
           </div>
         </section>
       </main>

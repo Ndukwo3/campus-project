@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { formatRelativeTime, capitalizeName } from "@/lib/utils";
+import { sendPushNotification } from "@/lib/push";
 import TopNavigation from "@/components/TopNavigation";
 import FeedCard from "@/components/FeedCard";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -149,6 +150,13 @@ export default function Home() {
           post_id: postId,
           is_read: false
         });
+        sendPushNotification({
+          recipientId: post.user_id,
+          title: 'New Like on Peerza',
+          body: `Someone liked your post: "${post.content?.substring(0, 50) || ''}"`,
+          url: `/post/${postId}`,
+          tag: `like-${postId}`,
+        });
       }
     }
   };
@@ -212,6 +220,13 @@ export default function Home() {
           content: `reposted your post: "${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}"`,
           post_id: postId,
           is_read: false
+        });
+        sendPushNotification({
+          recipientId: post.user_id,
+          title: 'New Repost on Peerza',
+          body: `Someone reposted your post: "${post.content?.substring(0, 50) || ''}"`,
+          url: `/post/${postId}`,
+          tag: `repost-${postId}`,
         });
       }
     }
