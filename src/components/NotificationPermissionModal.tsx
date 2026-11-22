@@ -136,7 +136,7 @@ export default function NotificationPermissionModal({ userId }: { userId: string
                 <span className="text-[10px] font-medium text-zinc-500">now</span>
               </div>
               <p className="text-[13px] font-bold text-white leading-snug">
-                New Message from Amarachi
+                New Message from Peerzites
               </p>
               <p className="text-[12px] text-zinc-300 mt-0.5 line-clamp-1">
                 "Hey! Did you see the new post in the feed?"

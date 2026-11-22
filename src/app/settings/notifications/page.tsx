@@ -198,7 +198,7 @@ export default function NotificationsSettingsPage() {
                 </div>
                 <span className="text-[10px] text-zinc-500">now</span>
               </div>
-              <p className="text-[13px] font-bold text-white">New message from Amarachi</p>
+              <p className="text-[13px] font-bold text-white">New message from Peerzites</p>
               <p className="text-[12px] text-zinc-300 mt-0.5">Hey! Are you coming to the study group?</p>
             </div>
 
@@ -218,7 +218,7 @@ export default function NotificationsSettingsPage() {
                 <Repeat2 size={12} className="text-[#E5FF66]" />
                 New Activity on your post
               </p>
-              <p className="text-[12px] text-zinc-400 mt-0.5">Victor liked and reposted your post.</p>
+              <p className="text-[12px] text-zinc-400 mt-0.5">Peerzites liked and reposted your post.</p>
             </div>
 
             <button
