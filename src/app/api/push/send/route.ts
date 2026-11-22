@@ -29,7 +29,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'VAPID keys not configured' }, { status: 500 });
     }
 
-    const { recipientId, title, body, url, icon, tag } = await req.json();
+    const payloadBody = await req.json();
+    const recipientId = payloadBody.recipientId || payloadBody.userId;
+    const { title, body, url, icon, tag } = payloadBody;
 
     if (!recipientId || !body) {
       return NextResponse.json(
