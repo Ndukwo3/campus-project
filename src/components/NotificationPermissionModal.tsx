@@ -43,7 +43,8 @@ export default function NotificationPermissionModal({ userId }: { userId: string
 
       // 2. Check Location permission
       let locationNeeded = false;
-      if ("geolocation" in navigator && "permissions" in navigator) {
+      const isLocationVerified = localStorage.getItem("univas_location_verified") === "true";
+      if (!isLocationVerified && "geolocation" in navigator && "permissions" in navigator) {
         try {
           const locStatus = await navigator.permissions.query({ name: "geolocation" as PermissionName });
           if (locStatus.state === "prompt") {
