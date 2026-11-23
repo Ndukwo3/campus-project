@@ -1,8 +1,8 @@
 "use client";
 
-import { Home, Search, MessageSquare, User, Bell, BookOpen, PlusSquare, MoreHorizontal, LogOut, Settings } from "lucide-react";
+import { Home, MessageSquare, User, Bell, BookOpen, Plus, Settings, Search } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import AuthLogo from "./AuthLogo";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
@@ -12,8 +12,10 @@ import Image from "next/image";
 
 export default function DesktopSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function getUser() {
@@ -40,76 +42,101 @@ export default function DesktopSidebar() {
   });
 
   const navItems = [
-    { label: "Home", href: "/", icon: Home },
+    { label: "Feed", href: "/", icon: Home },
     { label: "Library", href: "/library", icon: BookOpen },
-    { label: "Notifications", href: "/notifications", icon: Bell },
     { label: "Messages", href: "/messages", icon: MessageSquare, badge: unreadCount },
+    { label: "Activity", href: "/notifications", icon: Bell },
     { label: "Profile", href: "/profile", icon: User },
-    { label: "Settings", href: "/settings", icon: Settings },
   ];
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/search');
+    }
+  };
+
   return (
-    <div className="hidden lg:flex flex-col h-screen sticky top-0 w-[275px] px-4 py-4 border-r border-zinc-100 dark:border-zinc-800">
-      <div className="mb-8 px-4">
-        <AuthLogo />
-      </div>
-
-      <nav className="flex-1 space-y-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-          return (
-            <Link 
-              key={item.href} 
-              href={item.href}
-              className={`flex items-center gap-4 px-4 py-3 rounded-full text-xl transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 group ${isActive ? "font-black" : "font-medium"}`}
-            >
-              <div className="relative">
-                <item.icon size={26} strokeWidth={isActive ? 2.5 : 2} />
-                {item.badge ? (
-                  <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#E5FF66] dark:bg-[#E5FF66] text-black rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white dark:border-black">
-                    {item.badge}
-                  </div>
-                ) : null}
-              </div>
-              <span className="hidden xl:block">{item.label}</span>
-            </Link>
-          );
-        })}
-        
-        <Link href="/create" className="block w-full mt-4">
-          <button className="w-full bg-[#E5FF66] text-black py-4 rounded-full font-black text-lg shadow-lg hover:brightness-95 transition-all active:scale-95 hidden xl:block">
-            Post
-          </button>
+    <header className="hidden lg:block sticky top-0 z-50 w-full bg-white/80 dark:bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-zinc-200/70 dark:border-zinc-800/70">
+      <div className="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between gap-6">
+        {/* Left: Brand */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <AuthLogo />
         </Link>
-        <Link href="/create" className="block mx-auto mt-4 xl:hidden">
-          <button className="w-14 h-14 bg-[#E5FF66] text-black rounded-full flex items-center justify-center shadow-lg hover:brightness-95 transition-all active:scale-95">
-            <PlusSquare size={26} strokeWidth={2.5} />
-          </button>
-        </Link>
-      </nav>
 
-      {user && (
-        <div className="mt-auto mb-4">
-          <div className="flex items-center justify-between p-3 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0">
+        {/* Center: Floating Pill Navigation */}
+        <nav className="flex items-center gap-1 bg-zinc-100/80 dark:bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/60">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all ${
+                  isActive
+                    ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold shadow-sm"
+                    : "text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-white"
+                }`}
+              >
+                <div className="relative">
+                  <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  {item.badge ? (
+                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 bg-[#E5FF66] text-black rounded-full flex items-center justify-center text-[9px] font-black">
+                      {item.badge}
+                    </span>
+                  ) : null}
+                </div>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Right: Search, Create, Settings, Avatar */}
+        <div className="flex items-center gap-3 shrink-0">
+          <form onSubmit={handleSearch} className="relative hidden xl:block w-56">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search campus..."
+              className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-xl py-2 pl-9 pr-3 text-xs font-medium outline-none border border-transparent focus:border-[#E5FF66] transition-all"
+            />
+          </form>
+
+          <Link href="/create">
+            <button className="flex items-center gap-1.5 bg-[#E5FF66] text-black px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider shadow-sm hover:brightness-95 active:scale-95 transition-all">
+              <Plus size={16} strokeWidth={3} />
+              <span>Create</span>
+            </button>
+          </Link>
+
+          <Link
+            href="/settings"
+            className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+            title="Settings"
+          >
+            <Settings size={17} />
+          </Link>
+
+          {user && (
+            <Link href="/profile" className="flex items-center gap-2 pl-1">
+              <div className="w-9 h-9 rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
                 {user.avatar_url ? (
-                  <Image src={user.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover" />
+                  <Image src={user.avatar_url} alt={capitalizeName(user.full_name)} width={36} height={36} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <User size={20} className="text-zinc-400" />
+                    <User size={16} className="text-zinc-400" />
                   </div>
                 )}
               </div>
-              <div className="hidden xl:block min-w-0">
-                <p className="font-bold text-sm truncate">{capitalizeName(user.full_name)}</p>
-                <p className="text-zinc-500 text-xs truncate">{user.username}</p>
-              </div>
-            </div>
-            <MoreHorizontal size={18} className="hidden xl:block text-zinc-500" />
-          </div>
+            </Link>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </header>
   );
 }

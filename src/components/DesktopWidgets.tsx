@@ -1,10 +1,10 @@
 "use client";
 
-import { Search, Settings, MoreHorizontal } from "lucide-react";
+import { BookOpen, ArrowRight, Users, Sparkles, Loader2 } from "lucide-react";
 import SuggestedConnections from "./SuggestedConnections";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 export default function DesktopWidgets() {
   const supabase = createClient();
@@ -24,38 +24,33 @@ export default function DesktopWidgets() {
   }, [supabase]);
 
   return (
-    <div className="hidden lg:block w-[350px] xl:w-[400px] px-8 py-4 space-y-6">
-      {/* Search Bar */}
-      <div className="sticky top-0 z-10 pt-1 pb-4 bg-white dark:bg-black">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-            <Search size={18} className="text-zinc-400 group-focus-within:text-[#E5FF66] transition-colors" />
+    <aside className="hidden lg:flex flex-col w-[340px] shrink-0 sticky top-22 space-y-5">
+      {/* Campus Library Quick Access */}
+      <Link
+        href="/library"
+        className="group block bg-zinc-900 dark:bg-zinc-900/90 text-white rounded-3xl p-5 border border-zinc-800 shadow-sm hover:border-[#E5FF66]/60 transition-all"
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#E5FF66] text-black flex items-center justify-center">
+            <BookOpen size={20} strokeWidth={2.5} />
           </div>
-          <input 
-            type="text" 
-            placeholder="Search Peerza"
-            className="w-full bg-zinc-100 dark:bg-zinc-900 rounded-full py-3.5 pl-14 pr-6 text-sm font-medium outline-none border border-transparent focus:border-[#E5FF66] focus:bg-white dark:focus:bg-black transition-all"
-          />
+          <ArrowRight size={18} className="text-zinc-400 group-hover:text-[#E5FF66] group-hover:translate-x-1 transition-all" />
         </div>
-      </div>
-
-      {/* Subscribe/Premium Placeholder */}
-      <div className="bg-zinc-50 dark:bg-zinc-900 rounded-[24px] p-5 border border-zinc-100 dark:border-zinc-800 space-y-3">
-        <h3 className="text-xl font-black italic tracking-tighter">Peerza Premium</h3>
-        <p className="text-sm font-medium text-zinc-500 leading-relaxed">
-          Unlock exclusive academic tools and community features.
+        <h3 className="text-base font-black tracking-tight">Campus Library</h3>
+        <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+          Access past questions, lecture notes, and department resources.
         </p>
-        <button className="bg-black dark:bg-white text-white dark:text-black px-5 py-2.5 rounded-full font-black text-sm hover:opacity-90 transition-opacity">
-          Subscribe
-        </button>
-      </div>
+      </Link>
 
-      {/* Suggested Connections */}
-      <div className="bg-zinc-50 dark:bg-zinc-900 rounded-[24px] overflow-hidden border border-zinc-100 dark:border-zinc-800">
-        <div className="px-5 py-4">
-            <h3 className="text-xl font-black tracking-tight">Who to follow</h3>
+      {/* Campus Connections */}
+      <div className="bg-white dark:bg-[#0A0A0A] rounded-3xl overflow-hidden border border-zinc-200/70 dark:border-zinc-800/70 shadow-sm">
+        <div className="px-5 py-4 flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800/60">
+          <Users size={17} className="text-[#E5FF66]" />
+          <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
+            Campus Connections
+          </h3>
         </div>
-        <div className="px-1 pb-2">
+        <div className="px-2 py-2">
           {loading ? (
             <div className="py-8 flex justify-center">
               <Loader2 className="animate-spin text-zinc-300" />
@@ -64,43 +59,18 @@ export default function DesktopWidgets() {
             <SuggestedConnections userId={user.id} universityId={user.university_id} />
           ) : null}
         </div>
-        <button className="w-full text-left px-5 py-4 text-[#E5FF66] text-sm font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors border-t border-zinc-100 dark:border-zinc-800">
-          Show more
-        </button>
       </div>
 
-      {/* Trends / What's happening */}
-      <div className="bg-zinc-50 dark:bg-zinc-900 rounded-[24px] overflow-hidden border border-zinc-100 dark:border-zinc-800">
-        <div className="px-5 py-4">
-            <h3 className="text-xl font-black tracking-tight">What's happening</h3>
+      {/* Peerza Campus Tip */}
+      <div className="bg-white dark:bg-[#0A0A0A] rounded-3xl p-5 border border-zinc-200/70 dark:border-zinc-800/70 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
+          <Sparkles size={14} className="text-[#E5FF66]" />
+          <span>Peerza v0.1.1</span>
         </div>
-        <div className="space-y-0">
-            {[
-                { category: "Trending in Nigeria", title: "ASUU Strike", posts: "42.5K Posts" },
-                { category: "Academic • Trending", title: "JAMB Results", posts: "12.1K Posts" },
-                { category: "University Life", title: "#CampusVibes", posts: "8,432 Posts" },
-            ].map((trend, i) => (
-                <div key={i} className="px-5 py-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer group">
-                    <div className="flex justify-between">
-                        <span className="text-[11px] font-medium text-zinc-500">{trend.category}</span>
-                        <MoreHorizontal size={16} className="text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <p className="font-black text-sm mt-0.5">{trend.title}</p>
-                    <p className="text-[11px] font-medium text-zinc-500 mt-0.5">{trend.posts}</p>
-                </div>
-            ))}
-        </div>
-        <button className="w-full text-left px-5 py-4 text-[#E5FF66] text-sm font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-          Show more
-        </button>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+          Built for Nigerian students to connect, share campus moments, and study smarter together.
+        </p>
       </div>
-
-      {/* Footer Links */}
-      <div className="px-5 py-2 flex flex-wrap gap-x-4 gap-y-1">
-          {["Terms of Service", "Privacy Policy", "Cookie Policy", "Accessibility", "Ads info", "More ...", "© 2026 Peerza Corp."].map((link, i) => (
-              <span key={i} className="text-[12px] text-zinc-500 hover:underline cursor-pointer">{link}</span>
-          ))}
-      </div>
-    </div>
+    </aside>
   );
 }
