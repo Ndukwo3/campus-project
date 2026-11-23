@@ -152,7 +152,7 @@ export default function CreatePostPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black max-w-md mx-auto relative font-sans flex flex-col transition-colors">
+    <div className="min-h-screen bg-white dark:bg-black max-w-md lg:max-w-none mx-auto relative font-sans flex flex-col transition-colors">
       {/* Premium Glass Header */}
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-xl px-4 py-4 flex items-center justify-between border-b border-zinc-100/50 dark:border-zinc-800/50">
         <div className="flex items-center gap-3">

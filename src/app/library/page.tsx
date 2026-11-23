@@ -189,7 +189,7 @@ export default function LibraryPage() {
   const currentStepIndex = STEPS.indexOf(currentStep);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black max-w-md mx-auto relative font-sans transition-colors overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-black max-w-md lg:max-w-none mx-auto relative font-sans transition-colors overflow-hidden">
       {/* Header (Context-aware) */}
       <div className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50">
         <div className="px-6 pt-10 pb-5 flex items-center gap-4">
