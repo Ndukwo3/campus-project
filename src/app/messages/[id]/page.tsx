@@ -846,8 +846,40 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-dvh bg-[#F8F9FA] items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-zinc-900" />
+      <div className="flex flex-col w-full flex-1 h-dvh bg-[#F8F9FA] dark:bg-black animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between px-4 py-4 bg-white/90 dark:bg-black/90 border-b border-zinc-100 dark:border-zinc-800/50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+            <div className="space-y-2">
+              <div className="w-28 h-4 rounded-md bg-zinc-200 dark:bg-zinc-800" />
+              <div className="w-16 h-3 rounded-md bg-zinc-100 dark:bg-zinc-900" />
+            </div>
+          </div>
+          <div className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-900" />
+        </div>
+
+        {/* Message Bubbles Skeleton */}
+        <div className="flex-1 p-4 space-y-4 overflow-hidden">
+          <div className="flex justify-start">
+            <div className="w-48 h-12 rounded-2xl rounded-tl-sm bg-zinc-200 dark:bg-zinc-800" />
+          </div>
+          <div className="flex justify-end">
+            <div className="w-56 h-14 rounded-2xl rounded-tr-sm bg-zinc-200 dark:bg-zinc-800" />
+          </div>
+          <div className="flex justify-start">
+            <div className="w-40 h-10 rounded-2xl rounded-tl-sm bg-zinc-200 dark:bg-zinc-800" />
+          </div>
+          <div className="flex justify-end">
+            <div className="w-36 h-10 rounded-2xl rounded-tr-sm bg-zinc-200 dark:bg-zinc-800" />
+          </div>
+        </div>
+
+        {/* Input Bar Skeleton */}
+        <div className="p-4 bg-white dark:bg-black border-t border-zinc-100 dark:border-zinc-800/50 flex items-center gap-3">
+          <div className="flex-1 h-11 rounded-2xl bg-zinc-100 dark:bg-zinc-900" />
+          <div className="w-11 h-11 rounded-2xl bg-zinc-200 dark:bg-zinc-800" />
+        </div>
       </div>
     );
   }
