@@ -251,13 +251,21 @@ export default function Home() {
       
       {/* Desktop Header */}
       <div className="sticky top-0 z-40 hidden lg:block bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800">
-        <div className="px-5 py-4">
-          <h1 className="text-xl font-black tracking-tight">Home</h1>
-        </div>
         <div className="flex border-b border-zinc-100 dark:border-zinc-800">
           <button className="flex-1 py-4 text-sm font-black text-zinc-900 dark:text-zinc-100 border-b-4 border-[#E5FF66]">For you</button>
           <button className="flex-1 py-4 text-sm font-bold text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">Following</button>
         </div>
+        <Link
+          href="/create"
+          className="flex items-center justify-between px-5 py-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors group"
+        >
+          <span className="text-sm text-zinc-400 dark:text-zinc-500 font-medium group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
+            Share something with your campus...
+          </span>
+          <span className="bg-[#E5FF66] text-black px-4 py-1.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-sm group-hover:brightness-95 transition-all">
+            Post
+          </span>
+        </Link>
       </div>
 
       <main className="px-5 py-2">
