@@ -82,6 +82,7 @@ import ThemeColorUpdater from "@/components/ThemeColorUpdater";
 
 
 import ResponsiveLayout from "@/components/ResponsiveLayout";
+import SplashScreen from "@/components/SplashScreen";
 
 export default function RootLayout({
   children,
@@ -124,6 +125,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ThemeColorUpdater />
+            <SplashScreen />
             <GlobalStateLoader />
             <SessionTracker />
             <ResponsiveLayout>
