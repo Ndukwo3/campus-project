@@ -154,7 +154,15 @@ export default function LibraryPage() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        setDepartments(data);
+        // Deduplicate departments by normalized name (case-insensitive, trimmed)
+        const seen = new Set<string>();
+        const uniqueDepts = data.filter((dept: any) => {
+          const key = (dept.name || '').trim().toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setDepartments(uniqueDepts);
       } else {
         console.warn("No departments found for this query");
         setDepartments([]);
