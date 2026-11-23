@@ -60,7 +60,7 @@ export default function DesktopSidebar() {
 
   return (
     <header className="hidden lg:block sticky top-0 z-50 w-full bg-white/80 dark:bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-zinc-200/70 dark:border-zinc-800/70">
-      <div className="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between gap-6">
+      <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-6">
         {/* Left: Brand */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <AuthLogo />

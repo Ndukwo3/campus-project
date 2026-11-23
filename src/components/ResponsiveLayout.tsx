@@ -20,12 +20,12 @@ export default function ResponsiveLayout({ children }: { children: React.ReactNo
       {/* Top Desktop Navigation */}
       <DesktopSidebar />
 
-      {/* Centered Campus Hub Container */}
-      <div className="max-w-[1200px] mx-auto lg:px-6 lg:py-6 flex justify-center gap-6 items-start">
+      {/* Expanded Full-Width Campus Hub Container */}
+      <div className="max-w-[1440px] mx-auto lg:px-6 lg:py-6 flex justify-center gap-6 items-start">
         {/* Main Content Card */}
         <main
           className={`w-full min-h-screen lg:min-h-[calc(100vh-7rem)] bg-white dark:bg-[#0A0A0A] lg:rounded-3xl lg:border lg:border-zinc-200/70 lg:dark:border-zinc-800/70 lg:shadow-sm overflow-hidden relative ${
-            isMessagesPath ? "lg:max-w-[1040px]" : "lg:max-w-[660px]"
+            isMessagesPath ? "lg:flex-1" : "lg:flex-1 lg:max-w-[820px]"
           }`}
         >
           {children}
