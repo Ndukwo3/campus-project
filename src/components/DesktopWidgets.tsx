@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, ArrowRight, Users, Sparkles, Loader2, Bot, Bookmark, Settings } from "lucide-react";
+import { BookOpen, ArrowRight, Users, Sparkles, Loader2, MessageSquare, Bookmark, Settings } from "lucide-react";
 import SuggestedConnections from "./SuggestedConnections";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
@@ -67,14 +67,14 @@ export default function DesktopWidgets() {
           Quick Shortcuts
         </p>
         <Link
-          href="/ai-assistant"
+          href="/messages"
           className="flex items-center justify-between px-3 py-2.5 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-[#E5FF66]/15 text-[#E5FF66] flex items-center justify-center">
-              <Bot size={16} />
+              <MessageSquare size={16} />
             </div>
-            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">AI Study Assistant</span>
+            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Messages</span>
           </div>
           <ArrowRight size={14} className="text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
         </Link>
