@@ -165,7 +165,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: "100%", opacity: 0 }}
       transition={{ type: "spring", stiffness: 380, damping: 32 }}
-      className="min-h-screen bg-white dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans transition-colors"
+      className="min-h-screen bg-white dark:bg-black pb-[100px] lg:pb-8 max-w-md lg:max-w-none mx-auto relative font-sans transition-colors"
     >
       {/* Header */}
       <div className="flex items-center px-6 py-4 sticky top-0 bg-white/80 dark:bg-black/80 backdrop-blur-xl z-30 border-b border-zinc-100/50 dark:border-zinc-800/50">

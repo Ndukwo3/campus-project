@@ -100,7 +100,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans transition-colors">
+    <div className="min-h-screen bg-white dark:bg-black pb-[100px] lg:pb-8 max-w-md lg:max-w-none mx-auto relative font-sans transition-colors">
       {/* Premium Header */}
       <div className="sticky top-0 z-40 w-full bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-zinc-100/50 dark:border-zinc-800/50 px-6 py-4 flex items-center justify-between">
         <button 

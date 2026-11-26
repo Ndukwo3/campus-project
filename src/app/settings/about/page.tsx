@@ -27,7 +27,7 @@ export default function AboutSettingsPage() {
   const [modal, setModal] = useState<"terms" | "privacy" | "oss" | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans transition-colors">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black pb-[100px] lg:pb-8 max-w-md lg:max-w-none mx-auto relative font-sans transition-colors">
 
       {modal === "terms" && (
         <DocModal title="Terms of Service" onClose={() => setModal(null)}>

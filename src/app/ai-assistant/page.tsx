@@ -82,7 +82,7 @@ export default function AIAssistantPage() {
   ];
 
   return (
-    <div className="flex flex-col h-dvh bg-white max-w-md mx-auto relative font-sans overflow-hidden">
+    <div className="flex flex-col h-dvh bg-white dark:bg-black max-w-md lg:max-w-none mx-auto relative font-sans overflow-hidden">
       {/* Premium Glass Header */}
       <div className="sticky top-0 z-30 bg-zinc-900 px-4 py-5 flex items-center justify-between border-b border-white/10 shadow-lg">
         <div className="flex items-center gap-3">

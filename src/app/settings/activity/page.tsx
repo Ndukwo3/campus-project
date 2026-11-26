@@ -92,7 +92,7 @@ export default function ActivitySettingsPage() {
   const [modal, setModal] = useState<"saved" | "liked" | "shared" | "comments" | "blocked" | "muted" | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black pb-[100px] max-w-md mx-auto relative font-sans transition-colors">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-black pb-[100px] lg:pb-8 max-w-md lg:max-w-none mx-auto relative font-sans transition-colors">
 
       {modal === "saved" && (
         <PostListModal title="Saved Posts" posts={SAVED_POSTS} emptyIcon={Bookmark} emptyText="No saved posts yet" onClose={() => setModal(null)} />
