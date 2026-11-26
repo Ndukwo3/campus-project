@@ -182,13 +182,13 @@ export default function SuggestedConnections({ userId, universityId, onCountChan
                   <VerifiedBadge size={12} />
                 )}
               </div>
-              <p className="text-[11px] font-bold text-[#E5FF66] uppercase tracking-widest mt-0.5">{user.username}</p>
+              <p className="text-[11px] font-bold text-[#E5FF66] uppercase tracking-widest mt-0.5 truncate">{user.username}</p>
             </div>
 
             <button
               onClick={() => handleConnect(user.id)}
               disabled={isSending || isAlreadySent}
-              className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.95] flex items-center gap-2 ${
+              className={`shrink-0 px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.95] flex items-center gap-2 ${
                 isAlreadySent
                 ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 cursor-default"
                 : isSending

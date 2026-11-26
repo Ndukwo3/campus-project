@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, ArrowRight, Users, Sparkles, Loader2 } from "lucide-react";
+import { BookOpen, ArrowRight, Users, Sparkles, Loader2, Bot, Bookmark, Settings } from "lucide-react";
 import SuggestedConnections from "./SuggestedConnections";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
@@ -61,6 +61,49 @@ export default function DesktopWidgets() {
         </div>
       </div>
 
+      {/* Quick Campus Shortcuts */}
+      <div className="bg-white dark:bg-[#0A0A0A] rounded-3xl p-4 border border-zinc-200/70 dark:border-zinc-800/70 shadow-sm space-y-1.5">
+        <p className="text-[11px] font-black uppercase tracking-wider text-zinc-400 px-2 pb-1">
+          Quick Shortcuts
+        </p>
+        <Link
+          href="/ai-assistant"
+          className="flex items-center justify-between px-3 py-2.5 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-[#E5FF66]/15 text-[#E5FF66] flex items-center justify-center">
+              <Bot size={16} />
+            </div>
+            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">AI Study Assistant</span>
+          </div>
+          <ArrowRight size={14} className="text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
+        </Link>
+        <Link
+          href="/profile"
+          className="flex items-center justify-between px-3 py-2.5 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center">
+              <Bookmark size={16} />
+            </div>
+            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Saved Posts & Profile</span>
+          </div>
+          <ArrowRight size={14} className="text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
+        </Link>
+        <Link
+          href="/settings"
+          className="flex items-center justify-between px-3 py-2.5 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center">
+              <Settings size={16} />
+            </div>
+            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Account Settings</span>
+          </div>
+          <ArrowRight size={14} className="text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
+        </Link>
+      </div>
+
       {/* Peerza Campus Tip */}
       <div className="bg-white dark:bg-[#0A0A0A] rounded-3xl p-5 border border-zinc-200/70 dark:border-zinc-800/70 shadow-sm">
         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
@@ -70,6 +113,12 @@ export default function DesktopWidgets() {
         <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
           Built for Nigerian students to connect, share campus moments, and study smarter together.
         </p>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/60 text-[11px] font-medium text-zinc-400">
+          <Link href="/terms" className="hover:text-zinc-700 dark:hover:text-zinc-200">Terms</Link>
+          <Link href="/settings/privacy" className="hover:text-zinc-700 dark:hover:text-zinc-200">Privacy</Link>
+          <Link href="/settings/support" className="hover:text-zinc-700 dark:hover:text-zinc-200">Support</Link>
+          <span>© 2026 Peerza</span>
+        </div>
       </div>
     </aside>
   );
